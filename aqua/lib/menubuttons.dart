@@ -1,8 +1,6 @@
 import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:aqua/Home.dart';
-import 'package:aqua/AboutUs.dart';
-import'package:aqua/Services.dart';
+
 
 class MenuButtons extends StatelessWidget {
   final ScrollController scrollController; // Pass the ScrollController
@@ -98,7 +96,7 @@ class MenuButtons extends StatelessWidget {
           .findRenderObject()!
           .getTransformTo(null);
       scrollController.animateTo(
-        position!
+        position
             .getTranslation()
             .y, // Scroll to the y position of the About Us section
         duration: Duration(seconds: 1),
@@ -115,7 +113,7 @@ class MenuButtons extends StatelessWidget {
           .findRenderObject()!
           .getTransformTo(null);
       scrollController.animateTo(
-        position!
+        position
             .getTranslation()
             .y, // Scroll to the y position of the Home section
         duration: Duration(seconds: 1),
@@ -132,7 +130,7 @@ class MenuButtons extends StatelessWidget {
           .getTransformTo(null);
       // Use the passed scrollController here instead of declaring a new one
       scrollController.animateTo(
-        position!
+        position
             .getTranslation()
             .y, // Scroll to the y position of the Home section
         duration: Duration(seconds: 1),
@@ -148,7 +146,7 @@ class MenuButtons extends StatelessWidget {
           .findRenderObject()!
           .getTransformTo(null);
       scrollController.animateTo(
-        position!
+        position
             .getTranslation()
             .y, // Scroll to the y position of the Home section
         duration: Duration(seconds: 1),
