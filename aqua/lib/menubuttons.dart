@@ -2,16 +2,21 @@ import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:aqua/Home.dart';
 import 'package:aqua/AboutUs.dart';
+import'package:aqua/Services.dart';
 
 class MenuButtons extends StatelessWidget {
-  final ScrollController scrollController;  // Pass the ScrollController
-  final GlobalKey aboutUsKey;  // Pass the GlobalKey for About Us section
-  final GlobalKey homeKey;     // Pass the GlobalKey for Home section
+  final ScrollController scrollController; // Pass the ScrollController
+  final GlobalKey aboutUsKey; // Pass the GlobalKey for About Us section
+  final GlobalKey homeKey;
+  final GlobalKey servicesKey;
+  final GlobalKey contactUsKey; // Pass the GlobalKey for Home section
 
   const MenuButtons({
     required this.scrollController,
     required this.aboutUsKey,
-    required this.homeKey,    // Receive the GlobalKey for Home section
+    required this.homeKey,
+    required this.servicesKey,
+    required this.contactUsKey,
     super.key,
   });
 
@@ -50,7 +55,37 @@ class MenuButtons extends StatelessWidget {
             ),
           ),
         ),
+
         // Other buttons...
+        TextButton(
+          onPressed: () {
+            // Scroll to the Home section when the button is pressed
+            _scrollToServices();
+          },
+          child: Text(
+            'Services',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              color: ASColor.txt2Color,
+            ),
+          ),
+        ),
+
+        TextButton(
+          onPressed: () {
+            // Scroll to the Home section when the button is pressed
+            _scrollToContactUs();
+          },
+          child: Text(
+            'Contact Us',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 10,
+              color: ASColor.txt2Color,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -59,9 +94,13 @@ class MenuButtons extends StatelessWidget {
   void _scrollToAboutUs() {
     final context = aboutUsKey.currentContext;
     if (context != null) {
-      final position = aboutUsKey.currentContext!.findRenderObject()!.getTransformTo(null);
+      final position = aboutUsKey.currentContext!
+          .findRenderObject()!
+          .getTransformTo(null);
       scrollController.animateTo(
-        position!.getTranslation().y, // Scroll to the y position of the About Us section
+        position!
+            .getTranslation()
+            .y, // Scroll to the y position of the About Us section
         duration: Duration(seconds: 1),
         curve: Curves.easeInOut,
       );
@@ -72,18 +111,49 @@ class MenuButtons extends StatelessWidget {
   void _scrollToHome() {
     final context = homeKey.currentContext;
     if (context != null) {
-      final position = homeKey.currentContext!.findRenderObject()!.getTransformTo(null);
+      final position = homeKey.currentContext!
+          .findRenderObject()!
+          .getTransformTo(null);
       scrollController.animateTo(
-        position!.getTranslation().y, // Scroll to the y position of the Home section
+        position!
+            .getTranslation()
+            .y, // Scroll to the y position of the Home section
+        duration: Duration(seconds: 1),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _scrollToServices() {
+    final context = servicesKey.currentContext;
+    if (context != null) {
+      final position = servicesKey.currentContext!
+          .findRenderObject()!
+          .getTransformTo(null);
+      // Use the passed scrollController here instead of declaring a new one
+      scrollController.animateTo(
+        position!
+            .getTranslation()
+            .y, // Scroll to the y position of the Home section
+        duration: Duration(seconds: 1),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _scrollToContactUs() {
+    final context = contactUsKey.currentContext;
+    if (context != null) {
+      final position = contactUsKey.currentContext!
+          .findRenderObject()!
+          .getTransformTo(null);
+      scrollController.animateTo(
+        position!
+            .getTranslation()
+            .y, // Scroll to the y position of the Home section
         duration: Duration(seconds: 1),
         curve: Curves.easeInOut,
       );
     }
   }
 }
-
-
-
-
-
-

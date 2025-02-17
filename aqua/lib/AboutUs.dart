@@ -18,7 +18,7 @@ class _AboutusState extends State<Aboutus> {
         children: [
           Container(
             alignment: Alignment.centerLeft,  // Align the content to the left
-            padding: EdgeInsets.only(left: 15, top: 60), // Optional: Add padding to the left if you want some space from the edge
+            padding: EdgeInsets.only(left: 15, top: 30), // Optional: Add padding to the left if you want some space from the edge
             child: Column(
               children: [
                 Text('ABOUT US',
