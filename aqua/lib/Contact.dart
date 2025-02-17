@@ -423,9 +423,10 @@ class _ContactUsState extends State<Contactus> {
           padding: EdgeInsets.only(top: 60, bottom: 10),
           child: Center(
             child: Text('Copyright © 2003-2023 Creatic Agency\nAll Rights Reserved.',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 8,
-              color: ASColor.txt2Color
+              color: Colors.grey
             ),),
           ),
         )
