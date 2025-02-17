@@ -14,7 +14,7 @@ class ASColor {
       ASColor.secondary, // Black (left)
       ASColor.primary,   // Blue (right)
     ],
-    stops: [0.7, 1.0], // Black covers 70%, blue covers 30%
+    stops: [0.8, 1.0], // Black covers 70%, blue covers 30%
   );
 
   // TEXT COLOR
