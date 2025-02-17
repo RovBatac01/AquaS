@@ -22,7 +22,10 @@ class _MyWidgetState extends State<LandingPage> {
                 gradient: ASColor.primaryGradient
               ),
             ),
-            Row(
+            Padding(
+              padding: EdgeInsets.only(top: 20),
+                child: 
+                  Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -47,6 +50,7 @@ class _MyWidgetState extends State<LandingPage> {
                   color: ASColor.txt2Color
                 ),)
               ],
+            ),
             ),
             
             Padding(
