@@ -17,6 +17,16 @@ class ASColor {
     stops: [0.8, 1.0], // Black covers 70%, blue covers 30%
   );
 
+  static const LinearGradient secondaryGradient = LinearGradient(
+  colors: [
+    Colors.black, // Start color
+    Color(0xFF02030F), // Middle color
+    Color(0xFF0D1326), // End color
+  ],
+  begin: Alignment.centerLeft, // Gradient starts from the left
+  end: Alignment.centerRight, // Gradient ends at the right
+);
+
   // TEXT COLOR
   static const Color txt1Color = Color(0xFF6D95FC);
   static const Color txt2Color = Colors.white;

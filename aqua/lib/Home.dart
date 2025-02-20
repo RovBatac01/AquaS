@@ -1,8 +1,8 @@
+import 'package:aqua/Login.dart';
 import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
-
   const Home({Key? key}) : super(key: key);
   @override
   _HomeState createState() => _HomeState();
@@ -11,10 +11,46 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    return Container(  // Color for visibility
+    return Container(
+      // Color for visibility
       padding: EdgeInsets.all(20),
       child: Column(
         children: [
+          Container(
+            padding: EdgeInsets.only(bottom: 70),
+            alignment: Alignment.center,
+            child: OutlinedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: ASColor.txt1Color,
+                  width: 2,
+                ), // Change the outline color
+                minimumSize: Size(
+                  30,
+                  30,
+                ), // Set equal width and height for a square shape
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius
+                          .zero, // Remove rounded corners to make it a square
+                ),
+              ),
+              child: Text(
+                'GET STARTED',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 10,
+                  color: ASColor.txt2Color,
+                ),
+              ),
+            ),
+          ),
           Text(
             'AQUASENSE',
             style: TextStyle(
@@ -23,7 +59,6 @@ class _HomeState extends State<Home> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
 
           Text(
             'SOLUTIONS',
@@ -34,19 +69,23 @@ class _HomeState extends State<Home> {
             ),
           ),
 
-
           Container(
-            alignment: Alignment.centerLeft,  // Align the content to the left
-            padding: EdgeInsets.only(left: 15, top: 60), // Optional: Add padding to the left if you want some space from the edge
+            alignment: Alignment.centerLeft, // Align the content to the left
+            padding: EdgeInsets.only(
+              left: 15,
+              top: 60,
+            ), // Optional: Add padding to the left if you want some space from the edge
             child: Column(
               children: [
-                Text('WELCOME TO AQUASENSE',
+                Text(
+                  'WELCOME TO AQUASENSE',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 10,
                     color: ASColor.txt1Color,
                     letterSpacing: 1.0,
-                  ),)
+                  ),
+                ),
               ],
             ),
           ),
@@ -57,13 +96,14 @@ class _HomeState extends State<Home> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text('WATER QUALITY\nMONITORING\nSYSTEM',
+                Text(
+                  'WATER QUALITY\nMONITORING\nSYSTEM',
                   style: TextStyle(
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                     color: ASColor.txt2Color,
-                    letterSpacing: 1.0
+                    letterSpacing: 1.0,
                   ),
                 ),
               ],
@@ -71,13 +111,19 @@ class _HomeState extends State<Home> {
           ),
 
           Align(
-            alignment: Alignment.topLeft,  // Align it to the top left corner of the screen
+            alignment:
+                Alignment
+                    .topLeft, // Align it to the top left corner of the screen
             child: Container(
-              padding: EdgeInsets.only(top: 20, left: 15, right: 200), // Optional top padding
-              width: 290,  // Set the specific width of the divider
+              padding: EdgeInsets.only(
+                top: 20,
+                left: 15,
+                right: 200,
+              ), // Optional top padding
+              width: 290, // Set the specific width of the divider
               child: Divider(
                 color: ASColor.txt1Color,
-                thickness: 2.0,  // Thickness of the line
+                thickness: 2.0, // Thickness of the line
               ),
             ),
           ),
@@ -89,12 +135,13 @@ class _HomeState extends State<Home> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lorem ipsumNeque porro quisquam est\nqui dolorem ipsum quia dolor sit amet,\nconsectetur, adipisci velit Neque porro\nelit Neque porro quis ipsum',
+                Text(
+                  'Lorem ipsumNeque porro quisquam est\nqui dolorem ipsum quia dolor sit amet,\nconsectetur, adipisci velit Neque porro\nelit Neque porro quis ipsum',
                   style: TextStyle(
                     fontFamily: "Poppins",
                     fontSize: 10,
                     color: ASColor.txt2Color,
-                    letterSpacing: 1.0
+                    letterSpacing: 1.0,
                   ),
                 ),
               ],
@@ -106,17 +153,26 @@ class _HomeState extends State<Home> {
             child: OutlinedButton(
               onPressed: () {},
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: ASColor.txt1Color, width: 2), // Change the outline color
-                minimumSize: Size(30, 30), // Set equal width and height for a square shape
+                side: BorderSide(
+                  color: ASColor.txt1Color,
+                  width: 2,
+                ), // Change the outline color
+                minimumSize: Size(
+                  30,
+                  30,
+                ), // Set equal width and height for a square shape
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.zero, // Remove rounded corners to make it a square
+                  borderRadius:
+                      BorderRadius
+                          .zero, // Remove rounded corners to make it a square
                 ),
               ),
-              child: Text('GET IN TOUCH',
+              child: Text(
+                'GET IN TOUCH',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 10,
-                  color: ASColor.txt2Color
+                  color: ASColor.txt2Color,
                 ),
               ),
             ),
