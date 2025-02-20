@@ -1,9 +1,8 @@
+import 'package:aqua/Login.dart';
 import 'package:flutter/material.dart';
 import 'package:aqua/colors.dart';
 
 class Contactus extends StatefulWidget {
-
-  
   const Contactus({Key? key}) : super(key: key);
 
   @override
@@ -419,16 +418,48 @@ class _ContactUsState extends State<Contactus> {
         ),
 
         Container(
+          padding: EdgeInsets.only(top: 20),
+          alignment: Alignment.center,
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Login()),
+              );
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(
+                color: ASColor.txt1Color,
+                width: 2,
+              ), // Change the outline color
+              minimumSize: Size(30, 30,
+              ), // Set equal width and height for a square shape
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.zero, // Remove rounded corners to make it a square
+              ),
+            ),
+            child: Text(
+              'GET STARTED',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 10,
+                color: ASColor.txt2Color,
+              ),
+            ),
+          ),
+        ),
+
+        Container(
           padding: EdgeInsets.only(top: 60, bottom: 10),
           child: Center(
-            child: Text('Copyright © 2003-2023 Creatic Agency\nAll Rights Reserved.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 8,
-              color: Colors.grey
-            ),),
+            child: Text(
+              'Copyright © 2003-2023 Creatic Agency\nAll Rights Reserved.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 8, color: Colors.grey),
+            ),
           ),
-        )
+        ),
       ],
     );
   }
