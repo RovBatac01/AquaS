@@ -4,15 +4,18 @@ class ASColor {
   ASColor._();
 
   // BACKGROUND COLOR
-  static const Color primary = Color.fromARGB(255, 42, 68, 181);
-  static const Color secondary = Colors.black;
+  static const Color BGfirst = Color.fromARGB(255, 42, 68, 181);
+  static const Color BGsecond = Colors.white;
+  static const Color BGthird = Colors.black;
+  static const Color BGfourth = Color(0xFF0077b6);
+  static const Color BGfifth = Color(0xFF89CFF1);
 
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.centerLeft, 
     end: Alignment.centerRight, 
     colors: [
-      ASColor.secondary, // Black (left)
-      ASColor.primary,   // Blue (right)
+      ASColor.BGthird, // Black (left)
+      ASColor.BGfirst,   // Blue (right)
     ],
     stops: [0.8, 1.0], // Black covers 70%, blue covers 30%
   );
