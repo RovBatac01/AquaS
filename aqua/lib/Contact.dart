@@ -292,7 +292,7 @@ class _ContactUsState extends State<Contactus> {
           padding: EdgeInsets.only(left: 20, top: 20),
           child: Row(
             children: [
-              Icon(Icons.pin_drop_outlined, color: ASColor.primary, size: 20),
+              Icon(Icons.pin_drop_outlined, color: ASColor.BGfirst, size: 20),
               SizedBox(width: 20),
               Text.rich(
                 TextSpan(
@@ -325,7 +325,7 @@ class _ContactUsState extends State<Contactus> {
           padding: EdgeInsets.only(left: 20, top: 20),
           child: Row(
             children: [
-              Icon(Icons.phone_enabled, color: ASColor.primary, size: 20),
+              Icon(Icons.phone_enabled, color: ASColor.BGfirst, size: 20),
               SizedBox(width: 20),
               Text.rich(
                 TextSpan(
@@ -358,7 +358,7 @@ class _ContactUsState extends State<Contactus> {
           padding: EdgeInsets.only(left: 20, top: 20),
           child: Row(
             children: [
-              Icon(Icons.mail_outline, color: ASColor.primary, size: 20),
+              Icon(Icons.mail_outline, color: ASColor.BGfirst, size: 20),
               SizedBox(width: 20),
               Text.rich(
                 TextSpan(

@@ -75,8 +75,8 @@ class _MyWidgetState extends State<Ourservices> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      ASColor.secondary,
-                      ASColor.primary,
+                      ASColor.BGsecond,
+                      ASColor.BGfirst,
                     ], // Your gradient colors
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
