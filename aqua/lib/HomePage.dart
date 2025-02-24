@@ -1,3 +1,4 @@
+import 'package:aqua/GaugeMeter.dart';
 import 'package:aqua/Login.dart';
 import 'package:flutter/material.dart';
 import 'colors.dart';
@@ -61,15 +62,13 @@ class _MainScreenState extends State<MainScreen> {
         child: Column(
           children: [
             Container(
-                height: 200, // Adjust height as needed
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: ASColor.secondaryGradient,
-                ),
+              height: 200, // Adjust height as needed
+              width: double.infinity,
+              decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
               child: Center(
-                child: Text('Menu',
-                  style: TextStyle(
-                  color: Colors.white, fontSize: 24),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
             ),
@@ -139,61 +138,84 @@ class _MainScreenState extends State<MainScreen> {
       ),
 
       // Display the current screen
-      body: Container(
-        width: MediaQuery.of(context).size.width, // Full screen width
-        height: MediaQuery.of(context).size.height, // Full screen height
-        decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
-        child: Center(
-          child: Container(
-            width: 200,
-            height: 170,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.blueAccent),
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Temperature",
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
-                    Icon(Icons.thermostat, color: Colors.redAccent, size: 20),
-                  ],
-                ),
-                Text(
-                  "${_temperature.toInt()}°C",
-                  style: TextStyle(
-                    color: Colors.blueAccent,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              width: MediaQuery.of(context).size.width, // Full screen width
+              height: MediaQuery.of(context).size.height, // Full screen height
+              decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
+              child: Column(
+                children: [
+                  Container(
+                  width: 400,
+                  height: 170,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.blueAccent),
                   ),
-                ),
-                Text(
-                  getWaterStatus(_temperature),
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                Slider(
-                  value: _temperature,
-                  min: 0,
-                  max: 50,
-                  divisions: 50,
-                  activeColor: Colors.blueAccent,
-                  inactiveColor: Colors.grey,
-                  onChanged: (value) {
-                    setState(() {
-                      _temperature = value;
-                    });
-                  },
-                ),
-              ],
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Temperature",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Icon(
+                            Icons.thermostat,
+                            color: Colors.redAccent,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        "${_temperature.toInt()}°C",
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        getWaterStatus(_temperature),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      Slider(
+                        value: _temperature,
+                        min: 0,
+                        max: 50,
+                        divisions: 50,
+                        activeColor: Colors.blueAccent,
+                        inactiveColor: Colors.grey,
+                        onChanged: (value) {
+                          setState(() {
+                            _temperature = value;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  ),
+
+                  SizedBox(height: 50,),
+                
+                Container(
+                  width: 200,
+                  height: 250,
+                  child:  GaugeMeter(),
+                )
+                ]
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

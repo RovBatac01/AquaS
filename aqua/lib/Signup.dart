@@ -1,19 +1,28 @@
-import 'dart:ui'; 
+import 'dart:ui';
 import 'package:aqua/Login.dart';
+import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
-// import 'package:flutter_application_1/login.dart';
-// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 void main() {
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false, 
-    home: Signup(),
-  ));
+  runApp(MaterialApp(debugShowCheckedModeBanner: false, home: Signup()));
 }
 
-class Signup extends StatelessWidget {
+class Signup extends StatefulWidget {
   const Signup({super.key});
 
+  @override
+  State<Signup> createState() => _SignupState();
+}
+
+class _SignupState extends State<Signup> {
+  // Form key for validation and submission
+  final _formKey = GlobalKey<FormState>();
+
+  // Controllers for text fields
+  final TextEditingController username = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
+  final TextEditingController confirm_password = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +30,14 @@ class Signup extends StatelessWidget {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          // Background blur circles
           Positioned(
             top: -100,
             left: -100,
             child: ClipOval(
               child: Container(
                 width: 300,
-                height: 300,
+                height: 400,
                 decoration: BoxDecoration(color: Colors.purple),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 70, sigmaY: 50),
@@ -36,7 +46,6 @@ class Signup extends StatelessWidget {
               ),
             ),
           ),
-          
           Positioned(
             bottom: -60,
             right: -80,
@@ -44,7 +53,7 @@ class Signup extends StatelessWidget {
               child: Container(
                 width: 180,
                 height: 180,
-                decoration: BoxDecoration(color: Colors.purple),
+                decoration: BoxDecoration(color: ASColor.BGfourth),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
                   child: Container(color: Colors.transparent),
@@ -53,6 +62,7 @@ class Signup extends StatelessWidget {
             ),
           ),
 
+          // Form content
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -61,109 +71,310 @@ class Signup extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Just some details to get you in!",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    _buildTextField("Username"),
-                    SizedBox(height: 12),
-                    _buildTextField("Email/Phone"),
-                    SizedBox(height: 12),
-                    _buildTextField("Password", isPassword: true),
-                    SizedBox(height: 12),
-                    _buildTextField("Confirm Password", isPassword: true),
-                    SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.purple,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Center(
+                child: Form(
+                  key: _formKey, // Attach the form key
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Title
+                      Align(
+                        alignment: Alignment.centerLeft,
                         child: Text(
-                          "Sign Up",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          'Sign Up',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 20),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.center,
-                    //   children: [
-                    //     Icon(FontAwesomeIcons.google, color: Colors.white),
-                    //     SizedBox(width: 16),
-                    //     Icon(FontAwesomeIcons.facebook, color: Colors.white),
-                    //     SizedBox(width: 16),
-                    //     Icon(FontAwesomeIcons.github, color: Colors.white),
-                    //   ],
-                    // ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text("Already have an account? ", style: TextStyle(color: Colors.white70)),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => LoginScreen()),
-                            );
-                          },
-                          child: Text("Login", style: TextStyle(color: Colors.purple)),
+                      SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Just some details to get you in!",
+                          style: TextStyle(color: Colors.white, fontSize: 14),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      SizedBox(height: 20),
+
+                      // Username field
+                      TextFormField(
+                        controller: username,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is focused
+                              width: 2.0, // Thickness of the outline
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is not focused
+                              width: 1.5, // Thickness of the outline
+                            ),
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt2Color,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Username';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 12),
+
+                      // Email/Phone field
+                      TextFormField(
+                        controller: email,
+                        decoration: InputDecoration(
+                          labelText: 'Email/Phone Number',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is focused
+                              width: 2.0, // Thickness of the outline
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is not focused
+                              width: 1.5, // Thickness of the outline
+                            ),
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt2Color,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Email';
+                          }
+                          bool isEmail = RegExp(
+                            r'^\S+@\S+\.\S+$',
+                          ).hasMatch(value);
+
+                          // Regular expression for phone number validation (10-15 digits)
+                          bool isPhone = RegExp(r'^\d{10,15}$').hasMatch(value);
+
+                          if (!isEmail && !isPhone) {
+                            return 'Please enter a valid Email or Phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 12),
+
+                      // Password field
+                      TextFormField(
+                        controller: password,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is focused
+                              width: 2.0, // Thickness of the outline
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is not focused
+                              width: 1.5, // Thickness of the outline
+                            ),
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt2Color,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Password';
+                          }
+
+                          bool hasMinLength = value.length >= 8;
+                          bool hasUpperCase = RegExp(r'[A-Z]').hasMatch(value);
+                          bool hasNumber = RegExp(r'[0-9]').hasMatch(value);
+                          bool hasSpecialChar = RegExp(r'[@_]').hasMatch(value);
+
+                          // Check if ALL conditions are met
+                          if (hasMinLength && hasUpperCase && hasNumber && hasSpecialChar) {
+                            return null; // Password is valid
+                          }
+
+                          List<String> errors = [];
+
+                          if (value.length < 8) {
+                            errors.add('• At least 8 characters');
+                          }
+                          if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                            errors.add('• At least one uppercase letter');
+                          }
+                          if (!RegExp(r'[0-9]').hasMatch(value)) {
+                            errors.add('• At least one number');
+                          }
+                          if (!RegExp(r'[@_]').hasMatch(value)) {
+                            errors.add(
+                              '• At least one special character (@ or _)',
+                            );
+                          }
+
+                          // If there are errors, join them into a single string
+                          if (errors.isNotEmpty) {
+                            return errors.join('\n');
+                          }
+
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 12),
+
+                      // Confirm Password field
+                      TextFormField(
+                        controller: confirm_password,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is focused
+                              width: 2.0, // Thickness of the outline
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(
+                              color:
+                                  ASColor
+                                      .BGfifth, // Outline color when the field is not focused
+                              width: 1.5, // Thickness of the outline
+                            ),
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt2Color,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm the passowrd';
+                          } else if (value != password.text) {
+                            return 'It is not match to the password';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: 12),
+
+                      // Sign Up button
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState?.validate() ?? false) {
+                              // Form is valid, perform action (e.g., submit)
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text('Form Submitted'),
+                                    content: Text(
+                                      'Username: ${username.text}\n'
+                                      'Email/phone: ${email.text}\n'
+                                      'Password: ${password.text}\n',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text('OK'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
+                          },
+                          child: Text('Register'),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+
+                      // Login link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Already have an account? ",
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => LoginScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              "Login",
+                              style: TextStyle(color: Colors.purple),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTextField(String hint, {bool isPassword = false}) {
-    return TextField(
-      obscureText: isPassword,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white10,
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.white54),
-        suffixIcon: isPassword ? Icon(Icons.visibility_off, color: Colors.white54) : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      style: TextStyle(color: Colors.white),
     );
   }
 }
