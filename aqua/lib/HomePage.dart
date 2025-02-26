@@ -1,4 +1,6 @@
-import 'package:aqua/GaugeMeter.dart';
+import 'package:aqua/AccountManagement.dart';
+import 'package:aqua/Dashboard.dart';
+import 'package:aqua/Home.dart';
 import 'package:aqua/Login.dart';
 import 'package:flutter/material.dart';
 import 'colors.dart';
@@ -20,23 +22,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  double _temperature = 21; // Default temperature
-
-  // Function to determine water status
-  String getWaterStatus(double temp) {
-    if (temp < 15) return "Cold Water";
-    if (temp < 30) return "Warm Water";
-    return "Hot Water";
-  }
-
   int _currentIndex = 0;
 
-  // // List of screens for Bottom Navigation Bar
-  // final List<Widget> _screens = [
-  //   HomeScreen(),
-  //   AboutScreen(),
-  //   SettingsScreen(),
-  // ];
+  // List of screens for Bottom Navigation Bar
+  final List<Widget> _screens = [
+    Dashboard(),
+    Accountmanagement(),
+    SettingsScreen(),
+  ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.light);
 
@@ -56,14 +49,14 @@ class _MainScreenState extends State<MainScreen> {
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 15,
-                  color: ASColor.txt2Color,
+                  // color: ASColor.txt2Color,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               centerTitle: true,
-              flexibleSpace: Container(
-                decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
-              ),
+              // flexibleSpace: Container(
+              //   decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
+              // ),
             ),
 
             // Drawer for navigation
@@ -88,8 +81,8 @@ class _MainScreenState extends State<MainScreen> {
                     child: ListView(
                       children: [
                         ListTile(
-                          leading: Icon(Icons.home_max_outlined),
-                          title: Text('Home Screen'),
+                          leading: Icon(Icons.dashboard_customize_outlined),
+                          title: Text('Dashboard'),
                           onTap: () {
                             setState(() {
                               _currentIndex = 0;
@@ -117,21 +110,16 @@ class _MainScreenState extends State<MainScreen> {
                             Navigator.pop(context);
                           },
                         ),
-                        ListTile(
-                          leading: Icon(Icons.history),
-                          title: Text('History'),
-                          onTap: () {
-                            setState(() {
-                              _currentIndex = 3;
-                            });
-                            Navigator.pop(context);
-                          },
-                        ),
 
                         ListTile(
                           leading: Icon(Icons.history),
                           title: Text('Dark Mode/ Light Mode'),
-                          onTap: () => _notifier.value =  mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,
+                          onTap:
+                              () =>
+                                  _notifier.value =
+                                      mode == ThemeMode.light
+                                          ? ThemeMode.dark
+                                          : ThemeMode.light,
                         ),
                       ],
                     ),
@@ -157,88 +145,35 @@ class _MainScreenState extends State<MainScreen> {
             ),
 
             // Display the current screen
-            body: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width:
-                        MediaQuery.of(context).size.width, // Full screen width
-                    height:
-                        MediaQuery.of(
-                          context,
-                        ).size.height, // Full screen height
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 400,
-                          height: 170,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(15),
-                            border: Border.all(color: Colors.blueAccent),
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Temperature",
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Icon(
-                                    Icons.thermostat,
-                                    color: Colors.redAccent,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                "${_temperature.toInt()}°C",
-                                style: TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                getWaterStatus(_temperature),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              Slider(
-                                value: _temperature,
-                                min: 0,
-                                max: 50,
-                                divisions: 50,
-                                activeColor: Colors.blueAccent,
-                                inactiveColor: Colors.grey,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _temperature = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        SizedBox(height: 50),
-
-                        Container(width: 200, height: 250, child: GaugeMeter()),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            body: _screens[_currentIndex],
+            // Bottom Navigation Bar for navigation
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              type: BottomNavigationBarType.shifting, // Shifting
+              selectedItemColor: Colors.blue,
+              unselectedItemColor: Colors.grey,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard),
+                  label: 'Dashboard',
+                  // backgroundColor: Colors.blue,
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.info),
+                  label: 'Account Management',
+                  // backgroundColor: Colors.green,
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.settings),
+                  label: 'Settings',
+                  // backgroundColor: Colors.yellow,
+                ),
+              ],
             ),
           ),
         );
@@ -248,40 +183,21 @@ class _MainScreenState extends State<MainScreen> {
 }
 
 // Home Screen
-// class HomeScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Center(
-//       child: Text(
-//         'Home Screen',
-//         style: TextStyle(fontSize: 24),
-//       ),
-//     );
-//   }
-// }
+class HomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('Home Screen', style: TextStyle(fontSize: 24)),
+    );
+  }
+}
 
-// // About Screen
-// class AboutScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Center(
-//       child: Text(
-//         'About Screen',
-//         style: TextStyle(fontSize: 24),
-//       ),
-//     );
-//   }
-// }
-
-// // Settings Screen
-// class SettingsScreen extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return const Center(
-//       child: Text(
-//         'Settings Screen',
-//         style: TextStyle(fontSize: 24),
-//       ),
-//     );
-//   }
-// }
+// Settings Screen
+class SettingsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Text('Settings Screen', style: TextStyle(fontSize: 24)),
+    );
+  }
+}

@@ -24,7 +24,7 @@ class _LandingPageState extends State<LandingPage> {
   final GlobalKey _contactKey = GlobalKey();
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
-    ThemeMode.light,
+    ThemeMode.dark,
   );
 
   @override
