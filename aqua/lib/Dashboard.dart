@@ -29,19 +29,22 @@ class _MyWidgetState extends State<Dashboard> {
               child: GaugeMeter(),
             ),
             SizedBox(height: 20), // Space between widgets
-            Container(
-              alignment: Alignment.center,
-              child: WaterTemperature(
-                isDarkTheme: Theme.of(context).brightness == Brightness.dark,
-              ),
+
+            Padding(padding: EdgeInsets.all(20),
+            child: 
+              Container(
+                alignment: Alignment.center,
+                child: WaterTemperature(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
+              )
             ),
 
             SizedBox(height: 20), // Space between widgets
-            Container(
-              alignment: Alignment.center,
-              child: WaterTemperature(
-                isDarkTheme: Theme.of(context).brightness == Brightness.dark,
-              ),
+            Padding(padding: EdgeInsets.all(20),
+            child: 
+              Container(
+                alignment: Alignment.center,
+                child: WaterTemperature(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
+              )
             ),
           ],
           
