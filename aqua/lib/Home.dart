@@ -64,7 +64,6 @@ class _HomeState extends State<Home> {
             'SOLUTIONS',
             style: TextStyle(
               fontSize: 10,
-              color: ASColor.txt2Color,
               letterSpacing: 2.0,
             ),
           ),
@@ -81,7 +80,7 @@ class _HomeState extends State<Home> {
                   'WELCOME TO AQUASENSE',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 10,
+                    fontSize: 12,
                     color: ASColor.txt1Color,
                     letterSpacing: 1.0,
                   ),
@@ -101,8 +100,7 @@ class _HomeState extends State<Home> {
                   style: TextStyle(
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: ASColor.txt2Color,
+                    fontSize: 25,
                     letterSpacing: 1.0,
                   ),
                 ),
@@ -139,8 +137,7 @@ class _HomeState extends State<Home> {
                   'Lorem ipsumNeque porro quisquam est\nqui dolorem ipsum quia dolor sit amet,\nconsectetur, adipisci velit Neque porro\nelit Neque porro quis ipsum',
                   style: TextStyle(
                     fontFamily: "Poppins",
-                    fontSize: 10,
-                    color: ASColor.txt2Color,
+                    fontSize: 15,
                     letterSpacing: 1.0,
                   ),
                 ),
@@ -172,7 +169,6 @@ class _HomeState extends State<Home> {
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 10,
-                  color: ASColor.txt2Color,
                 ),
               ),
             ),

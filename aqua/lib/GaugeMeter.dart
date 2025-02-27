@@ -1,3 +1,4 @@
+import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:http/http.dart' as http;
@@ -119,7 +120,7 @@ class _GaugeMeterState extends State<GaugeMeter> {
         Text(
           '${value.toInt()}%',
           style: TextStyle(
-            color: Colors.white,
+            color: ASColor.txt1Color,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),

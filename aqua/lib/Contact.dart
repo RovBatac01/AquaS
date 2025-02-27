@@ -42,7 +42,7 @@ class _ContactUsState extends State<Contactus> {
 
         Container(
           width: 300,
-          height: 350,
+          height: 400,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(
               10,
@@ -72,7 +72,6 @@ class _ContactUsState extends State<Contactus> {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 10,
-                        color: ASColor.txt2Color,
                       ),
                     ),
                   ),
@@ -80,21 +79,20 @@ class _ContactUsState extends State<Contactus> {
                   SizedBox(height: 5),
 
                   Container(
-                    padding: EdgeInsets.only(bottom: 17, left: 5),
+                    padding: EdgeInsets.only(bottom: 17, left: 10),
                     width: 250,
                     height: 40,
                     alignment: Alignment.topLeft,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: ASColor.txt2Color, // The color of the outline
+                        color: ASColor.BGfirst, // The color of the outline
                         width: 1, // Width of the outline
                       ),
                     ),
                     child: TextField(
                       controller: _nameController,
                       style: TextStyle(
-                        color: ASColor.txt2Color,
                         fontSize: 12,
                         fontFamily: 'Poppins',
                       ),
@@ -110,7 +108,6 @@ class _ContactUsState extends State<Contactus> {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 10,
-                        color: ASColor.txt2Color,
                       ),
                     ),
                   ),
@@ -118,7 +115,7 @@ class _ContactUsState extends State<Contactus> {
                   SizedBox(height: 5),
 
                   Container(
-                    padding: EdgeInsets.only(bottom: 18, left: 5),
+                    padding: EdgeInsets.only(bottom: 18, left: 10),
                     width: 250,
                     height: 40,
                     alignment: Alignment.topLeft,
@@ -127,14 +124,13 @@ class _ContactUsState extends State<Contactus> {
                         10,
                       ), // Optional for rounded corners
                       border: Border.all(
-                        color: ASColor.txt2Color, // The color of the outline
+                        color: ASColor.BGfirst, // The color of the outline
                         width: 1, // Width of the outline
                       ), // Optional for rounded corners
                     ),
                     child: TextField(
                       controller: _emailController,
                       style: TextStyle(
-                        color: ASColor.txt2Color,
                         fontSize: 12,
                         fontFamily: 'Poppins',
                       ),
@@ -150,7 +146,6 @@ class _ContactUsState extends State<Contactus> {
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 10,
-                        color: ASColor.txt2Color,
                       ),
                     ),
                   ),
@@ -167,14 +162,13 @@ class _ContactUsState extends State<Contactus> {
                         10,
                       ), // Optional for rounded corners
                       border: Border.all(
-                        color: ASColor.txt2Color, // The color of the outline
+                        color: ASColor.BGfirst, // The color of the outline
                         width: 1, // Width of the outline
                       ), // Optional for rounded corners
                     ),
                     child: TextField(
                       controller: _messageController,
                       style: TextStyle(
-                        color: ASColor.txt2Color,
                         fontSize: 12,
                         fontFamily: 'Poppins',
                       ),
@@ -216,7 +210,6 @@ class _ContactUsState extends State<Contactus> {
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 10,
-                  color: ASColor.txt2Color,
                 ),
               ),
             ),
@@ -230,16 +223,15 @@ class _ContactUsState extends State<Contactus> {
             TextSpan(
               text: 'GET IN ', // First part of the text
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 20,
                 fontFamily: 'Poppins',
-                color: ASColor.txt2Color,
                 fontWeight: FontWeight.bold,
               ),
               children: [
                 TextSpan(
                   text: 'TOUCH', // Second part with different color
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 20,
                     fontFamily: 'Poppins',
                     color: ASColor.txt1Color, // Change to desired color
                     fontWeight: FontWeight.bold,
@@ -262,7 +254,6 @@ class _ContactUsState extends State<Contactus> {
             ), // Optional top padding
             width: 290, // Set the specific width of the divider
             child: Divider(
-              color: ASColor.txt2Color,
               thickness: 2.0, // Thickness of the line
             ),
           ),
@@ -279,8 +270,7 @@ class _ContactUsState extends State<Contactus> {
                 'Lorem ipsumNeque porro quisquam est\nqui dolorem ipsum quia dolor sit amet,\nconsectetur, adipisci velit Neque porro',
                 style: TextStyle(
                   fontFamily: "Poppins",
-                  fontSize: 10,
-                  color: ASColor.txt2Color,
+                  fontSize: 15,
                   letterSpacing: 1.0,
                 ),
               ),
@@ -300,15 +290,14 @@ class _ContactUsState extends State<Contactus> {
                     TextSpan(
                       text: 'Office Address\n', // First part of the text
                       style: TextStyle(
-                        fontSize: 10.0, // Style for the "Office Address"
-                        color: ASColor.txt2Color, // Color for "Office Address"
+                        fontSize: 15.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
                       text: 'NU Dasmariñas', // Second part of the text
                       style: TextStyle(
-                        fontSize: 8.0, // Different size for "NU Dasmariñas"
+                        fontSize: 12, // Different size for "NU Dasmariñas"
                         color:
                             ASColor
                                 .txt1Color, // Different color for "NU Dasmariñas"
@@ -333,15 +322,14 @@ class _ContactUsState extends State<Contactus> {
                     TextSpan(
                       text: 'Call Us\n', // First part of the text
                       style: TextStyle(
-                        fontSize: 10.0, // Style for the "Office Address"
-                        color: ASColor.txt2Color, // Color for "Office Address"
+                        fontSize: 15.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
                       text: '+639123456789', // Second part of the text
                       style: TextStyle(
-                        fontSize: 8.0, // Different size for "NU Dasmariñas"
+                        fontSize: 12, // Different size for "NU Dasmariñas"
                         color:
                             ASColor
                                 .txt1Color, // Different color for "NU Dasmariñas"
@@ -366,15 +354,14 @@ class _ContactUsState extends State<Contactus> {
                     TextSpan(
                       text: 'Mail Us\n', // First part of the text
                       style: TextStyle(
-                        fontSize: 10.0, // Style for the "Office Address"
-                        color: ASColor.txt2Color, // Color for "Office Address"
+                        fontSize: 15.0, // Color for "Office Address"
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     TextSpan(
                       text: 'deleazar62@gmail.com', // Second part of the text
                       style: TextStyle(
-                        fontSize: 8.0, // Different size for "NU Dasmariñas"
+                        fontSize: 12.0, // Different size for "NU Dasmariñas"
                         color:
                             ASColor
                                 .txt1Color, // Different color for "NU Dasmariñas"
@@ -411,7 +398,6 @@ class _ContactUsState extends State<Contactus> {
             ), // Optional top padding
             width: 290, // Set the specific width of the divider
             child: Divider(
-              color: ASColor.txt2Color,
               thickness: 2.0, // Thickness of the line
             ),
           ),
@@ -443,8 +429,7 @@ class _ContactUsState extends State<Contactus> {
               'GET STARTED',
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 10,
-                color: ASColor.txt2Color,
+                fontSize: 12,
               ),
             ),
           ),
@@ -456,7 +441,7 @@ class _ContactUsState extends State<Contactus> {
             child: Text(
               'Copyright © 2003-2023 Creatic Agency\nAll Rights Reserved.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 8, color: Colors.grey),
+              style: TextStyle(fontSize: 13,),
             ),
           ),
         ),

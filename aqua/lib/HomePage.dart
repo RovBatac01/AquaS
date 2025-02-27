@@ -1,8 +1,11 @@
-import 'package:aqua/AccountManagement.dart';
+import 'package:aqua/Settings.dart';
+import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:aqua/Dashboard.dart';
+import 'package:aqua/AccountManagement.dart';
+import 'package:aqua/History.dart';
 import 'package:aqua/Home.dart';
 import 'package:aqua/Login.dart';
-import 'package:flutter/material.dart';
 import 'colors.dart';
 
 void main() {
@@ -12,7 +15,10 @@ void main() {
 class MyDrawerAndNavBarApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: MainScreen());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MainScreen(),
+    );
   }
 }
 
@@ -24,11 +30,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // List of screens for Bottom Navigation Bar
   final List<Widget> _screens = [
     Dashboard(),
     Accountmanagement(),
-    SettingsScreen(),
+    HistoricalData(),
+    Settings(),
   ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.light);
@@ -44,160 +50,90 @@ class _MainScreenState extends State<MainScreen> {
           darkTheme: ThemeData.dark(),
           home: Scaffold(
             appBar: AppBar(
-              title: const Text(
-                'AQUASENSE',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 15,
-                  // color: ASColor.txt2Color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              centerTitle: true,
-              // flexibleSpace: Container(
-              //   decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
-              // ),
-            ),
-
-            // Drawer for navigation
-            drawer: Drawer(
-              child: Column(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    height: 200, // Adjust height as needed
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: ASColor.secondaryGradient,
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Menu',
-                        style: TextStyle(color: Colors.white, fontSize: 24),
-                      ),
-                    ),
+                  Icon(
+                    Icons.water_drop,
+                    color: ASColor.txt1Color,
+                    size: 30,
                   ),
-                  // Expanded ListView for menu items
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.dashboard_customize_outlined),
-                          title: Text('Dashboard'),
-                          onTap: () {
-                            setState(() {
-                              _currentIndex = 0;
-                            });
-                            Navigator.pop(context);
-                          },
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.water_drop),
-                          title: Text('Water Set'),
-                          onTap: () {
-                            setState(() {
-                              _currentIndex = 1;
-                            });
-                            Navigator.pop(context);
-                          },
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.person),
-                          title: Text('Management'),
-                          onTap: () {
-                            setState(() {
-                              _currentIndex = 2;
-                            });
-                            Navigator.pop(context);
-                          },
-                        ),
-
-                        ListTile(
-                          leading: Icon(Icons.history),
-                          title: Text('Dark Mode/ Light Mode'),
-                          onTap:
-                              () =>
-                                  _notifier.value =
-                                      mode == ThemeMode.light
-                                          ? ThemeMode.dark
-                                          : ThemeMode.light,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Logout Button at the bottom
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ListTile(
-                      leading: Icon(Icons.logout),
-                      title: Text('Logout'),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LoginScreen(),
-                          ),
-                        );
-                      },
+                  SizedBox(width: 10),
+                  Text(
+                    'AQUASENSE',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 25,
+                      color: ASColor.txt1Color,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
+              centerTitle: true,
+              flexibleSpace: Container(
+                decoration: BoxDecoration(gradient: ASColor.secondaryGradient),
+              ),
             ),
-
-            // Display the current screen
             body: _screens[_currentIndex],
-            // Bottom Navigation Bar for navigation
-            bottomNavigationBar: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (index) {
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: GNav(
+                gap: 8,
+                activeColor: Colors.white,
+                iconSize: 24,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                backgroundColor: Colors.white,
+                color: Colors.grey[600],
+                tabBackgroundColor: Colors.blue,
+                selectedIndex: _currentIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                },
+                tabs: [
+                  GButton(
+                    icon: Icons.dashboard_outlined,
+                    text: 'Dashboard',
+                  ),
+                  GButton(
+                    icon: Icons.manage_accounts_outlined,
+                    text: 'Accounts',
+                  ),
+                  GButton(
+                    icon: Icons.history_outlined,
+                    text: 'History',
+                  ),
+                  GButton(
+                    icon: Icons.settings,
+                    text: 'Settings',
+                  ),
+                ],
+              ),
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
                 setState(() {
-                  _currentIndex = index;
+                  mode = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+                  _notifier.value = mode;
                 });
               },
-              type: BottomNavigationBarType.shifting, // Shifting
-              selectedItemColor: Colors.blue,
-              unselectedItemColor: Colors.grey,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard),
-                  label: 'Dashboard',
-                  // backgroundColor: Colors.blue,
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.info),
-                  label: 'Account Management',
-                  // backgroundColor: Colors.green,
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings),
-                  label: 'Settings',
-                  // backgroundColor: Colors.yellow,
-                ),
-              ],
+              child: Icon(Icons.dark_mode_outlined),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-// Home Screen
-class HomeScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Home Screen', style: TextStyle(fontSize: 24)),
-    );
-  }
-}
-
-// Settings Screen
-class SettingsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Settings Screen', style: TextStyle(fontSize: 24)),
     );
   }
 }

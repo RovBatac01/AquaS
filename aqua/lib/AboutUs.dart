@@ -24,7 +24,7 @@ class _AboutusState extends State<Aboutus> {
                 Text('ABOUT US',
                   style: TextStyle(
                     fontFamily: 'Poppins',
-                    fontSize: 10,
+                    fontSize: 12,
                     color: ASColor.txt1Color,
                     letterSpacing: 1.0,
                   ),)
@@ -42,8 +42,7 @@ class _AboutusState extends State<Aboutus> {
                   style: TextStyle(
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: ASColor.txt2Color,
+                    fontSize: 25,
                     letterSpacing: 1.0
                   ),
                 ),
@@ -61,8 +60,7 @@ class _AboutusState extends State<Aboutus> {
                 Text('Lorem ipsumNeque porro quisquam est\nqui dolorem ipsum quia dolor sit amet,\nconsectetur, adipisci velit Neque porro\nelit Neque porro quis ipsum',
                   style: TextStyle(
                     fontFamily: "Poppins",
-                    fontSize: 10,
-                    color: ASColor.txt2Color,
+                    fontSize: 15,
                     letterSpacing: 1.0
                   ),
                 ),
@@ -85,8 +83,7 @@ class _AboutusState extends State<Aboutus> {
               child: Text('READ MORE',
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 10,
-                  color: ASColor.txt2Color
+                  fontSize: 12,
                 ),
               ),
             ),

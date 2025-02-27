@@ -16,38 +16,18 @@ class _MyWidgetState extends State<Dashboard> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-
-            Container(
-              alignment: Alignment.center,
-              child: GaugeMeter(),
-            ),
-
-            SizedBox(height: 20,),
-
-            Container(
-              alignment: Alignment.center,
-              child: GaugeMeter(),
-            ),
-            SizedBox(height: 20), // Space between widgets
-
-            Padding(padding: EdgeInsets.all(20),
-            child: 
-              Container(
+            Padding(
+              padding: EdgeInsets.only(top: 30,), // Add space above the first container
+              child: Container(
                 alignment: Alignment.center,
-                child: WaterTemperature(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
-              )
+                child: GaugeMeter(),
+              ),
             ),
 
-            SizedBox(height: 20), // Space between widgets
-            Padding(padding: EdgeInsets.all(20),
-            child: 
-              Container(
-                alignment: Alignment.center,
-                child: WaterTemperature(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
-              )
-            ),
+            SizedBox(height: 20),
+
+            Container(alignment: Alignment.center, child: GaugeMeter()),
           ],
-          
         ),
       ),
     );

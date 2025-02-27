@@ -31,7 +31,7 @@ class _MyWidgetState extends State<Ourservices> {
                       'OUR SERVICES',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 10,
+                        fontSize: 12,
                         color: ASColor.txt1Color,
                         letterSpacing: 1.0,
                       ),
@@ -47,16 +47,15 @@ class _MyWidgetState extends State<Ourservices> {
                   TextSpan(
                     text: 'Experience The Power\nOf ', // First part of the text
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 25,
                       fontFamily: 'Poppins',
-                      color: ASColor.txt2Color,
                       fontWeight: FontWeight.bold,
                     ),
                     children: [
                       TextSpan(
                         text: 'Innovation', // Second part with different color
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 25,
                           fontFamily: 'Poppins',
                           color: ASColor.txt1Color, // Change to desired color
                           fontWeight: FontWeight.bold,
@@ -120,8 +119,7 @@ class _MyWidgetState extends State<Ourservices> {
                       'Lorem ipsumNeque porro quisquam est\nqui dolorem ipsum quia dolor sit amet,\nconsectetur, adipisci velit Neque porro\nelit Neque porro quis ipsum',
                       style: TextStyle(
                         fontFamily: "Poppins",
-                        fontSize: 10,
-                        color: ASColor.txt2Color,
+                        fontSize: 15,
                         letterSpacing: 1.0,
                       ),
                     ),
@@ -144,8 +142,7 @@ class _MyWidgetState extends State<Ourservices> {
               child: Text('VIEW ALL',
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 10,
-                  color: ASColor.txt2Color
+                  fontSize: 12,
                 ),
               ),
             ),
