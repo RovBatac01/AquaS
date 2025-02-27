@@ -1,14 +1,13 @@
-import 'dart:ui'; 
+import 'dart:ui';
 import 'package:aqua/AdminDashboard.dart';
 import 'package:aqua/Signup.dart';
+import 'package:aqua/UserDashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter_application_1/signup.dart';
 
-
 void main() {
-  runApp(MaterialApp(
-    home: LoginScreen(),
-  ));
+  runApp(MaterialApp(home: LoginScreen()));
 }
 
 class LoginScreen extends StatefulWidget {
@@ -19,23 +18,67 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _isChecked = false; 
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
+  bool _isChecked = false;
+  final TextEditingController username = TextEditingController();
+  final TextEditingController password = TextEditingController();
   final String fixedUsername = "admin";
   final String fixedPassword = "123";
+  late SharedPreferences _prefs;
 
+  //------------------------------Function for the password toggle visibility
+
+  bool _obscureText = true;
+  void _toggleVisibility() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+  }
+  //-------------------------------------------------------------------------
+
+  //-------------------------------Function for Remember me
+
+  @override
+  void initState() {
+    super.initState();
+    _initPreferences();
+  }
+
+  /// Initialize SharedPreferences
+  Future<void> _initPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
+    _loadSavedCredentials();
+  }
+
+  /// Load saved username & password
+  void _loadSavedCredentials() {
+    setState(() {
+      username.text = _prefs.getString('username') ?? "";
+      password.text = _prefs.getString('password') ?? "";
+      _isChecked = _prefs.getBool('rememberMe') ?? false;
+    });
+  }
+
+  /// Save username & password if "Remember Me" is checked
+  void _saveCredentials() {
+    if (_isChecked) {
+      _prefs.setString('username', username.text);
+      _prefs.setString('password', password.text);
+      _prefs.setBool('rememberMe', true);
+    } else {
+      _prefs.remove('username');
+      _prefs.remove('password');
+      _prefs.setBool('rememberMe', false);
+    }
+  }
 
   void _login() {
-    String enteredUsername = _usernameController.text;
-    String enteredPassword = _passwordController.text;
+    String enteredUsername = username.text;
+    String enteredPassword = password.text;
 
     if (enteredUsername == fixedUsername && enteredPassword == fixedPassword) {
-
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => MyDrawerAndNavBarApp()),
+        MaterialPageRoute(builder: (context) => Userdashboard()),
       );
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(
@@ -54,14 +97,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-
           Positioned(
             top: -100,
             left: -100,
@@ -69,20 +110,15 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 width: 300,
                 height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.purple,
-                ),
+                decoration: BoxDecoration(color: Colors.purple),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 70, sigmaY: 50),
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
+                  child: Container(color: Colors.transparent),
                 ),
               ),
             ),
           ),
-          
-       
+
           Positioned(
             bottom: -60,
             right: -80,
@@ -90,14 +126,10 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 width: 180,
                 height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.purple,
-                ),
+                decoration: BoxDecoration(color: Colors.purple),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                  child: Container(
-                    color: Colors.transparent,
-                  ),
+                  child: Container(color: Colors.transparent),
                 ),
               ),
             ),
@@ -111,7 +143,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -132,15 +167,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Glad you're back",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 14),
                       ),
                     ),
                     SizedBox(height: 20),
                     TextField(
-                      controller: _usernameController,
+                      controller: username,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white10,
@@ -155,14 +187,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 12),
                     TextField(
-                      controller: _passwordController,
-                      obscureText: true,
+                      controller: password,
+                      obscureText: _obscureText,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white10,
                         hintText: 'Password',
                         hintStyle: TextStyle(color: Colors.white54),
-                        suffixIcon: Icon(Icons.visibility_off, color: Colors.white54),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureText
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.white,
+                          ),
+                          onPressed: _toggleVisibility,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
@@ -177,11 +217,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           value: _isChecked,
                           onChanged: (bool? value) {
                             setState(() {
-                              _isChecked = value!;
+                              _isChecked = value ?? false;
                             });
+                            _saveCredentials();
                           },
                         ),
-                        Text("Remember me", style: TextStyle(color: Colors.white70)),
+                        Text(
+                          "Remember me",
+                          style: TextStyle(color: Colors.white70),
+                        ),
                         Spacer(),
                         TextButton(
                           onPressed: () {},
@@ -224,11 +268,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Don’t have an account ?", style: TextStyle(color: Colors.white70)),
+                        Text(
+                          "Don’t have an account ?",
+                          style: TextStyle(color: Colors.white70),
+                        ),
                         TextButton(
                           onPressed: () {
-                            Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => Signup()),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => Signup()),
                             );
                           },
                           child: Text(

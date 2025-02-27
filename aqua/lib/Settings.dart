@@ -1,3 +1,4 @@
+import 'package:aqua/Login.dart';
 import 'package:flutter/material.dart';
 
 class Settings extends StatefulWidget {
@@ -10,6 +11,24 @@ class Settings extends StatefulWidget {
 class _MyWidgetState extends State<Settings> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      body: Column(
+        children: [
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -17,22 +17,21 @@ class MyDrawerAndNavBarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainScreen(),
+      home: Userdashboard(),
     );
   }
 }
 
-class MainScreen extends StatefulWidget {
+class Userdashboard extends StatefulWidget {
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
     Dashboard(),
-    Accountmanagement(),
     HistoricalData(),
     Settings(),
   ];
@@ -106,10 +105,6 @@ class _MainScreenState extends State<MainScreen> {
                   GButton(
                     icon: Icons.dashboard_outlined,
                     text: 'Dashboard',
-                  ),
-                  GButton(
-                    icon: Icons.manage_accounts_outlined,
-                    text: 'Accounts',
                   ),
                   GButton(
                     icon: Icons.history_outlined,
