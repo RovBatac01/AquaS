@@ -17,17 +17,17 @@ class MyDrawerAndNavBarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainScreen(),
+      home: Admindashboard(),
     );
   }
 }
 
-class MainScreen extends StatefulWidget {
+class Admindashboard extends StatefulWidget {
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<Admindashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [

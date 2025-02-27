@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (enteredUsername == fixedUsername && enteredPassword == fixedPassword) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Userdashboard()),
+        MaterialPageRoute(builder: (context) => Admindashboard()),
       );
       // ScaffoldMessenger.of(context).showSnackBar(
       //   SnackBar(
