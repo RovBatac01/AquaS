@@ -1,12 +1,9 @@
+import 'package:aqua/Dashboard.dart';
+import 'package:aqua/History.dart';
 import 'package:aqua/Settings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:aqua/Dashboard.dart';
-import 'package:aqua/AccountManagement.dart';
-import 'package:aqua/History.dart';
-import 'package:aqua/Home.dart';
-import 'package:aqua/Login.dart';
-import 'colors.dart';
+import 'colors.dart'; // Ensure this file contains your custom colors
 
 void main() {
   runApp(MyDrawerAndNavBarApp());
@@ -43,6 +40,13 @@ class _MainScreenState extends State<Userdashboard> {
     return ValueListenableBuilder(
       valueListenable: _notifier,
       builder: (_, mode, __) {
+        // Define colors based on the theme mode
+        final bool isDarkMode = mode == ThemeMode.dark;
+        final Color navBarColor = isDarkMode ? Colors.grey[900]! : Colors.white;
+        final Color iconColor = isDarkMode ? Colors.white : Colors.grey[600]!;
+        final Color activeIconColor = isDarkMode ? Colors.white : Colors.white;
+        final Color tabBackgroundColor = isDarkMode ? Colors.blue[800]! : Colors.blue;
+
         return MaterialApp(
           themeMode: mode,
           theme: ThemeData.light(),
@@ -77,7 +81,7 @@ class _MainScreenState extends State<Userdashboard> {
             body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: navBarColor,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -89,12 +93,12 @@ class _MainScreenState extends State<Userdashboard> {
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: GNav(
                 gap: 8,
-                activeColor: Colors.white,
+                activeColor: activeIconColor,
                 iconSize: 24,
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                backgroundColor: Colors.white,
-                color: Colors.grey[600],
-                tabBackgroundColor: Colors.blue,
+                backgroundColor: navBarColor,
+                color: iconColor,
+                tabBackgroundColor: tabBackgroundColor,
                 selectedIndex: _currentIndex,
                 onTabChange: (index) {
                   setState(() {
@@ -120,8 +124,7 @@ class _MainScreenState extends State<Userdashboard> {
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 setState(() {
-                  mode = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-                  _notifier.value = mode;
+                  _notifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
                 });
               },
               child: Icon(Icons.dark_mode_outlined),

@@ -3,6 +3,7 @@ import 'package:aqua/AdminDashboard.dart';
 import 'package:aqua/Signup.dart';
 import 'package:aqua/UserDashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter_application_1/signup.dart';
 
@@ -71,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  //Need to be change when connecting to Database
   void _login() {
     String enteredUsername = username.text;
     String enteredPassword = password.text;
@@ -78,14 +80,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (enteredUsername == fixedUsername && enteredPassword == fixedPassword) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Admindashboard()),
+        MaterialPageRoute(builder: (context) => Userdashboard()),
       );
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text("Login Successful!"),
-      //     backgroundColor: Colors.green,
-      //   ),
-      // );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Login Successful!"),
+          backgroundColor: Colors.green,
+        ),
+      );
       // // Navigate to another screen if needed
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,6 +173,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
+
+                    //Username and Password-------------------------------------
                     TextField(
                       controller: username,
                       decoration: InputDecoration(
@@ -210,7 +214,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       style: TextStyle(color: Colors.white),
                     ),
+                    //Username and Password-------------------------------------
+
+
                     SizedBox(height: 12),
+
+                    //Remember me and forgot password---------------------------
                     Row(
                       children: [
                         Checkbox(
@@ -254,16 +263,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.center,
-                    //   children: [
-                    //     Icon(FontAwesomeIcons.google, color: Colors.white),
-                    //     SizedBox(width: 16),
-                    //     Icon(FontAwesomeIcons.facebook, color: Colors.white),
-                    //     SizedBox(width: 16),
-                    //     Icon(FontAwesomeIcons.github, color: Colors.white),
-                    //   ],
-                    // ),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(FontAwesomeIcons.google, color: Colors.white),
+                        SizedBox(width: 16),
+                      ],
+                    ),
+
                     SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
