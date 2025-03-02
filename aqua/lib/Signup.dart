@@ -183,7 +183,7 @@ class _SignupState extends State<Signup> {
                           ).hasMatch(value);
 
                           // Regular expression for phone number validation (10-15 digits)
-                          bool isPhone = RegExp(r'^\d{10,15}$').hasMatch(value);
+                          bool isPhone = RegExp(r'^\d{11}$').hasMatch(value);
 
                           if (!isEmail && !isPhone) {
                             return 'Please enter a valid Email or Phone number';

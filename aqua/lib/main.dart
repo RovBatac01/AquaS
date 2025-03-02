@@ -1,3 +1,4 @@
+import 'package:aqua/Login.dart';
 import 'package:flutter/material.dart';
 import 'landingpage.dart';
 
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
       ),
-      home: LandingPage()
+      home: LoginScreen()
     );
   }
 }
