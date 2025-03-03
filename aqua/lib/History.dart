@@ -19,7 +19,7 @@ class _MyWidgetState extends State<HistoricalData> {
             child: 
               Container(
                 alignment: Alignment.center,
-                child: WaterTemperature(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
+                child: TurbidityMonitor(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
               )
             ),
 
@@ -29,7 +29,7 @@ class _MyWidgetState extends State<HistoricalData> {
             child: 
               Container(
                 alignment: Alignment.center,
-                child: WaterTemperature(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
+                child: TurbidityMonitor(isDarkTheme: Theme.of(context).brightness == Brightness.dark,),
               )
             ),
           ],

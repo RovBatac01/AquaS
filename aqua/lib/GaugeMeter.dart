@@ -1,4 +1,3 @@
-import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:http/http.dart' as http;
@@ -23,11 +22,16 @@ class _GaugeMeterState extends State<GaugeMeter> {
 
   void fetchInitialValue() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:5000/data'));
+      final response = await http.get(Uri.parse('http://localhost:3000/data'));
       if (response.statusCode == 200) {
-        setState(() {
-          value = json.decode(response.body)['value'].toDouble();
-        });
+        List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty && data.first.containsKey('turbidity_value')) {
+          setState(() {
+            value = (data.first['turbidity_value'] as num).toDouble();
+          });
+        }
+      } else {
+        print("Server responded with status code: ${response.statusCode}");
       }
     } catch (e) {
       print("Error fetching initial value: $e");
@@ -35,7 +39,7 @@ class _GaugeMeterState extends State<GaugeMeter> {
   }
 
   void setupSocket() {
-    socket = IO.io('http://localhost:5000', <String, dynamic>{
+    socket = IO.io('http://localhost:3001', <String, dynamic>{
       'transports': ['websocket'],
     });
 
@@ -44,9 +48,11 @@ class _GaugeMeterState extends State<GaugeMeter> {
     });
 
     socket.on('updateData', (newData) {
-      setState(() {
-        value = (newData['value'] as num).toDouble();
-      });
+      if (newData != null && newData.containsKey('value')) {
+        setState(() {
+          value = (newData['value'] as num).toDouble();
+        });
+      }
     });
 
     socket.onDisconnect((_) {
@@ -60,12 +66,21 @@ class _GaugeMeterState extends State<GaugeMeter> {
     super.dispose();
   }
 
+  Color getWaterQualityColor(double value) {
+    return value >= 70 ? Colors.green : (value <= 30 ? Colors.red : Colors.orange);
+  }
+
+  String getWaterQualityStatus(double value) {
+    if (value >= 70) return 'Clean Water';
+    if (value <= 30) return 'Contaminated';
+    return 'Moderate Quality';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Container with Gauge inside
         Container(
           width: 200,
           height: 200,
@@ -74,21 +89,20 @@ class _GaugeMeterState extends State<GaugeMeter> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Stack(
-            alignment: Alignment.bottomCenter, // Align everything to the bottom
+            alignment: Alignment.bottomCenter,
             children: [
-              // Quarter-circle gauge positioned at the bottom
               Positioned(
-                bottom: 10, // Adjust this to fit well
+                bottom: 10,
                 left: 0,
                 right: 0,
                 child: SizedBox(
-                  height: 100, // Half the height of the container
+                  height: 100,
                   child: SfRadialGauge(
                     axes: <RadialAxis>[
                       RadialAxis(
                         minimum: 0,
                         maximum: 100,
-                        startAngle: 180, // Makes it a bottom quarter-circle
+                        startAngle: 180,
                         endAngle: 0,
                         showLabels: false,
                         showTicks: false,
@@ -103,7 +117,7 @@ class _GaugeMeterState extends State<GaugeMeter> {
                             cornerStyle: CornerStyle.bothCurve,
                             width: 0.15,
                             sizeUnit: GaugeSizeUnit.factor,
-                            color: Color(0xFF6FCF97),
+                            color: getWaterQualityColor(value),
                           ),
                         ],
                       ),
@@ -114,15 +128,22 @@ class _GaugeMeterState extends State<GaugeMeter> {
             ],
           ),
         ),
-
-        // Display the percentage outside the box
-        SizedBox(height: 10), // Space between box and text
+        SizedBox(height: 10),
         Text(
           '${value.toInt()}%',
           style: TextStyle(
-            color: ASColor.txt1Color,
+            color: const Color.fromARGB(255, 0, 0, 0),
             fontSize: 24,
             fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 5),
+        Text(
+          getWaterQualityStatus(value),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: getWaterQualityColor(value),
           ),
         ),
       ],
