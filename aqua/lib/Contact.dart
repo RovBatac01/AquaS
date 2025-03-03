@@ -10,9 +10,9 @@ class Contactus extends StatefulWidget {
 }
 
 class _ContactUsState extends State<Contactus> {
-  TextEditingController _nameController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _messageController = TextEditingController();
+  TextEditingController _Name = TextEditingController();
+  TextEditingController _Email = TextEditingController();
+  TextEditingController _Message = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -91,7 +91,7 @@ class _ContactUsState extends State<Contactus> {
                       ),
                     ),
                     child: TextField(
-                      controller: _nameController,
+                      controller: _Name,
                       style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'Poppins',
@@ -129,7 +129,7 @@ class _ContactUsState extends State<Contactus> {
                       ), // Optional for rounded corners
                     ),
                     child: TextField(
-                      controller: _emailController,
+                      controller: _Email,
                       style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'Poppins',
@@ -167,7 +167,7 @@ class _ContactUsState extends State<Contactus> {
                       ), // Optional for rounded corners
                     ),
                     child: TextField(
-                      controller: _messageController,
+                      controller: _Message,
                       style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'Poppins',
