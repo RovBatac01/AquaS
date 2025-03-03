@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:aqua/AdminDashboard.dart';
 import 'package:aqua/Signup.dart';
 import 'package:aqua/UserDashboard.dart';
+import 'package:aqua/UserSendReport.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -80,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (enteredUsername == fixedUsername && enteredPassword == fixedPassword) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Admindashboard()),
+        MaterialPageRoute(builder: (context) => Userdashboard()),
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

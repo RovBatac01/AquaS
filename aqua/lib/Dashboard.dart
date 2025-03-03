@@ -27,135 +27,146 @@ class _DashboardState extends State<Dashboard> {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.only(
-                top: 30,
-              ), // Add space above the first container
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 20), // Side margin
-                padding: EdgeInsets.all(20), // Inner padding
-                decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? Colors.grey[900]
-                          : Colors.white, // Dynamic background
-                  borderRadius: BorderRadius.circular(15), // Rounded corners
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          isDarkMode
-                              ? Colors.black.withOpacity(
-                                0.5,
-                              ) // Darker shadow in dark mode
-                              : Colors.black.withOpacity(
-                                0.1,
-                              ), // Light shadow in light mode
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Turbidity',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient:
+              isDarkMode
+                  ? null // Keep dark mode background as is
+                  : LinearGradient(
+                    colors: [
+                      Color(0xFFE0F7FA),
+                      Color(0xFFD1C4E9),
+                    ], // Ice Blue to Soft Purple
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(
+                  top: 30,
+                ), // Add space above the first container
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20), // Side margin
+                  padding: EdgeInsets.all(20), // Inner padding
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? Colors.grey[900]
+                            : Colors.white, // Dynamic background
+                    borderRadius: BorderRadius.circular(15), // Rounded corners
+                    boxShadow: [
+                      BoxShadow(
                         color:
                             isDarkMode
-                                ? Colors.white
-                                : Colors.blueAccent, // Adjust text color
+                                ? Colors.black.withOpacity(
+                                  0.5,
+                                ) // Darker shadow in dark mode
+                                : Colors.black.withOpacity(
+                                  0.1,
+                                ), // Light shadow in light mode
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                        offset: Offset(0, 5),
                       ),
-                    ),
-                    SizedBox(height: 10), // Spacing
-                    Divider(
-                      thickness: 1,
-                      color:
-                          isDarkMode
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade300, // Adaptive divider
-                    ),
-                    SizedBox(height: 10),
-
-                    Text(
-                      'Turbidity is the key parameter for assessing overall quality of water',
-                    ),
-
-                    SizedBox(height: 10),
-                    GaugeMeter(),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            Padding(
-              padding: EdgeInsets.only(
-                top: 30,
-              ), // Add space above the first container
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 20), // Side margin
-                padding: EdgeInsets.all(20), // Inner padding
-                decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? Colors.grey[900]
-                          : Colors.white, // Dynamic background
-                  borderRadius: BorderRadius.circular(15), // Rounded corners
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          isDarkMode
-                              ? Colors.black.withOpacity(
-                                0.5,
-                              ) // Darker shadow in dark mode
-                              : Colors.black.withOpacity(
-                                0.1,
-                              ), // Light shadow in light mode
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Turbidity',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Turbidity',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDarkMode
+                                  ? Colors.white
+                                  : Colors.blueAccent, // Adjust text color
+                        ),
+                      ),
+                      SizedBox(height: 10), // Spacing
+                      Divider(
+                        thickness: 1,
                         color:
                             isDarkMode
-                                ? Colors.white
-                                : Colors.blueAccent, // Adjust text color
+                                ? Colors.grey.shade600
+                                : Colors.grey.shade300, // Adaptive divider
                       ),
-                    ),
-                    SizedBox(height: 10), // Spacing
-                    Divider(
-                      thickness: 1,
-                      color:
-                          isDarkMode
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade300, // Adaptive divider
-                    ),
-                    SizedBox(height: 10), // Spacing
-                    GaugeMeter(), // Your additional content
-                  ],
+                      SizedBox(height: 10),
+                      Text(
+                        'Turbidity is the key parameter for assessing overall quality of water',
+                      ),
+                      SizedBox(height: 10),
+                      GaugeMeter(),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 20),
+              Padding(
+                padding: EdgeInsets.only(
+                  top: 30,
+                ), // Add space above the first container
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 20), // Side margin
+                  padding: EdgeInsets.all(20), // Inner padding
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? Colors.grey[900]
+                            : Colors.white, // Dynamic background
+                    borderRadius: BorderRadius.circular(15), // Rounded corners
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            isDarkMode
+                                ? Colors.black.withOpacity(
+                                  0.5,
+                                ) // Darker shadow in dark mode
+                                : Colors.black.withOpacity(
+                                  0.1,
+                                ), // Light shadow in light mode
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Turbidity',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDarkMode
+                                  ? Colors.white
+                                  : Colors.blueAccent, // Adjust text color
+                        ),
+                      ),
+                      SizedBox(height: 10), // Spacing
+                      Divider(
+                        thickness: 1,
+                        color:
+                            isDarkMode
+                                ? Colors.grey.shade600
+                                : Colors.grey.shade300, // Adaptive divider
+                      ),
+                      SizedBox(height: 10), // Spacing
+                      GaugeMeter(), // Your additional content
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

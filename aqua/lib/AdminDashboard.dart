@@ -60,8 +60,8 @@ class _MainScreenState extends State<Admindashboard> {
                   gradient:
                       mode == ThemeMode.light
                           ? ASColor
-                              .secondaryGradient 
-                          : ASColor.primaryGradient, 
+                              .secondGradient 
+                          : ASColor.firstGradient, 
                 ), 
               ),
               title: Row(
@@ -112,8 +112,8 @@ class _MainScreenState extends State<Admindashboard> {
               decoration: BoxDecoration(
                 gradient:
                     isDarkMode
-                        ? ASColor.primaryGradient //Background Color of NavBar for Dark Mode
-                        : ASColor.secondaryGradient, //Background Color of NavBar for Dark Mode
+                        ? ASColor.firstGradient //Background Color of NavBar for Dark Mode
+                        : ASColor.secondGradient, //Background Color of NavBar for Dark Mode
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -129,8 +129,8 @@ class _MainScreenState extends State<Admindashboard> {
                   color: isDarkMode ? ASColor.BGthird : Colors.white,
                   tabBackgroundGradient:
                       isDarkMode
-                          ? ASColor.secondaryGradient
-                          : ASColor.primaryGradient,
+                          ? ASColor.secondGradient
+                          : ASColor.firstGradient,
 
                   textStyle: TextStyle(
                     color:

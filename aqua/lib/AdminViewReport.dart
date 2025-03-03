@@ -91,8 +91,8 @@ class _AdminviewreportState extends State<Adminviewreport> {
                         margin: EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           gradient: isDarkMode
-                              ? ASColor.primaryGradient
-                              : ASColor.secondaryGradient,
+                              ? ASColor.firstGradient
+                              : ASColor.secondGradient,
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Card(
