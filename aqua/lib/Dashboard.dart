@@ -90,26 +90,6 @@ class _DashboardState extends State<Dashboard> {
 
                     SizedBox(height: 10),
                     GaugeMeter(),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.circle,
-                          size: 15,
-                          color: getTurbidityColor(ntuLevel), // Dynamic color
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          getTurbidityStatus(ntuLevel), // Dynamic text
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),

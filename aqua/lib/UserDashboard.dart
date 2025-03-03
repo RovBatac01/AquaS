@@ -1,7 +1,7 @@
 import 'package:aqua/Dashboard.dart';
 import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
-import 'package:aqua/Report.dart';
+import 'package:aqua/UserSendReport.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'colors.dart'; // Ensure this file contains your custom colors
@@ -28,7 +28,7 @@ class Userdashboard extends StatefulWidget {
 class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [Dashboard(), HistoricalData(), Report()];
+  final List<Widget> _screens = [Dashboard(), HistoricalData(), Usersendreport()];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
 

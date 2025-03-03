@@ -3,14 +3,14 @@ import 'package:aqua/Login.dart';
 import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 
-class Report extends StatefulWidget {
-  const Report({super.key});
+class Usersendreport extends StatefulWidget {
+  const Usersendreport({super.key});
 
   @override
-  State<Report> createState() => _MyWidgetState();
+  State<Usersendreport> createState() => _MyWidgetState();
 }
 
-class _MyWidgetState extends State<Report> {
+class _MyWidgetState extends State<Usersendreport> {
 
   TextEditingController username = TextEditingController();
   TextEditingController email = TextEditingController();

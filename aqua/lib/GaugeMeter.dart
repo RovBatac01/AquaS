@@ -3,6 +3,7 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'colors.dart';
 
 class GaugeMeter extends StatefulWidget {
   @override
@@ -67,7 +68,9 @@ class _GaugeMeterState extends State<GaugeMeter> {
   }
 
   Color getWaterQualityColor(double value) {
-    return value >= 70 ? Colors.green : (value <= 30 ? Colors.red : Colors.orange);
+    return value >= 70
+        ? Colors.green
+        : (value <= 30 ? Colors.red : Colors.orange);
   }
 
   String getWaterQualityStatus(double value) {
@@ -132,16 +135,20 @@ class _GaugeMeterState extends State<GaugeMeter> {
         Text(
           '${value.toInt()}%',
           style: TextStyle(
-            color: const Color.fromARGB(255, 0, 0, 0),
+            color:
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orange // Color for dark mode
+                    : Colors.black, // Color for light mode
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
+
         SizedBox(height: 5),
         Text(
           getWaterQualityStatus(value),
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: getWaterQualityColor(value),
           ),
