@@ -88,7 +88,7 @@ class _AdminviewreportState extends State<Adminviewreport> {
                       final report = reports[index];
 
                       return Container(
-                        margin: EdgeInsets.all(10),
+                        margin: EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           gradient: isDarkMode
                               ? ASColor.primaryGradient
@@ -97,12 +97,12 @@ class _AdminviewreportState extends State<Adminviewreport> {
                         ),
                         child: Card(
                           color: Colors.transparent, // Allows gradient to be visible
-                          elevation: 5,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.only(bottom: 20),
+                            padding: EdgeInsets.all(10),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
