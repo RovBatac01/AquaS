@@ -61,137 +61,158 @@ class _AdminviewreportState extends State<Adminviewreport> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: reports.isEmpty
-          ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: EdgeInsets.all(15),
-              itemCount: reports.length,
-              itemBuilder: (context, index) {
-                final report = reports[index];
-
-                return Container(
-                  margin: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: isDarkMode
-                        ? ASColor.primaryGradient
-                        : ASColor.secondaryGradient,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Card(
-                    color: Colors.transparent, // Allows gradient to be visible
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Username:',
-                                    style: TextStyle(
-                                      color: Colors.orange, // Change color here
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    report['username'],
-                                    style: TextStyle(
-                                      color: isDarkMode 
-                                        ? ASColor.txt3Color //Color of Text in Light Mode
-                                        : ASColor.txt2Color, // Color of Text in Dark Mode
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w100
-                                    ),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Text(
-                                    'Email:',
-                                    style: TextStyle(
-                                      color: Colors.orange, // Change color here
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    report['email'],
-                                    style: TextStyle(
-                                      color: isDarkMode 
-                                        ? ASColor.txt3Color //Color of Text in Light Mode
-                                        : ASColor.txt2Color, // Color of Text in Dark Mode
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w100
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Icon(
-                                Icons.person_outline,
-                                color: Colors.white, // Change icon color here
-                                size: 40,
-                              ),
-                            ],
-                          ),
-                          Divider(height: 20, thickness: 1.5),
-                          Text(
-                            'Report:',
-                            style: TextStyle(
-                              color: Colors.orange, // Change color here
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            report['report'],
-                            style: TextStyle(
-                              color: isDarkMode 
-                                        ? ASColor.txt3Color //Color of Text in Light Mode
-                                        : ASColor.txt2Color, // Color of Text in Dark Mode
-                              fontSize: 14,
-                              fontWeight: FontWeight.w100
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: () {
-                                // Implement see more action
-                              },
-                              icon: Icon(
-                                Icons.more_horiz,
-                                color: isDarkMode 
-                                        ? ASColor.BGthird //Color of Icon in Light Mode
-                                        : Colors.orange, // Color of Icon in Dark Mode 
-                              ),
-                              label: Text(
-                                'See More',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDarkMode 
-                                        ? ASColor.BGthird //Color of Text in Light Mode
-                                        : Colors.orange, // Color of Text in Dark Mode 
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Container(
+              alignment: Alignment.center,
+              child: Text(
+                'View Report',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.orange : ASColor.txt3Color,
+                ),
+              ),
             ),
+          ),
+          Expanded(
+            child: reports.isEmpty
+                ? Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: EdgeInsets.all(15),
+                    itemCount: reports.length,
+                    itemBuilder: (context, index) {
+                      final report = reports[index];
+
+                      return Container(
+                        margin: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          gradient: isDarkMode
+                              ? ASColor.primaryGradient
+                              : ASColor.secondaryGradient,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Card(
+                          color: Colors.transparent, // Allows gradient to be visible
+                          elevation: 5,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Username:',
+                                          style: TextStyle(
+                                            color: Colors.orange, // Change color here
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          report['username'],
+                                          style: TextStyle(
+                                            color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Text in Light Mode
+                                              : ASColor.txt2Color, // Color of Text in Dark Mode
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w100
+                                          ),
+                                        ),
+                                        SizedBox(height: 10),
+                                        Text(
+                                          'Email:',
+                                          style: TextStyle(
+                                            color: Colors.orange, // Change color here
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          report['email'],
+                                          style: TextStyle(
+                                            color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Text in Light Mode
+                                              : ASColor.txt2Color, // Color of Text in Dark Mode
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w100
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Icon(
+                                      Icons.person_outline,
+                                      color: Colors.white, // Change icon color here
+                                      size: 40,
+                                    ),
+                                  ],
+                                ),
+                                Divider(height: 20, thickness: 1.5),
+                                Text(
+                                  'Report:',
+                                  style: TextStyle(
+                                    color: Colors.orange, // Change color here
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  report['report'],
+                                  style: TextStyle(
+                                    color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Text in Light Mode
+                                              : ASColor.txt2Color, // Color of Text in Dark Mode
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w100
+                                  ),
+                                ),
+                                SizedBox(height: 10),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: () {
+                                      // Implement see more action
+                                    },
+                                    icon: Icon(
+                                      Icons.more_horiz,
+                                      color: isDarkMode 
+                                              ? ASColor.BGthird //Color of Icon in Light Mode
+                                              : Colors.orange, // Color of Icon in Dark Mode 
+                                    ),
+                                    label: Text(
+                                      'See More',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDarkMode 
+                                              ? ASColor.BGthird //Color of Text in Light Mode
+                                              : Colors.orange, // Color of Text in Dark Mode 
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
