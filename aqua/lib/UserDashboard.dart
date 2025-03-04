@@ -1,3 +1,5 @@
+import 'package:aqua/AccountManagement.dart';
+import 'package:aqua/AdminViewReport.dart';
 import 'package:aqua/Dashboard.dart';
 import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
@@ -28,7 +30,11 @@ class Userdashboard extends StatefulWidget {
 class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [Dashboard(), HistoricalData(), Usersendreport()];
+  final List<Widget> _screens = [
+    Dashboard(), 
+    HistoricalData(), 
+    Usersendreport()
+    ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
 
@@ -53,8 +59,8 @@ class _MainScreenState extends State<Userdashboard> {
                   gradient:
                       mode == ThemeMode.light
                           ? ASColor
-                              .secondaryGradient 
-                          : ASColor.primaryGradient, 
+                              .secondGradient 
+                          : ASColor.firstGradient, 
                 ), 
               ),
               title: Row(
@@ -105,8 +111,8 @@ class _MainScreenState extends State<Userdashboard> {
               decoration: BoxDecoration(
                 gradient:
                     isDarkMode
-                        ? ASColor.primaryGradient //Background Color of NavBar for Dark Mode
-                        : ASColor.secondaryGradient, //Background Color of NavBar for Dark Mode
+                        ? ASColor.firstGradient //Background Color of NavBar for Dark Mode
+                        : ASColor.secondGradient, //Background Color of NavBar for Dark Mode
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -122,8 +128,8 @@ class _MainScreenState extends State<Userdashboard> {
                   color: isDarkMode ? ASColor.BGthird : Colors.white,
                   tabBackgroundGradient:
                       isDarkMode
-                          ? ASColor.secondaryGradient
-                          : ASColor.primaryGradient,
+                          ? ASColor.secondGradient
+                          : ASColor.firstGradient,
 
                   textStyle: TextStyle(
                     color:

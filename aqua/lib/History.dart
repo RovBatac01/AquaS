@@ -1,5 +1,6 @@
 import 'package:aqua/WaterTemperature.dart';
 import 'package:flutter/material.dart';
+import 'colors.dart'; 
 
 class HistoricalData extends StatefulWidget {
   const HistoricalData({super.key});
@@ -12,20 +13,14 @@ class _MyWidgetState extends State<HistoricalData> {
   
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient:
               isDarkMode
                   ? null // Keep dark mode background as is
-                  : LinearGradient(
-                    colors: [
-                      Color(0xFFE0F7FA),
-                      Color(0xFFD1C4E9),
-                    ], // Ice Blue to Soft Purple
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  : ASColor.thirdGradient
         ),
         child: SingleChildScrollView(
           child: Column(
