@@ -1,7 +1,6 @@
 import 'package:aqua/Contact.dart';
 import 'package:aqua/Services.dart';
 import 'package:flutter/material.dart';
-import 'package:aqua/colors.dart';
 import 'package:aqua/Home.dart';
 import 'package:aqua/AboutUs.dart'; // Import the AboutUs widget
 import 'menubuttons.dart'; // Import MenuButtons

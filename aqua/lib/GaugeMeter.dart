@@ -3,7 +3,7 @@ import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'colors.dart';
+
 
 class GaugeMeter extends StatefulWidget {
   @override
