@@ -38,8 +38,9 @@ class ASColor {
   );
 
   // TEXT COLOR
-  static const Color txt1Color = Color(0xFF6D95FC);
+  static const Color txt1Color = Color.fromARGB(255, 42, 68, 181);
   static const Color txt2Color = Colors.white;
   static const Color txt3Color = Colors.black;
-  static const Color txt4Color = Color.fromARGB(255, 42, 68, 181);
+  static const Color txt4Color = Color(0xFF6D95FC);
+  static const Color txt5Color = Color(0xFF89CFF1); 
 }
