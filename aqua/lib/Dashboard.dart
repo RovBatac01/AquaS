@@ -1,4 +1,5 @@
 import 'package:aqua/GaugeMeter.dart';
+import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 
 class Dashboard extends StatefulWidget {
@@ -31,15 +32,8 @@ class _DashboardState extends State<Dashboard> {
         decoration: BoxDecoration(
           gradient:
               isDarkMode
-                  ? null // Keep dark mode background as is
-                  : LinearGradient(
-                    colors: [
-                      Color(0xFFE0F7FA),
-                      Color(0xFFD1C4E9),
-                    ], // Ice Blue to Soft Purple
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  ? ASColor.fifthGradient
+                  : ASColor.fourthGradient,
         ),
         child: SingleChildScrollView(
           child: Column(

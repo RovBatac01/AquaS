@@ -1,3 +1,4 @@
+import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
 
 class Accountmanagement extends StatefulWidget {
@@ -109,208 +110,230 @@ class _MyWidgetState extends State<Accountmanagement> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Search and Dropdown (Responsive)
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              alignment: WrapAlignment.start,
-              children: [
-                SizedBox(
-                  width: screenWidth, // Adjust width based on screen size
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: screenWidth * 0.3,
-                  child: DropdownButtonFormField<String>(
-                    value: selectedRole,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedRole = newValue!;
-                      });
-                    },
-                    items:
-                        ['Admin', 'User']
-                            .map<DropdownMenuItem<String>>(
-                              (String value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              ),
-                            )
-                            .toList(),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // User List Container (Responsive)
-            Container(
-              alignment: Alignment.center,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: isDarkMode
+            ? ASColor.fifthGradient
+            : ASColor.fourthGradient,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Search and Dropdown (Responsive)
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.start,
                 children: [
-                  Card(
-                    elevation: 4, // Adds shadow for a lifted effect
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Container(
-                      width: double.infinity,
-                      height: 400,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: 2.0),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: ListView.separated(
-                          padding: EdgeInsets.all(8),
-                          itemCount: users.length,
-                          separatorBuilder:
-                              (context, index) =>
-                                  Divider(color: Colors.grey[300]),
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.blueAccent,
-                                child: Icon(Icons.person),
-                              ),
-                              title: Text(
-                                users[index]["name"] ?? "No Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(users[index]["role"] ?? "No Role"),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.edit),
-                                    onPressed: () => _editUser(index),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.delete),
-                                    onPressed:
-                                        () => _deleteUser(context, index), //
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                  SizedBox(
+                    width: screenWidth, // Adjust width based on screen size
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.grey),
                         ),
                       ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: screenWidth * 0.3,
+                    child: DropdownButtonFormField<String>(
+                      value: selectedRole,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedRole = newValue!;
+                        });
+                      },
+                      items:
+                          ['Admin', 'User']
+                              .map<DropdownMenuItem<String>>(
+                                (String value) => DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                ),
+                              )
+                              .toList(),
                     ),
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Create Button
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Dialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
+        
+              const SizedBox(height: 20),
+        
+              // User List Container (Responsive)
+              Container(
+                alignment: Alignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Card(
+                      elevation: 4, // Adds shadow for a lifted effect
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        height: 400,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey, width: 2.0),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Container(
-                          width: screenWidth * 0.8, // Responsive width
-                          child: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  'Create Admin',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 20,
-                                  ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: ListView.separated(
+                            padding: EdgeInsets.all(8),
+                            itemCount: users.length,
+                            separatorBuilder:
+                                (context, index) =>
+                                    Divider(color: Colors.grey[300]),
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.blueAccent,
+                                  child: Icon(Icons.person),
                                 ),
-                                const SizedBox(height: 20),
-                                Form(
-                                  key: _formKey,
-                                  child: Column(
-                                    children: [
-                                      _buildTextField(username, 'Username'),
-                                      const SizedBox(height: 15),
-                                      _buildTextField(
-                                        email,
-                                        'Email/Phone Number',
-                                      ),
-                                      const SizedBox(height: 15),
-                                      _buildTextField(
-                                        password,
-                                        'Password',
-                                        obscureText: true,
-                                      ),
-                                      const SizedBox(height: 15),
-                                      _buildTextField(
-                                        confirm_password,
-                                        'Confirm Password',
-                                        obscureText: true,
-                                      ),
-                                      const SizedBox(height: 15),
-                                      // _buildDropdown(),
-                                    ],
-                                  ),
+                                title: Text(
+                                  users[index]["name"] ?? "No Name",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                subtitle: Text(users[index]["role"] ?? "No Role"),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text("Cancel"),
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
+                                      onPressed: () => _editUser(index),
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        if (_formKey.currentState!.validate()) {
-                                          // Perform actions
-                                        }
-                                      },
-                                      child: const Text("Create"),
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      onPressed:
+                                          () => _deleteUser(context, index), //
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ),
-                      );
-                    },
-                  );
-                },
-                child: const Text("Create Admin"),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+        
+              const SizedBox(height: 20),
+        
+              // Create Button
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: Container(
+                            padding: EdgeInsets.all(15),
+                            width: screenWidth * 0.8, // Responsive width
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Create Admin',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      color: ASColor.txt4Color,
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      children: [
+                                        _buildTextField(username, 'Username'),
+                                        const SizedBox(height: 15),
+                                        _buildTextField(
+                                          email,
+                                          'Email/Phone Number',
+                                        ),
+                                        const SizedBox(height: 15),
+                                        _buildTextField(
+                                          password,
+                                          'Password',
+                                          obscureText: true,
+                                        ),
+                                        const SizedBox(height: 15),
+                                        _buildTextField(
+                                          confirm_password,
+                                          'Confirm Password',
+                                          obscureText: true,
+                                        ),
+                                        const SizedBox(height: 15),
+                                        // _buildDropdown(),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text("Cancel",
+                                            style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                color: ASColor.txt4Color,
+                                                fontSize: 16,)),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          if (_formKey.currentState!.validate()) {
+                                            // Perform actions
+                                          }
+                                        },
+                                        child: const Text("Create",
+                                            style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                color: ASColor.txt4Color,
+                                                fontSize: 16,)),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: const Text("Create Admin",
+                      style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt4Color,
+                          fontSize: 16,)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

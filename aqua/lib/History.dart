@@ -19,7 +19,7 @@ class _MyWidgetState extends State<HistoricalData> {
         decoration: BoxDecoration(
           gradient:
               isDarkMode
-                  ? null // Keep dark mode background as is
+                  ? ASColor.fifthGradient
                   : ASColor.thirdGradient
         ),
         child: SingleChildScrollView(

@@ -61,165 +61,172 @@ class _AdminviewreportState extends State<Adminviewreport> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Container(
-              alignment: Alignment.center,
-              child: Text(
-                'View Report',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? ASColor.txt2Color : ASColor.txt3Color,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: isDarkMode
+              ? ASColor.fifthGradient
+              : ASColor.fourthGradient,
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Container(
+                alignment: Alignment.center,
+                child: Text(
+                  'View Report',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? ASColor.txt2Color : ASColor.txt3Color,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: reports.isEmpty
-                ? Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    padding: EdgeInsets.all(15),
-                    itemCount: reports.length,
-                    itemBuilder: (context, index) {
-                      final report = reports[index];
-
-                      return Container(
-                        margin: EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: isDarkMode
-                              ? ASColor.firstGradient
-                              : ASColor.secondGradient,
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Card(
-                          color: Colors.transparent, // Allows gradient to be visible
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
+            Expanded(
+              child: reports.isEmpty
+                  ? Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      padding: EdgeInsets.all(15),
+                      itemCount: reports.length,
+                      itemBuilder: (context, index) {
+                        final report = reports[index];
+        
+                        return Container(
+                          margin: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: isDarkMode
+                                ? ASColor.firstGradient
+                                : ASColor.secondGradient,
                             borderRadius: BorderRadius.circular(15),
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Username:',
-                                          style: TextStyle(
-                                            color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Text in Light Mode
-                                              : ASColor.txt2Color, // Color of Text in Dark Mode
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                          child: Card(
+                            color: Colors.transparent, // Allows gradient to be visible
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Username:',
+                                            style: TextStyle(
+                                              color: isDarkMode 
+                                                ? ASColor.txt3Color //Color of Text in Light Mode
+                                                : ASColor.txt2Color, // Color of Text in Dark Mode
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          report['username'],
-                                          style: TextStyle(
-                                            color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Text in Light Mode
-                                              : ASColor.txt2Color, // Color of Text in Dark Mode
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600
+                                          Text(
+                                            report['username'],
+                                            style: TextStyle(
+                                              color: isDarkMode 
+                                                ? ASColor.txt3Color //Color of Text in Light Mode
+                                                : ASColor.txt2Color, // Color of Text in Dark Mode
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600
+                                            ),
                                           ),
-                                        ),
-                                        SizedBox(height: 10),
-                                        Text(
-                                          'Email:',
-                                          style: TextStyle(
-                                            color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Text in Light Mode
-                                              : ASColor.txt2Color, // Color of Text in Dark Mode
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                                          SizedBox(height: 10),
+                                          Text(
+                                            'Email:',
+                                            style: TextStyle(
+                                              color: isDarkMode 
+                                                ? ASColor.txt3Color //Color of Text in Light Mode
+                                                : ASColor.txt2Color, // Color of Text in Dark Mode
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          report['email'],
-                                          style: TextStyle(
-                                            color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Text in Light Mode
-                                              : ASColor.txt2Color, // Color of Text in Dark Mode
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600
+                                          Text(
+                                            report['email'],
+                                            style: TextStyle(
+                                              color: isDarkMode 
+                                                ? ASColor.txt3Color //Color of Text in Light Mode
+                                                : ASColor.txt2Color, // Color of Text in Dark Mode
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    Icon(
-                                      Icons.person_outline,
-                                      color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Icon in Light Mode
-                                              : ASColor.txt2Color, // Color of Icon in Dark Mode 
-                                      size: 40,
-                                    ),
-                                  ],
-                                ),
-                                Divider(height: 20, thickness: 1.5),
-                                Text(
-                                  'Report:',
-                                  style: TextStyle(
-                                    color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Text in Light Mode
-                                              : ASColor.txt2Color, // Color of Text in Dark Mode
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  report['report'],
-                                  style: TextStyle(
-                                    color: isDarkMode 
-                                              ? ASColor.txt3Color //Color of Text in Light Mode
-                                              : ASColor.txt2Color, // Color of Text in Dark Mode
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600
-                                  ),
-                                ),
-                                SizedBox(height: 10),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton.icon(
-                                    onPressed: () {
-                                      // Implement see more action
-                                    },
-                                    icon: Icon(
-                                      Icons.more_horiz,
-                                      color: isDarkMode 
-                                              ? ASColor.BGthird //Color of Icon in Light Mode
-                                              : ASColor.BGsecond, // Color of Icon in Dark Mode 
-                                    ),
-                                    label: Text(
-                                      'See More',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
+                                        ],
+                                      ),
+                                      Icon(
+                                        Icons.person_outline,
                                         color: isDarkMode 
-                                              ? ASColor.BGthird //Color of Text in Light Mode
-                                              : ASColor.BGsecond, // Color of Text in Dark Mode 
+                                                ? ASColor.txt3Color //Color of Icon in Light Mode
+                                                : ASColor.txt2Color, // Color of Icon in Dark Mode 
+                                        size: 40,
+                                      ),
+                                    ],
+                                  ),
+                                  Divider(height: 20, thickness: 1.5),
+                                  Text(
+                                    'Report:',
+                                    style: TextStyle(
+                                      color: isDarkMode 
+                                                ? ASColor.txt3Color //Color of Text in Light Mode
+                                                : ASColor.txt2Color, // Color of Text in Dark Mode
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    report['report'],
+                                    style: TextStyle(
+                                      color: isDarkMode 
+                                                ? ASColor.txt3Color //Color of Text in Light Mode
+                                                : ASColor.txt2Color, // Color of Text in Dark Mode
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton.icon(
+                                      onPressed: () {
+                                        // Implement see more action
+                                      },
+                                      icon: Icon(
+                                        Icons.more_horiz,
+                                        color: isDarkMode 
+                                                ? ASColor.BGthird //Color of Icon in Light Mode
+                                                : ASColor.BGsecond, // Color of Icon in Dark Mode 
+                                      ),
+                                      label: Text(
+                                        'See More',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDarkMode 
+                                                ? ASColor.BGthird //Color of Text in Light Mode
+                                                : ASColor.BGsecond, // Color of Text in Dark Mode 
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -22,8 +22,8 @@ class _MyWidgetState extends State<Usersendreport> {
         decoration: BoxDecoration(
           gradient:
               isDarkMode
-                  ? null // Keep dark mode background as is
-                  : ASColor.thirdGradient
+                  ? ASColor.fifthGradient
+                  : ASColor.fourthGradient
         ),
         child: Column(
           children: [
