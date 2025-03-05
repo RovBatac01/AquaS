@@ -73,7 +73,7 @@ class _AdminviewreportState extends State<Adminviewreport> {
                   fontSize: 24,
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.orange : ASColor.txt3Color,
+                  color: isDarkMode ? ASColor.txt2Color : ASColor.txt3Color,
                 ),
               ),
             ),
@@ -115,7 +115,9 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                         Text(
                                           'Username:',
                                           style: TextStyle(
-                                            color: Colors.orange, // Change color here
+                                            color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Text in Light Mode
+                                              : ASColor.txt2Color, // Color of Text in Dark Mode
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -127,14 +129,16 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                               ? ASColor.txt3Color //Color of Text in Light Mode
                                               : ASColor.txt2Color, // Color of Text in Dark Mode
                                             fontSize: 14,
-                                            fontWeight: FontWeight.w100
+                                            fontWeight: FontWeight.w600
                                           ),
                                         ),
                                         SizedBox(height: 10),
                                         Text(
                                           'Email:',
                                           style: TextStyle(
-                                            color: Colors.orange, // Change color here
+                                            color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Text in Light Mode
+                                              : ASColor.txt2Color, // Color of Text in Dark Mode
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -146,14 +150,16 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                               ? ASColor.txt3Color //Color of Text in Light Mode
                                               : ASColor.txt2Color, // Color of Text in Dark Mode
                                             fontSize: 14,
-                                            fontWeight: FontWeight.w100
+                                            fontWeight: FontWeight.w600
                                           ),
                                         ),
                                       ],
                                     ),
                                     Icon(
                                       Icons.person_outline,
-                                      color: Colors.white, // Change icon color here
+                                      color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Icon in Light Mode
+                                              : ASColor.txt2Color, // Color of Icon in Dark Mode 
                                       size: 40,
                                     ),
                                   ],
@@ -162,7 +168,9 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                 Text(
                                   'Report:',
                                   style: TextStyle(
-                                    color: Colors.orange, // Change color here
+                                    color: isDarkMode 
+                                              ? ASColor.txt3Color //Color of Text in Light Mode
+                                              : ASColor.txt2Color, // Color of Text in Dark Mode
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -175,7 +183,7 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                               ? ASColor.txt3Color //Color of Text in Light Mode
                                               : ASColor.txt2Color, // Color of Text in Dark Mode
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w100
+                                    fontWeight: FontWeight.w600
                                   ),
                                 ),
                                 SizedBox(height: 10),
@@ -189,7 +197,7 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                       Icons.more_horiz,
                                       color: isDarkMode 
                                               ? ASColor.BGthird //Color of Icon in Light Mode
-                                              : Colors.orange, // Color of Icon in Dark Mode 
+                                              : ASColor.BGsecond, // Color of Icon in Dark Mode 
                                     ),
                                     label: Text(
                                       'See More',
@@ -198,7 +206,7 @@ class _AdminviewreportState extends State<Adminviewreport> {
                                         fontWeight: FontWeight.bold,
                                         color: isDarkMode 
                                               ? ASColor.BGthird //Color of Text in Light Mode
-                                              : Colors.orange, // Color of Text in Dark Mode 
+                                              : ASColor.BGsecond, // Color of Text in Dark Mode 
                                       ),
                                     ),
                                   ),

@@ -1,4 +1,3 @@
-import 'package:aqua/AdminViewAccount.dart';
 import 'package:aqua/SAdminAccountManagement.dart';
 import 'package:aqua/AdminViewReport.dart';
 import 'package:aqua/Dashboard.dart';
@@ -18,29 +17,58 @@ class MyDrawerAndNavBarApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Admindashboard(),
+      home: Sadmindashboard(),
     );
   }
 }
 
-class Admindashboard extends StatefulWidget {
+class Sadmindashboard extends StatefulWidget {
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<Admindashboard> {
+class _MainScreenState extends State<Sadmindashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
     Dashboard(),
-    Adminviewaccount(),
+    Accountmanagement(),
     HistoricalData(),
     Adminviewreport(),
   ];
 
-  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
-    ThemeMode.dark,
-  ); // This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
+  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Logout"),
+          content: Text("Are you sure you want to log out?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog first
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text("Confirm"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,10 +126,7 @@ class _MainScreenState extends State<Admindashboard> {
                       size: 28,
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
+                      _showLogoutDialog(context);
                     },
                   ),
                 ],
@@ -171,7 +196,6 @@ class _MainScreenState extends State<Admindashboard> {
                 ),
               ),
             ),
-
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 setState(() {

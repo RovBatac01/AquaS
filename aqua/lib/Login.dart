@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:aqua/AdminDashboard.dart';
+import 'package:aqua/SAdminDashboard.dart';
 import 'package:aqua/Signup.dart';
 import 'package:aqua/UserDashboard.dart';
 import 'package:aqua/UserSendReport.dart';

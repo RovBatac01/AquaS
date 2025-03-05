@@ -23,6 +23,7 @@ class _SignupState extends State<Signup> {
   final TextEditingController email = TextEditingController();
   final TextEditingController password = TextEditingController();
   final TextEditingController confirm_password = TextEditingController();
+  bool isChecked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +308,22 @@ class _SignupState extends State<Signup> {
                         },
                       ),
 
-                      SizedBox(height: 12),
+
+                      CheckboxListTile(
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text("I agree to the terms and conditions",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt2Color,
+                          fontSize: 14,
+                        ),),
+                        value: isChecked,
+                        onChanged: (bool? newValue) {
+                          setState(() {
+                            isChecked = newValue ?? false;
+                          });
+                        },
+                      ),
 
                       // Sign Up button
                       Center(
@@ -342,6 +358,7 @@ class _SignupState extends State<Signup> {
                         ),
                       ),
                       SizedBox(height: 20),
+
 
                       // Login link
                       Row(
