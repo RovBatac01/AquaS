@@ -1,4 +1,5 @@
 import 'package:aqua/Login.dart';
+import 'package:aqua/SAdminDashboard.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
       ),
-      home: LoginScreen()
+      home: Sadmindashboard()
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:aqua/SAdminDashboard.dart';
 import 'package:aqua/Signup.dart';
 import 'package:aqua/UserDashboard.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (enteredUsername == fixedUsername && enteredPassword == fixedPassword) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => Userdashboard()),
+        MaterialPageRoute(builder: (context) => Sadmindashboard()),
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

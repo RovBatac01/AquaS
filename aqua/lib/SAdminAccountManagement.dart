@@ -112,7 +112,7 @@ class _MyWidgetState extends State<Accountmanagement> {
 
     return Scaffold(
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -166,8 +166,8 @@ class _MyWidgetState extends State<Accountmanagement> {
             const SizedBox(height: 20),
 
             // User List Container (Responsive)
-            Padding(
-              padding: EdgeInsets.only(top: 20),
+            Container(
+              alignment: Alignment.center,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -241,7 +241,6 @@ class _MyWidgetState extends State<Accountmanagement> {
                         ),
                         child: Container(
                           width: screenWidth * 0.8, // Responsive width
-                          padding: const EdgeInsets.all(20),
                           child: SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,

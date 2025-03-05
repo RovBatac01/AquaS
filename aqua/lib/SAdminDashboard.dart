@@ -50,7 +50,11 @@ class _MainScreenState extends State<Sadmindashboard> {
               onPressed: () {
                 Navigator.pop(context); // Close dialog
               },
-              child: Text("Cancel"),
+              child: Text("Cancel",
+                  style: TextStyle(
+                    color: ASColor.txt3Color,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w300)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -60,8 +64,12 @@ class _MainScreenState extends State<Sadmindashboard> {
                   MaterialPageRoute(builder: (context) => LoginScreen()),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text("Confirm"),
+              style: ElevatedButton.styleFrom(backgroundColor: ASColor.BGsecond),
+              child: Text("Confirm",
+                  style: TextStyle(
+                    color: ASColor.txt3Color,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w300)),
             ),
           ],
         );
@@ -144,8 +152,7 @@ class _MainScreenState extends State<Sadmindashboard> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: SingleChildScrollView(
-                  scrollDirection:
-                      Axis.horizontal, // Enables horizontal scrolling
+                  scrollDirection:Axis.horizontal, // Enables horizontal scrolling
                   child: SizedBox(
                     width:
                         MediaQuery.of(
