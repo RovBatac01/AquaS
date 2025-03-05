@@ -35,6 +35,45 @@ class _MainScreenState extends State<Userdashboard> {
     ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Logout"),
+          content: Text("Are you sure you want to log out?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+              child: Text("Cancel",
+                  style: TextStyle(
+                    color: ASColor.txt3Color,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w300)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog first
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: ASColor.BGsecond),
+              child: Text("Confirm",
+                  style: TextStyle(
+                    color: ASColor.txt3Color,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w300)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -92,12 +131,7 @@ class _MainScreenState extends State<Userdashboard> {
                       size: 28,
                     ),
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => LoginScreen(),
-                        ),
-                      );
+                      _showLogoutDialog(context);
                     },
                   ),
                 ],
