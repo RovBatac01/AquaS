@@ -6,7 +6,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
-
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 const app = express();
 const port = 5000;
@@ -26,8 +27,8 @@ const io = new Server(server, {
 // MySQL Connection
 const db = mysql.createConnection({
   host: "localhost",
-  user: "root", // Change if needed
-  password: "", // Add your MySQL password
+  user: "root",
+  password: "",
   database: "aquasense",
 });
 
@@ -35,82 +36,106 @@ app.post("/register", async (req, res) => {
   const { username, email, phone = null, password, confirm_password } = req.body;
 
   if (!username || !email || !password || !confirm_password) {
-      return res.status(400).json({ error: "All fields are required" });
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   if (password !== confirm_password) {
-      return res.status(400).json({ error: "Passwords do not match" });
+    return res.status(400).json({ error: "Passwords do not match" });
   }
 
   try {
-      // Hash Password
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-      // SQL Query (id is assumed to be AUTO_INCREMENT)
-      const sql = "INSERT INTO users (username, email, phone, password_hash) VALUES (?, ?, ?, ?)";
+    // SQL Query
+    const sql = "INSERT INTO users (username, email, phone, password_hash) VALUES (?, ?, ?, ?)";
 
-      // Insert User Data
-      db.query(sql, [username, email, phone || null, hashedPassword], (err, result) => {
-          if (err) {
-              console.error("Database error:", err.sqlMessage);
-              return res.status(500).json({ error: "Database error occurred" });
-          }
-          res.json({ 
-              message: "User registered successfully!", 
-              userId: result.insertId // Returns the newly inserted user ID
-          });
+    // Insert User Data
+    db.query(sql, [username, email, phone || null, hashedPassword], (err, result) => {
+      if (err) {
+        console.error("Database error:", err.sqlMessage);
+        return res.status(500).json({ error: "Database error occurred" });
+      }
+      res.json({
+        message: "User registered successfully!",
+        userId: result.insertId, // Return inserted user ID
       });
+    });
 
   } catch (error) {
-      console.error("Error:", error);
-      res.status(500).json({ error: "Server error" });
+    console.error("Error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error("❌ MySQL Connection Error:", err);
-    return;
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "All fields are required" });
   }
-  console.log("✅ Connected to MySQL Database.");
+
+  const sql = "SELECT * FROM users WHERE username = ?";
+  db.query(sql, [username], async (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database error occurred" });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const user = results[0];
+
+    // Compare hashed password
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    res.json({ message: "Login successful!" });
+  });
 });
+
+
 
 // Set up SerialPort (Change COM5 to your correct port)
-const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 });
-const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
+// const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 });
+// const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
 
-serialPort.on("open", () => {
-  console.log("✅ Serial Port Opened: COM5");
-});
+// serialPort.on("open", () => {
+//   console.log("✅ Serial Port Opened: COM5");
+// });
 
-// Read and store data from Arduino
-parser.on("data", (data) => {
-  console.log("📡 Raw Data Received:", data.trim());
+// // Read and store data from Arduino
+// parser.on("data", (data) => {
+//   console.log("📡 Raw Data Received:", data.trim());
 
-  try {
-    const jsonData = JSON.parse(data.trim());
-    const turbidityValue = jsonData.turbidity_value;
-    const timestamp = new Date().toISOString();
+//   try {
+//     const jsonData = JSON.parse(data.trim());
+//     const turbidityValue = jsonData.turbidity_value;
+//     const timestamp = new Date().toISOString();
 
-    console.log("🔄 Parsed Turbidity Value:", turbidityValue, "Timestamp:", timestamp);
+//     console.log("🔄 Parsed Turbidity Value:", turbidityValue, "Timestamp:", timestamp);
 
-    // Insert into MySQL
-    const query = "INSERT INTO turbidity_readings (turbidity_value, timestamp) VALUES (?, ?)";
-    db.query(query, [turbidityValue, timestamp], (err, result) => {
-      if (err) {
-        console.error("❌ Database Insert Error:", err);
-      } else {
-        console.log("✅ Data Inserted Successfully: ID", result.insertId);
+//     // Insert into MySQL
+//     const query = "INSERT INTO turbidity_readings (turbidity_value, timestamp) VALUES (?, ?)";
+//     db.query(query, [turbidityValue, timestamp], (err, result) => {
+//       if (err) {
+//         console.error("❌ Database Insert Error:", err);
+//       } else {
+//         console.log("✅ Data Inserted Successfully: ID", result.insertId);
 
-        // Emit real-time data update
-        io.emit("updateData", { value: turbidityValue, timestamp });
-        console.log("📢 WebSocket Event Emitted:", { value: turbidityValue, timestamp });
-      }
-    });
-  } catch (err) {
-    console.error("❌ JSON Parse Error:", err);
-  }
-});
+//         // Emit real-time data update
+//         io.emit("updateData", { value: turbidityValue, timestamp });
+//         console.log("📢 WebSocket Event Emitted:", { value: turbidityValue, timestamp });
+//       }
+//     });
+//   } catch (err) {
+//     console.error("❌ JSON Parse Error:", err);
+//   }
+// });
 
 // API Route to Fetch Data
 app.get("/data", (req, res) => {

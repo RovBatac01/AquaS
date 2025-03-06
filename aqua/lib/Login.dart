@@ -4,6 +4,9 @@ import 'package:aqua/Signup.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 // import 'package:flutter_application_1/signup.dart';
 
 void main() {
@@ -72,26 +75,65 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   //Need to be change when connecting to Database
-  void _login() {
+  void _login(
+    BuildContext context,
+    TextEditingController username,
+    TextEditingController password,
+  ) async {
     String enteredUsername = username.text;
     String enteredPassword = password.text;
 
-    if (enteredUsername == fixedUsername && enteredPassword == fixedPassword) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => Sadmindashboard()),
-      );
+    if (enteredUsername.isEmpty || enteredPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Login Successful!"),
-          backgroundColor: Colors.green,
+          content: Text("Please enter both username and password."),
+          backgroundColor: Colors.orange,
         ),
       );
-      // // Navigate to another screen if needed
-    } else {
+      return;
+    }
+
+    try {
+      var response = await http.post(
+        Uri.parse("http://localhost:5000/login"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": enteredUsername,
+          "password": enteredPassword,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body);
+
+        // Login successful
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Login Successful!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate to the admin dashboard
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Sadmindashboard()),
+        );
+      } else {
+        // Login failed
+        var jsonResponse = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(jsonResponse['error'] ?? "Invalid credentials"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      print("Error: $error");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Invalid Username or Password"),
+          content: Text("Server error. Please try again."),
           backgroundColor: Colors.red,
         ),
       );
@@ -213,9 +255,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       style: TextStyle(color: Colors.white),
                     ),
+
                     //Username and Password-------------------------------------
-
-
                     SizedBox(height: 12),
 
                     //Remember me and forgot password---------------------------
@@ -246,7 +287,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: _login,
+                      onPressed: () {
+                        _login(context, username, password);
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: Colors.purple,
@@ -261,6 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+
                     SizedBox(height: 20),
 
                     Row(
