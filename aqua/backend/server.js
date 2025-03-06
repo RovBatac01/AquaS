@@ -7,10 +7,13 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 
+
 const app = express();
-const port = 3000;
+const port = 5000;
 
 // Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors()); // Allow frontend requests
 
@@ -25,7 +28,43 @@ const db = mysql.createConnection({
   host: "localhost",
   user: "root", // Change if needed
   password: "", // Add your MySQL password
-  database: "sensor_db",
+  database: "aquasense",
+});
+
+app.post("/register", async (req, res) => {
+  const { username, email, phone = null, password, confirm_password } = req.body;
+
+  if (!username || !email || !password || !confirm_password) {
+      return res.status(400).json({ error: "All fields are required" });
+  }
+
+  if (password !== confirm_password) {
+      return res.status(400).json({ error: "Passwords do not match" });
+  }
+
+  try {
+      // Hash Password
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // SQL Query (id is assumed to be AUTO_INCREMENT)
+      const sql = "INSERT INTO users (username, email, phone, password_hash) VALUES (?, ?, ?, ?)";
+
+      // Insert User Data
+      db.query(sql, [username, email, phone || null, hashedPassword], (err, result) => {
+          if (err) {
+              console.error("Database error:", err.sqlMessage);
+              return res.status(500).json({ error: "Database error occurred" });
+          }
+          res.json({ 
+              message: "User registered successfully!", 
+              userId: result.insertId // Returns the newly inserted user ID
+          });
+      });
+
+  } catch (error) {
+      console.error("Error:", error);
+      res.status(500).json({ error: "Server error" });
+  }
 });
 
 db.connect((err) => {

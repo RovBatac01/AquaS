@@ -36,7 +36,7 @@ class _TurbidityMonitorState extends State<TurbidityMonitor> {
 
   void _fetchTurbidity() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/data'));
+      final response = await http.get(Uri.parse('http://localhost:5000/data'));
 
       if (response.statusCode == 200) {
         var decodedData = jsonDecode(response.body);

@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:aqua/Login.dart';
 import 'package:aqua/colors.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: Signup()));
@@ -24,6 +26,30 @@ class _SignupState extends State<Signup> {
   final TextEditingController password = TextEditingController();
   final TextEditingController confirm_password = TextEditingController();
   bool isChecked = false;
+
+Future<void> registerUser() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final url = Uri.parse('http://localhost:5000/register'); // Backend URL
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': username.text.trim(),
+        'email': email.text.trim(),
+        'password': password.text,
+        "confirm_password": password.text
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final responseData = jsonDecode(response.body);
+      print(responseData['message']); // Success message
+    } else {
+      print('Error: ${response.body}');
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -328,36 +354,11 @@ class _SignupState extends State<Signup> {
                       // Sign Up button
                       Center(
                         child: ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState?.validate() ?? false) {
-                              // Form is valid, perform action (e.g., submit)
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text('Form Submitted'),
-                                    content: Text(
-                                      'Username: ${username.text}\n'
-                                      'Email/phone: ${email.text}\n'
-                                      'Password: ${password.text}\n',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                        child: Text('OK'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            }
-                          },
-                          child: Text('Register'),
-                        ),
-                      ),
-                      SizedBox(height: 20),
+                        onPressed: registerUser,
+                        style: ElevatedButton.styleFrom(backgroundColor: ASColor.BGfifth),
+                        child: const Text('Sign Up'),
+                                              ),
+                                            ),                      SizedBox(height: 20),
 
 
                       // Login link

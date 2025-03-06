@@ -42,7 +42,7 @@ class _AdminviewreportState extends State<Adminviewreport> {
   Future<void> fetchReports() async {
     try {
       final response =
-          await http.get(Uri.parse('http://localhost:3000/reports'));
+          await http.get(Uri.parse('http://localhost:5000/reports'));
       if (response.statusCode == 200) {
         setState(() {
           reports = json.decode(response.body);

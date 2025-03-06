@@ -23,7 +23,7 @@ class _GaugeMeterState extends State<GaugeMeter> {
 
   void fetchInitialValue() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/data'));
+      final response = await http.get(Uri.parse('http://localhost:5000/data'));
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         if (data.isNotEmpty && data.first.containsKey('turbidity_value')) {
