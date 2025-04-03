@@ -1,6 +1,8 @@
 import 'package:aqua/Dashboard.dart';
 import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
+import 'package:aqua/NewHomeUi.dart';
+import 'package:aqua/Statistics.dart';
 import 'package:aqua/UserSendReport.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -29,8 +31,8 @@ class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    Dashboard(), 
-    HistoricalData(), 
+    HomeScreen(), 
+    Statistics(), 
     Usersendreport()
     ];
 
@@ -178,8 +180,8 @@ class _MainScreenState extends State<Userdashboard> {
                     });
                   },
                   tabs: [
-                    GButton(icon: Icons.dashboard_outlined, text: 'Dashboard'),
-                    GButton(icon: Icons.history_outlined, text: 'History'),
+                    GButton(icon: Icons.home_outlined, text: 'Home'),
+                    GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
                     GButton(icon: Icons.report, text: 'Report'),
                   ],
                 ),
