@@ -65,7 +65,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         title: const Text(
           'DETAILS',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
             color: Colors.black,
@@ -102,7 +102,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             // Circular Temperature Indicator with enhanced style
             Center(
               child: CustomPaint(
-                size: const Size(200, 200),
+                size: const Size(250, 250),
                 painter: CircularIndicator(
                   progress: progress,
                   label: label,

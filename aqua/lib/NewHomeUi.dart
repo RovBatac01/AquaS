@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
           'HOME',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 12,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
             letterSpacing: 1,
@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
+          // IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
         ],
       ),
       body: Padding(
@@ -58,11 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     'Hi, Hussin',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     'Your devices are working hard!',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(fontSize: 20, color: Colors.grey),
                   ),
                 ],
               ),
@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 children: [
                   Container(
-                    height: 160,
+                    height: 170,
                     child: Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Text(
                                       'Home Water Tank',
                                       style: const TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 17,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -119,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               "Water Quality",
                               style: const TextStyle(
-                                fontSize: 8,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 color:
                                     Colors
@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   'Great',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 17,
                                     fontWeight: FontWeight.w200,
                                     color:
                                         Colors

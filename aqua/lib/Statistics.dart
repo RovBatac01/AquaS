@@ -103,7 +103,7 @@ class _StatisticsState extends State<Statistics> {
           'STATISTICS',
           style: TextStyle(
             fontFamily: 'Poppins',
-            fontSize: 12,
+            fontSize: 17,
             fontWeight: FontWeight.w600,
             letterSpacing: 1,
           ),
@@ -128,7 +128,7 @@ class _StatisticsState extends State<Statistics> {
                       'Water quality at a glance',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 15,
+                        fontSize: 18,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
                         wordSpacing: 1,
@@ -139,7 +139,7 @@ class _StatisticsState extends State<Statistics> {
                       'Take a quick look at your water quality stats',
                       style: TextStyle(
                         fontFamily: 'Poppins',
-                        fontSize: 8,
+                        fontSize: 12,
                         fontWeight: FontWeight.w400,
                         color: Colors.grey,
                         letterSpacing: 0.5,
@@ -295,7 +295,7 @@ class _StatisticsState extends State<Statistics> {
                   Text(
                     'Water quality highlights',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                       fontFamily: 'Poppins',
@@ -355,6 +355,8 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ],
               ),
+
+              SizedBox(height: 20),
 
               IntrinsicHeight(
                 child: Row(
