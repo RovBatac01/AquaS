@@ -145,7 +145,7 @@ class _MainScreenState extends State<Userdashboard> {
               decoration: BoxDecoration(
                 gradient:
                     isDarkMode
-                        ? ASColor.firstGradient //Background Color of NavBar for Dark Mode
+                        ? ASColor.firstGradient //Background Color of NavBar for Light Mode
                         : ASColor.secondGradient, //Background Color of NavBar for Dark Mode
               ),
               child: Padding(
