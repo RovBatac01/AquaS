@@ -34,8 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text(
           'HOME',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 17,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
             letterSpacing: 1,

@@ -1,4 +1,6 @@
+import 'package:aqua/AdminDashboard.dart';
 import 'package:aqua/LandingPage.dart';
+import 'package:aqua/SAdminDashboard.dart';
 import 'package:aqua/UserDashboard.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
       ),
-      home: LandingPage()
+      home: Admindashboard()
     );
   }
 }

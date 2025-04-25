@@ -111,17 +111,15 @@ class _StatisticsState extends State<Statistics> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        // Added scrollable container
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Container(
-                alignment: Alignment.centerLeft, // Align text to the left
+                alignment: Alignment.centerLeft,
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start, // Align content to the left
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
@@ -149,7 +147,6 @@ class _StatisticsState extends State<Statistics> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
 
               Row(
@@ -171,40 +168,38 @@ class _StatisticsState extends State<Statistics> {
                             selectedPeriod = newValue!;
                           });
                         },
-                        items:
-                            <String>[
-                              "Daily",
-                              "Weekly",
-                              "Monthly",
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                        items: <String>[
+                          "Daily",
+                          "Weekly",
+                          "Monthly",
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'Poppins',
-                          color: Colors.black,
+                          color: Colors.lightBlue
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
 
               // Line Graph
               SizedBox(
-                height: 300, // Specify a fixed height for the graph
+                height: 300,
                 child: LineChart(
                   LineChartData(
                     gridData: FlGridData(show: true),
@@ -213,20 +208,18 @@ class _StatisticsState extends State<Statistics> {
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 40,
-                          getTitlesWidget:
-                              (value, _) => Text(
-                                value.toStringAsFixed(1),
-                                style: const TextStyle(fontSize: 12),
-                              ),
+                          getTitlesWidget: (value, _) => Text(
+                            value.toStringAsFixed(1),
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
                       ),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          reservedSize: 50, // Space for time labels
-                          interval: 1, // Ensures every timestamp is shown
+                          reservedSize: 50,
+                          interval: 1,
                           getTitlesWidget: (value, _) {
-                            // Fetch timestamps at 5-minute intervals
                             List<DateTime> timeData = getTimeData();
                             int index = value.toInt();
                             if (index >= 0 && index < timeData.length) {
@@ -234,10 +227,7 @@ class _StatisticsState extends State<Statistics> {
                                 'HH:mm:ss',
                               ).format(timeData[index]);
                               return Transform.rotate(
-                                angle:
-                                    -45 *
-                                    (3.141592653589793 /
-                                        180), // Rotate by 45 degrees
+                                angle: -45 * (3.141592653589793 / 180),
                                 child: Text(
                                   formattedTime,
                                   style: const TextStyle(
@@ -258,20 +248,22 @@ class _StatisticsState extends State<Statistics> {
                       border: const Border(
                         left: BorderSide(
                           color: Colors.black,
-                        ), // Keep left border
+                        ),
                         bottom: BorderSide(
                           color: Colors.black,
-                        ), // Keep bottom border
-                        right: BorderSide.none, // Remove right border
-                        top: BorderSide.none, // Remove top border
+                        ),
+                        right: BorderSide.none,
+                        top: BorderSide.none,
                       ),
                     ),
                     lineBarsData: [
                       LineChartBarData(
                         spots: List.generate(
                           getCurrentData().length,
-                          (index) =>
-                              FlSpot(index.toDouble(), getCurrentData()[index]),
+                          (index) => FlSpot(
+                            index.toDouble(),
+                            getCurrentData()[index],
+                          ),
                         ),
                         isCurved: true,
                         color: getStatColor(),
@@ -286,7 +278,6 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
 
               Row(
@@ -297,22 +288,19 @@ class _StatisticsState extends State<Statistics> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
                       fontFamily: 'Poppins',
                     ),
                   ),
-
-                  // Wrap DropdownButton inside a SizedBox to control its size
                   Container(
-                    width: 90, // Set desired width
-                    height: 30, // Set desired height
+                    width: 90,
+                    height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.transparent, // Background color
+                      color: Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                         color: Colors.blue,
                         width: 1.5,
-                      ), // Rounded corners
+                      ),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -322,40 +310,36 @@ class _StatisticsState extends State<Statistics> {
                             selectedStat = newValue!;
                           });
                         },
-                        isExpanded: true, // Make the dropdown take full width
-                        iconSize: 24, // Adjust the size of the dropdown icon
+                        isExpanded: true,
+                        iconSize: 24,
                         style: const TextStyle(
                           fontSize: 8,
                           fontFamily: 'Poppins',
-                          color: Colors.black, // Dropdown text color
                         ),
-                        items:
-                            <String>[
-                              "pH Level",
-                              "Turbidity",
-                              "EC",
-                              "Temp",
-                              "TDS",
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        Colors
-                                            .black, // Text color inside the dropdown
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                        items: <String>[
+                          "pH Level",
+                          "Turbidity",
+                          "EC",
+                          "Temp",
+                          "TDS",
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'Poppins',
+                                color: Colors.lightBlue
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),
                 ],
               ),
-
               SizedBox(height: 20),
 
               IntrinsicHeight(
@@ -363,19 +347,15 @@ class _StatisticsState extends State<Statistics> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: _highlightCard("Highest", "8.6", Colors.red),
+                      child: _highlightCard("Highest", getStatMaxValue().toString(), getStatColor()),
                     ),
-
                     SizedBox(width: 10),
-
                     Expanded(
-                      child: _highlightCard("Lowest", "5.3", Colors.green),
+                      child: _highlightCard("Lowest", getStatMinValue().toString(), getStatColor()),
                     ),
-
-                    SizedBox(width: 10,),
-                    
+                    SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard("Average", "7.2", Colors.blue),
+                      child: _highlightCard("Average", getStatAverage().toString(), getStatColor()),
                     ),
                   ],
                 ),
@@ -386,41 +366,93 @@ class _StatisticsState extends State<Statistics> {
       ),
     );
   }
-}
 
-Widget _highlightCard(String title, String value, Color color) {
-  return Container(
-    width: 90,
-    height: 120,
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.1),
-          blurRadius: 8,
-          spreadRadius: 4,
+  double getStatMaxValue() {
+    switch (selectedStat) {
+      case "pH Level":
+        return phData.reduce((a, b) => a > b ? a : b).toDouble();
+      case "Turbidity":
+        return turbidityData.reduce((a, b) => a > b ? a : b).toDouble();
+      case "EC":
+        return ecData.reduce((a, b) => a > b ? a : b).toDouble();
+      case "Temp":
+        return tempData.reduce((a, b) => a > b ? a : b).toDouble();
+      case "TDS":
+        return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
+      default:
+        return phData.reduce((a, b) => a > b ? a : b).toDouble();
+    }
+  }
+
+  double getStatMinValue() {
+    switch (selectedStat) {
+      case "pH Level":
+        return phData.reduce((a, b) => a < b ? a : b).toDouble();
+      case "Turbidity":
+        return turbidityData.reduce((a, b) => a < b ? a : b).toDouble();
+      case "EC":
+        return ecData.reduce((a, b) => a < b ? a : b).toDouble();
+      case "Temp":
+        return tempData.reduce((a, b) => a < b ? a : b).toDouble();
+      case "TDS":
+        return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
+      default:
+        return phData.reduce((a, b) => a < b ? a : b).toDouble();
+    }
+  }
+
+  double getStatAverage() {
+    switch (selectedStat) {
+      case "pH Level":
+        return phData.reduce((a, b) => a + b) / phData.length.toDouble();
+      case "Turbidity":
+        return turbidityData.reduce((a, b) => a + b) / turbidityData.length.toDouble();
+      case "EC":
+        return ecData.reduce((a, b) => a + b) / ecData.length.toDouble();
+      case "Temp":
+        return tempData.reduce((a, b) => a + b) / tempData.length.toDouble();
+      case "TDS":
+        return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
+      default:
+        return phData.reduce((a, b) => a + b) / phData.length.toDouble();
+    }
+  }
+
+  Widget _highlightCard(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color,
+          width: 1.2,
         ),
-      ],
-    ),
-    child: Column(
-      children: [
-        Icon(Icons.water_drop, color: color, size: 32),
-        const SizedBox(height: 8),
-        Text(
-          "$title (pH)",
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: color,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 5),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

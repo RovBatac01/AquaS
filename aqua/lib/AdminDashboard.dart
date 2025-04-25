@@ -3,6 +3,9 @@ import 'package:aqua/AdminViewReport.dart';
 import 'package:aqua/Dashboard.dart';
 import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
+import 'package:aqua/NewHomeUi.dart';
+import 'package:aqua/Notification.dart';
+import 'package:aqua/Statistics.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'colors.dart'; // Ensure this file contains your custom colors
@@ -30,10 +33,9 @@ class _MainScreenState extends State<Admindashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    Dashboard(),
-    Adminviewaccount(),
-    HistoricalData(),
-    Adminviewreport(),
+    HomeScreen(),
+    Statistics(),
+    NotificationPage(),
   ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
@@ -153,16 +155,9 @@ class _MainScreenState extends State<Admindashboard> {
                         });
                       },
                       tabs: [
-                        GButton(
-                          icon: Icons.dashboard_outlined,
-                          text: 'Dashboard',
-                        ),
-                        GButton(
-                          icon: Icons.manage_accounts,
-                          text: 'View Account',
-                        ),
-                        GButton(icon: Icons.history_outlined, text: 'History'),
-                        GButton(icon: Icons.report, text: 'Report'),
+                        GButton(icon: Icons.home, text: 'Home', ),
+                        GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
+                        GButton(icon: Icons.notifications_active_outlined, text: 'Notification'),
                       ],
                     ),
                   ),

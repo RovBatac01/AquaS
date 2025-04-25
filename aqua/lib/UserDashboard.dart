@@ -3,7 +3,7 @@ import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
 import 'package:aqua/NewHomeUi.dart';
 import 'package:aqua/Statistics.dart';
-import 'package:aqua/UserSendReport.dart';
+import 'package:aqua/Notification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'colors.dart'; // Ensure this file contains your custom colors
@@ -33,7 +33,7 @@ class _MainScreenState extends State<Userdashboard> {
   final List<Widget> _screens = [
     HomeScreen(), 
     Statistics(), 
-    Usersendreport()
+    NotificationPage()
     ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
@@ -182,7 +182,7 @@ class _MainScreenState extends State<Userdashboard> {
                   tabs: [
                     GButton(icon: Icons.home_outlined, text: 'Home'),
                     GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
-                    GButton(icon: Icons.report, text: 'Report'),
+                    GButton(icon: Icons.notifications_active_outlined, text: 'Notifications'),
                   ],
                 ),
               ),

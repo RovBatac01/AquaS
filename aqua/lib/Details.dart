@@ -65,10 +65,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
         title: const Text(
           'DETAILS',
           style: TextStyle(
-            fontSize: 17,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
-            color: Colors.black,
             letterSpacing: 1,
           ),
         ),
@@ -107,6 +106,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   progress: progress,
                   label: label,
                   color: indicatorColor,
+                  brightness: Theme.of(context).brightness, 
                 ),
               ),
             ),
@@ -202,7 +202,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 }
 
-// Widget for displaying water stats
 class StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -221,8 +220,18 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color bgColor =
-        isSelected ? Colors.blueAccent.withOpacity(0.8) : Colors.white;
+    // Get the current theme brightness (light or dark)
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Set the background color depending on the theme
+    Color bgColor = isSelected
+        ? Colors.blueAccent.withOpacity(0.8)
+        : isDarkMode
+            ? Colors.grey[800]! // Dark mode background color
+            : Colors.white; // Light mode background color
+
+    // Set text color based on the theme
+    Color textColor = isDarkMode ? Colors.white : Colors.black;
 
     return GestureDetector(
       onTap: onTap,
@@ -243,19 +252,23 @@ class StatCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 30,
-                color: isSelected ? Colors.white : Colors.blue,
+                color: textColor, // Apply the textColor here
               ),
               const SizedBox(height: 10),
               Text(
                 label,
-                style: const TextStyle(fontSize: 14, color: Colors.black),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: textColor, // Apply the textColor here
+                ),
               ),
               const SizedBox(height: 5),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
+                  color: textColor, // Apply the textColor here
                 ),
               ),
             ],
@@ -271,11 +284,13 @@ class CircularIndicator extends CustomPainter {
   final double progress;
   final String label;
   final Color color;
+  final Brightness brightness; // Add brightness as a parameter
 
   CircularIndicator({
     required this.progress,
     required this.label,
     required this.color,
+    required this.brightness, // Accept brightness
   });
 
   @override
@@ -311,14 +326,17 @@ class CircularIndicator extends CustomPainter {
       gradientPaint,
     );
 
+    // Determine text color based on brightness
+    Color textColor = brightness == Brightness.dark ? Colors.white : Colors.black;
+
     // Text in the center
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: textColor, // Set the text color dynamically
           shadows: [
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],
