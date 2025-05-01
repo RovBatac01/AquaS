@@ -13,8 +13,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Water Quality Stats',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'Poppins', // Apply Poppins as the default font
+      ),
       home: const Statistics(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -32,15 +36,7 @@ class _StatisticsState extends State<Statistics> {
   // Dummy data for each statistic
   List<int> phData = [7, 7, 7, 6, 8, 7, 7]; // pH Level
   List<int> turbidityData = [10, 15, 20, 25, 30, 28, 26]; // Turbidity
-  List<int> ecData = [
-    100,
-    120,
-    110,
-    115,
-    125,
-    130,
-    128,
-  ]; // Electrical Conductivity
+  List<int> ecData = [100, 120, 110, 115, 125, 130, 128]; // Electrical Conductivity
   List<int> tempData = [28, 29, 30, 31, 30, 29, 28]; // Temperature
   List<int> tdsData = [300, 320, 310, 330, 340, 335, 325]; // TDS
 
@@ -98,186 +94,190 @@ class _StatisticsState extends State<Statistics> {
     Color lineColor = getStatColor();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'STATISTICS',
+appBar: PreferredSize(
+  preferredSize: Size.fromHeight(90.0), // Adjust this value for the desired height
+  child: ClipRRect(
+    borderRadius: BorderRadius.only(
+      bottomLeft: Radius.circular(30.0), // Adjust these values for the desired radius
+      bottomRight: Radius.circular(30.0),
+    ),
+    child: AppBar(
+      title: const Padding(
+        padding: EdgeInsets.only(left: 10.0),
+        child: Text(
+          'Account Management',
           style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 17,
+            fontSize: 20,
             fontWeight: FontWeight.w600,
+            fontFamily: 'Poppins',
             letterSpacing: 1,
           ),
         ),
-        centerTitle: true,
       ),
+      centerTitle: false,
+      backgroundColor: Color(0xFF0a782f),
+    ),
+  ),
+),
+      backgroundColor: const Color(0xfff0ecec),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Water quality at a glance',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                        wordSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Take a quick look at your water quality stats',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.grey,
-                        letterSpacing: 0.5,
-                        wordSpacing: 1,
-                      ),
-                    ),
-                  ],
+              Text(
+                'Water Quality Overview',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                  wordSpacing: 1,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Take a quick look at your water quality stats',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.grey[600],
+                  letterSpacing: 0.5,
+                  wordSpacing: 1,
                 ),
               ),
               const SizedBox(height: 20),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Container(
-                    width: 100,
-                    height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.blue, width: 1.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blueAccent.withOpacity(0.6)),
                     ),
-                    child: Center(
-                      child: DropdownButton<String>(
-                        value: selectedPeriod,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedPeriod = newValue!;
-                          });
-                        },
-                        items: <String>[
-                          "Daily",
-                          "Weekly",
-                          "Monthly",
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
+                    child: DropdownButton<String>(
+                      value: selectedPeriod,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedPeriod = newValue!;
+                        });
+                      },
+                      items: <String>["Daily", "Weekly", "Monthly"]
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(
+                            value,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.lightBlue,
                             ),
-                          );
-                        }).toList(),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'Poppins',
-                          color: Colors.lightBlue
-                        ),
+                          ),
+                        );
+                      }).toList(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'Poppins',
+                        color: Colors.lightBlue,
                       ),
+                      underline: const SizedBox(), // Remove the underline
+                      icon: const Icon(Icons.arrow_drop_down),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // Line Graph
-              SizedBox(
-                height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: true),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          getTitlesWidget: (value, _) => Text(
-                            value.toStringAsFixed(1),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 50,
-                          interval: 1,
-                          getTitlesWidget: (value, _) {
-                            List<DateTime> timeData = getTimeData();
-                            int index = value.toInt();
-                            if (index >= 0 && index < timeData.length) {
-                              String formattedTime = DateFormat(
-                                'HH:mm:ss',
-                              ).format(timeData[index]);
-                              return Transform.rotate(
-                                angle: -45 * (3.141592653589793 / 180),
-                                child: Text(
-                                  formattedTime,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              );
-                            }
-                            return const Text("");
-                          },
-                        ),
+// Line Graph
+          SizedBox(
+            height: 300,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawHorizontalLine: true,
+                  drawVerticalLine: false,
+                ),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true, // Changed from show: true
+                      reservedSize: 40,
+                      getTitlesWidget: (value, _) => Text(
+                        value.toStringAsFixed(1),
+                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 12),
                       ),
                     ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: const Border(
-                        left: BorderSide(
-                          color: Colors.black,
-                        ),
-                        bottom: BorderSide(
-                          color: Colors.black,
-                        ),
-                        right: BorderSide.none,
-                        top: BorderSide.none,
-                      ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true, // Changed from show: true
+                      reservedSize: 40,
+                      interval: 1,
+                      getTitlesWidget: (value, _) {
+                        List<DateTime> timeData = getTimeData();
+                        int index = value.toInt();
+                        if (index >= 0 && index < timeData.length) {
+                          String formattedTime =
+                              DateFormat('HH:mm').format(timeData[index]);
+                          return Transform.rotate(
+                            angle: -45 * (3.141592653589793 / 180),
+                            child: Text(
+                              formattedTime,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        }
+                        return const Text("");
+                      },
                     ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: List.generate(
-                          getCurrentData().length,
-                          (index) => FlSpot(
-                            index.toDouble(),
-                            getCurrentData()[index],
-                          ),
-                        ),
-                        isCurved: true,
-                        color: getStatColor(),
-                        barWidth: 4,
-                        isStrokeCapRound: true,
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: getStatColor().withOpacity(0.3),
-                        ),
-                      ),
-                    ],
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false), // Changed from show: false
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false), // Changed from show: false
                   ),
                 ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: const Border(
+                    left: BorderSide(color: Colors.black12),
+                    bottom: BorderSide(color: Colors.black12),
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: List.generate(
+                      getCurrentData().length,
+                      (index) => FlSpot(
+                        index.toDouble(),
+                        getCurrentData()[index],
+                      ),
+                    ),
+                    isCurved: true,
+                    color: getStatColor(),
+                    barWidth: 4,
+                    isStrokeCapRound: true,
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: getStatColor().withOpacity(0.3),
+                    ),
+                  ),
+                ],
               ),
+            ),
+          ),
               const SizedBox(height: 20),
 
               Row(
@@ -286,21 +286,16 @@ class _StatisticsState extends State<Statistics> {
                   Text(
                     'Water quality highlights',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Poppins',
+                      color: Colors.grey[800],
                     ),
                   ),
                   Container(
-                    width: 90,
-                    height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: Colors.blue,
-                        width: 1.5,
-                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blueAccent.withOpacity(0.6)),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -310,11 +305,14 @@ class _StatisticsState extends State<Statistics> {
                             selectedStat = newValue!;
                           });
                         },
-                        isExpanded: true,
+                        isExpanded: false,
+                        icon: const Icon(Icons.arrow_drop_down),
                         iconSize: 24,
                         style: const TextStyle(
-                          fontSize: 8,
+                          fontSize: 12,
                           fontFamily: 'Poppins',
+                          color: Colors.lightBlue,
+                          fontWeight: FontWeight.w500,
                         ),
                         items: <String>[
                           "pH Level",
@@ -330,7 +328,8 @@ class _StatisticsState extends State<Statistics> {
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontFamily: 'Poppins',
-                                color: Colors.lightBlue
+                                color: Colors.lightBlue,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           );
@@ -340,22 +339,25 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               IntrinsicHeight(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: _highlightCard("Highest", getStatMaxValue().toString(), getStatColor()),
+                      child: _highlightCard(
+                          "Highest", getStatMaxValue().toString(), getStatColor()),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard("Lowest", getStatMinValue().toString(), getStatColor()),
+                      child: _highlightCard(
+                          "Lowest", getStatMinValue().toString(), getStatColor()),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard("Average", getStatAverage().toString(), getStatColor()),
+                      child: _highlightCard(
+                          "Average", getStatAverage().toStringAsFixed(1), getStatColor()),
                     ),
                   ],
                 ),
@@ -425,8 +427,8 @@ class _StatisticsState extends State<Statistics> {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: color,
-          width: 1.2,
+          color: color.withOpacity(0.8),
+          width: 1,
         ),
       ),
       child: Column(
@@ -436,9 +438,9 @@ class _StatisticsState extends State<Statistics> {
             label,
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: color,
+              color: Colors.grey[700],
             ),
           ),
           const SizedBox(height: 5),

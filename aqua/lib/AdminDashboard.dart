@@ -3,9 +3,9 @@ import 'package:aqua/AdminViewReport.dart';
 import 'package:aqua/Dashboard.dart';
 import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
-import 'package:aqua/NewHomeUi.dart';
-import 'package:aqua/Notification.dart';
-import 'package:aqua/Statistics.dart';
+import 'package:aqua/pages/HomeScreen.dart';
+import 'package:aqua/pages/Notification.dart';
+import 'package:aqua/pages/Statistics.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'colors.dart'; // Ensure this file contains your custom colors
