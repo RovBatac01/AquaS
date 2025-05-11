@@ -1,4 +1,4 @@
-import 'package:aqua/colors.dart';
+import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 
 class Accountmanagement extends StatefulWidget {

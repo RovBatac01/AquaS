@@ -1,5 +1,5 @@
-import 'package:aqua/Details.dart';
-import 'package:aqua/colors.dart';
+import 'package:aqua/NavBar/Details.dart';
+import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 
 void main() {

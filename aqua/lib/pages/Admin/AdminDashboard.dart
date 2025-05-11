@@ -1,10 +1,10 @@
-import 'package:aqua/Login.dart';
-import 'package:aqua/HomeUi.dart';
-import 'package:aqua/Notification.dart';
-import 'package:aqua/Statistics.dart';
+import 'package:aqua/pages/Login.dart';
+import 'package:aqua/NavBar/HomeUi.dart';
+import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/NavBar/Statistics.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'colors.dart'; // Ensure this file contains your custom colors
+import '../../components/colors.dart'; // Ensure this file contains your custom colors
 
 void main() {
   runApp(MyDrawerAndNavBarApp());

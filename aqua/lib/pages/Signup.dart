@@ -1,6 +1,6 @@
 import 'dart:ui';
-import 'package:aqua/Login.dart';
-import 'package:aqua/colors.dart';
+import 'package:aqua/pages/Login.dart';
+import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;

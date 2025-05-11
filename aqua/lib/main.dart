@@ -1,9 +1,9 @@
-import 'package:aqua/AdminDashboard.dart';
-import 'package:aqua/Details.dart';
-import 'package:aqua/LandingPage.dart';
-import 'package:aqua/Notification.dart';
-import 'package:aqua/SAdminDashboard.dart';
-import 'package:aqua/UserDashboard.dart';
+import 'package:aqua/pages/Admin/AdminDashboard.dart';
+import 'package:aqua/NavBar/Details.dart';
+import 'package:aqua/pages/LandingPage.dart';
+import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
+import 'package:aqua/pages/User/UserDashboard.dart';
 import 'package:flutter/material.dart';
 
 void main() {
