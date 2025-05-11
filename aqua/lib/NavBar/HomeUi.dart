@@ -1,3 +1,4 @@
+import 'package:aqua/NavBar/DetailCard.dart';
 import 'package:aqua/NavBar/Details.dart';
 import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,6 +209,58 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             SizedBox(height: 20),
+
+            DetailCard(
+              title: 'Home Water Tank',
+              quality: 'Good',
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsScreen(),
+                  ),
+                );
+              },
+            ),
+
+            DetailCard(
+              title: 'School Water Tank',
+              quality: 'Good',
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsScreen(),
+                  ),
+                );
+              },
+            ),
+
+            DetailCard(
+              title: 'Apartment Water Tank',
+              quality: 'Good',
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsScreen(),
+                  ),
+                );
+              },
+            ),
+
+            DetailCard(
+              title: 'Store Water Tank',
+              quality: 'Good',
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailsScreen(),
+                  ),
+                );
+              },
+            ),
 
             
           ],

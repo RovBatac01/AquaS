@@ -1,3 +1,4 @@
+import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -76,17 +77,17 @@ class _StatisticsState extends State<Statistics> {
   Color getStatColor() {
     switch (selectedStat) {
       case "pH Level":
-        return Colors.purple;
+        return ASColor.BGSixth;
       case "Turbidity":
-        return Colors.orange;
+        return ASColor.BGSixth;
       case "EC":
-        return Colors.red;
+        return ASColor.BGSixth;
       case "Temp":
-        return Colors.blue;
+        return ASColor.BGSixth;
       case "TDS":
-        return Colors.green;
+        return ASColor.BGSixth;
       default:
-        return Colors.blue;
+        return ASColor.BGSixth;
     }
   }
 
@@ -98,18 +99,6 @@ class _StatisticsState extends State<Statistics> {
     Color lineColor = getStatColor();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'STATISTICS',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
