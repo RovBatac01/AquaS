@@ -1,9 +1,5 @@
-import 'package:aqua/AdminViewAccount.dart';
-import 'package:aqua/AdminViewReport.dart';
-import 'package:aqua/Dashboard.dart';
-import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
-import 'package:aqua/NewHomeUi.dart';
+import 'package:aqua/HomeUi.dart';
 import 'package:aqua/Notification.dart';
 import 'package:aqua/Statistics.dart';
 import 'package:flutter/material.dart';
@@ -31,16 +27,25 @@ class Admindashboard extends StatefulWidget {
 
 class _MainScreenState extends State<Admindashboard> {
   int _currentIndex = 0;
-
   final List<Widget> _screens = [
-    HomeScreen(),
-    Statistics(),
-    NotificationPage(),
+    Center(child: HomeScreen()),
+    Center(child: Statistics()),
+    Center(child: NotificationPage()),
   ];
 
+  final List<String> _titles = ['Home', 'Statistics', 'Notification'];
+
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
-    ThemeMode.dark,
+    ThemeMode.light,
   ); // This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
+
+
+  //Code for the bottom navigation bar
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,51 +64,62 @@ class _MainScreenState extends State<Admindashboard> {
             appBar: AppBar(
               centerTitle: true,
               flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient:
-                      mode == ThemeMode.light
-                          ? ASColor.secondGradient
-                          : ASColor.firstGradient,
-                ),
+                color:
+                    mode == ThemeMode.light
+                        ? ASColor
+                            .BGSixth // Single color for light mode
+                        : ASColor.BGsecond, // Single color for dark mode
               ),
               title: Row(
                 children: [
-                  Icon(
-                    Icons.water_drop,
-                    color:
-                        isDarkMode
-                            ? ASColor
-                                .BGfirst // Color of The Icon for Dark Mode
-                            : ASColor
-                                .txt2Color, // Color of The Icon for Light Mode
-                    size: 30,
-                  ),
                   SizedBox(width: 10),
                   Text(
-                    'AQUASENSE',
+                    _titles[_currentIndex],
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 25,
-                      color: isDarkMode ? ASColor.BGfirst : ASColor.txt2Color,
+                      fontSize: 22,
+                      color: isDarkMode ? ASColor.txt6Color : ASColor.txt2Color,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  Spacer(),
-
-                  IconButton(
-                    icon: Icon(
-                      Icons.logout,
-                      color: isDarkMode ? ASColor.BGfirst : ASColor.txt2Color,
-                      size: 28,
+                  if (_currentIndex == 0) ...[
+                    SizedBox(width: 20),
+                    IntrinsicWidth(
+                      child: Container(
+                        height: 36,
+                        width: 180,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color:
+                              isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: TextField(
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            fontSize: 14,
+                          ),
+                          decoration: InputDecoration(
+                            icon: Icon(
+                              Icons.search,
+                              color:
+                                  isDarkMode ? Colors.white54 : Colors.black54,
+                              size: 20,
+                            ),
+                            hintText: 'Search...',
+                            border: InputBorder.none,
+                            hintStyle: TextStyle(
+                              color:
+                                  isDarkMode ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            print("Searching Home: $value");
+                          },
+                        ),
+                      ),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
-                    },
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -111,71 +127,60 @@ class _MainScreenState extends State<Admindashboard> {
             body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                gradient:
-                    isDarkMode
-                        ? ASColor
-                            .firstGradient // Dark Mode Background
-                        : ASColor.secondGradient, // Light Mode Background
+                color: Color(0xFF00A650), // Green background
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: SingleChildScrollView(
-                  scrollDirection:
-                      Axis.horizontal, // Enables horizontal scrolling
-                  child: SizedBox(
-                    width:
-                        MediaQuery.of(
-                          context,
-                        ).size.width, // Adapts to screen width
-                    child: GNav(
-                      gap: 8,
-                      activeColor:
-                          isDarkMode
-                              ? ASColor.BGfifth
-                              : ASColor.BGthird, // Icon Color
-                      iconSize: 24,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      backgroundColor: Colors.transparent,
-                      color: isDarkMode ? ASColor.BGthird : Colors.white,
-                      tabBackgroundGradient:
-                          isDarkMode
-                              ? ASColor.secondGradient
-                              : ASColor.firstGradient,
-                      textStyle: TextStyle(
-                        color: isDarkMode ? ASColor.BGfifth : ASColor.txt3Color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      selectedIndex: _currentIndex,
-                      onTabChange: (index) {
-                        setState(() {
-                          _currentIndex = index;
-                        });
-                      },
-                      tabs: [
-                        GButton(icon: Icons.home, text: 'Home', ),
-                        GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
-                        GButton(icon: Icons.notifications_active_outlined, text: 'Notification'),
-                      ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+                child: BottomNavigationBar(
+                  backgroundColor: Color(0xFF00A650), // Match container
+                  type: BottomNavigationBarType.fixed,
+                  selectedItemColor: Colors.white,
+                  unselectedItemColor: Colors.white.withOpacity(0.7),
+                  selectedFontSize: 12,
+                  unselectedFontSize: 12,
+                  elevation: 0,
+                  currentIndex: _currentIndex,
+                  onTap: _onItemTapped,
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: 'Home',
                     ),
-                  ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.history),
+                      label: 'History',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.notifications),
+                      label: 'Notifications',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.settings),
+                      label: 'Settings',
+                    ),
+                  ],
                 ),
               ),
             ),
 
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _notifier.value =
-                      mode == ThemeMode.light
-                          ? ThemeMode.dark
-                          : ThemeMode.light;
-                });
-              },
-              child: Icon(Icons.dark_mode_outlined),
-            ),
+            // floatingActionButton: FloatingActionButton(
+            //   onPressed: () {
+            //     setState(() {
+            //       _notifier.value =
+            //           mode == ThemeMode.light
+            //               ? ThemeMode.dark
+            //               : ThemeMode.light;
+            //     });
+            //   },
+            //   child: Icon(Icons.dark_mode_outlined),
+            // ),
           ),
         );
       },

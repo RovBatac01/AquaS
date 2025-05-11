@@ -1,7 +1,5 @@
-import 'package:aqua/Dashboard.dart';
-import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
-import 'package:aqua/NewHomeUi.dart';
+import 'package:aqua/HomeUi.dart';
 import 'package:aqua/Statistics.dart';
 import 'package:aqua/Notification.dart';
 import 'package:flutter/material.dart';

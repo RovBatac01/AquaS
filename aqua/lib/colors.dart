@@ -9,6 +9,7 @@ class ASColor {
   static const Color BGthird = Colors.black;
   static const Color BGfourth = Color(0xFF0077b6);
   static const Color BGfifth = Color(0xFF89CFF1);
+  static const Color BGSixth = Color(0xFF00A650);
 
   static const LinearGradient firstGradient = LinearGradient(
     begin: Alignment.centerLeft,
@@ -24,8 +25,8 @@ class ASColor {
   static const LinearGradient secondGradient = LinearGradient(
     colors: [
       Colors.black, // Start color
-      Color(0xFF02030F), // Middle color
-      Color(0xFF0D1326), // End color
+      Color(0xFF006400), // Middle color
+      Color(0xFF006d00), // End color
     ],
     begin: Alignment.centerLeft, // Gradient starts from the left
     end: Alignment.centerRight, // Gradient ends at the right
@@ -55,4 +56,5 @@ class ASColor {
   static const Color txt3Color = Colors.black;
   static const Color txt4Color = Color(0xFF6D95FC);
   static const Color txt5Color = Color(0xFF89CFF1);
+  static const Color txt6Color = Color(0xFF006400);
 }

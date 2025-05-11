@@ -1,5 +1,7 @@
 import 'package:aqua/AdminDashboard.dart';
+import 'package:aqua/Details.dart';
 import 'package:aqua/LandingPage.dart';
+import 'package:aqua/Notification.dart';
 import 'package:aqua/SAdminDashboard.dart';
 import 'package:aqua/UserDashboard.dart';
 import 'package:flutter/material.dart';

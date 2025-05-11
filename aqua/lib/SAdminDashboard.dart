@@ -1,14 +1,11 @@
-import 'package:aqua/NewHomeUi.dart';
+import 'package:aqua/HomeUi.dart';
 import 'package:aqua/Notification.dart';
 import 'package:aqua/SAdminAccountManagement.dart';
-import 'package:aqua/AdminViewReport.dart';
-import 'package:aqua/Dashboard.dart';
-import 'package:aqua/History.dart';
 import 'package:aqua/Login.dart';
 import 'package:aqua/Statistics.dart';
 import 'package:flutter/material.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'colors.dart'; // Ensure this file contains your custom colors
+// import 'package:google_nav_bar/google_nav_bar.dart';
 
 void main() {
   runApp(MyDrawerAndNavBarApp());
@@ -80,6 +77,13 @@ class _MainScreenState extends State<Sadmindashboard> {
     );
   }
 
+  //Code for the bottom navigation bar
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
@@ -146,59 +150,103 @@ class _MainScreenState extends State<Sadmindashboard> {
             body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                gradient:
-                    isDarkMode
-                        ? ASColor
-                            .firstGradient // Dark Mode Background
-                        : ASColor.secondGradient, // Light Mode Background
+                color: Color(0xFF00A650), // Green background
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: SingleChildScrollView(
-                  scrollDirection:Axis.horizontal, // Enables horizontal scrolling
-                  child: SizedBox(
-                    width:
-                        MediaQuery.of(
-                          context,
-                        ).size.width, // Adapts to screen width
-                    child: GNav(
-                      gap: 8,
-                      activeColor:
-                          isDarkMode
-                              ? ASColor.BGfifth
-                              : ASColor.BGthird, // Icon Color
-                      iconSize: 24,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      backgroundColor: Colors.transparent,
-                      color: isDarkMode ? ASColor.BGthird : Colors.white,
-                      tabBackgroundGradient:
-                          isDarkMode
-                              ? ASColor.secondGradient
-                              : ASColor.firstGradient,
-                      textStyle: TextStyle(
-                        color: isDarkMode ? ASColor.BGfifth : ASColor.txt3Color,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      selectedIndex: _currentIndex,
-                      onTabChange: (index) {
-                        setState(() {
-                          _currentIndex = index;
-                        });
-                      },
-                      tabs: [
-                        GButton(icon: Icons.home_outlined, text: 'Home',),
-                        GButton(icon: Icons.manage_accounts, text: 'View Account',),
-                        GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
-                        GButton(icon: Icons.notifications_active_outlined, text: 'Notifications'),
-                      ],
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+                child: BottomNavigationBar(
+                  backgroundColor: Color(0xFF00A650), // Match container
+                  type: BottomNavigationBarType.fixed,
+                  selectedItemColor: Colors.white,
+                  unselectedItemColor: Colors.white.withOpacity(0.7),
+                  selectedFontSize: 12,
+                  unselectedFontSize: 12,
+                  elevation: 0,
+                  currentIndex: _currentIndex,
+                  onTap: _onItemTapped,
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: 'Home',
                     ),
-                  ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.history),
+                      label: 'History',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.notifications),
+                      label: 'Notifications',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.settings),
+                      label: 'Settings',
+                    ),
+                  ],
                 ),
               ),
             ),
+            // bottomNavigationBar: Container(
+            //   decoration: BoxDecoration(
+            //     gradient:
+            //         isDarkMode
+            //             ? ASColor
+            //                 .firstGradient // Dark Mode Background
+            //             : ASColor.secondGradient, // Light Mode Background
+            //   ),
+            //   child: Padding(
+            //     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            //     child: SingleChildScrollView(
+            //       scrollDirection:Axis.horizontal, // Enables horizontal scrolling
+            //       child: SizedBox(
+            //         width:
+            //             MediaQuery.of(
+            //               context,
+            //             ).size.width, // Adapts to screen width
+            //         child: GNav(
+            //           gap: 8,
+            //           activeColor:
+            //               isDarkMode
+            //                   ? ASColor.BGfifth
+            //                   : ASColor.BGthird, // Icon Color
+            //           iconSize: 24,
+            //           padding: EdgeInsets.symmetric(
+            //             horizontal: 20,
+            //             vertical: 12,
+            //           ),
+            //           backgroundColor: Colors.transparent,
+            //           color: isDarkMode ? ASColor.BGthird : Colors.white,
+            //           tabBackgroundGradient:
+            //               isDarkMode
+            //                   ? ASColor.secondGradient
+            //                   : ASColor.firstGradient,
+            //           textStyle: TextStyle(
+            //             color: isDarkMode ? ASColor.BGfifth : ASColor.txt3Color,
+            //             fontWeight: FontWeight.bold,
+            //           ),
+            //           selectedIndex: _currentIndex,
+            //           onTabChange: (index) {
+            //             setState(() {
+            //               _currentIndex = index;
+            //             });
+            //           },
+            //           tabs: [
+            //             GButton(icon: Icons.home_outlined, text: 'Home',),
+            //             GButton(icon: Icons.manage_accounts, text: 'View Account',),
+            //             GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
+            //             GButton(icon: Icons.notifications_active_outlined, text: 'Notifications'),
+            //           ],
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 setState(() {
