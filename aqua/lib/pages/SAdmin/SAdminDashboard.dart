@@ -3,6 +3,7 @@ import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/Statistics.dart';
+import 'package:aqua/pages/SAdmin/SAdminHome.dart';
 import 'package:flutter/material.dart';
 import '../../components/colors.dart'; // Ensure this file contains your custom colors
 // import 'package:google_nav_bar/google_nav_bar.dart';
@@ -30,13 +31,18 @@ class _MainScreenState extends State<Sadmindashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeScreen(),
-    Accountmanagement(),
-    Statistics(),
-    NotificationPage(),
+    Center(child: SuperAdminHomeScreen()),
+    Center(child: Sadminaccountmanagement()),
+    Center(child: Statistics()),
+    Center(child: NotificationPage()),
   ];
 
-  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);
+  final List<String> _titles = ['Home','Account Management', 'Statistics', 'Notification'];
+
+  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
+    ThemeMode.light,
+  ); // This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
+
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -101,48 +107,26 @@ class _MainScreenState extends State<Sadmindashboard> {
             appBar: AppBar(
               centerTitle: true,
               flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient:
-                      mode == ThemeMode.light
-                          ? ASColor.secondGradient
-                          : ASColor.firstGradient,
-                ),
+                color:
+                    mode == ThemeMode.light
+                        ? ASColor.BGSixth // Single color for light mode
+                        : ASColor.BGthird, // Single color for dark mode
               ),
               title: Row(
                 children: [
-                  Icon(
-                    Icons.water_drop,
-                    color:
-                        isDarkMode
-                            ? ASColor
-                                .BGfirst // Color of The Icon for Dark Mode
-                            : ASColor
-                                .txt2Color, // Color of The Icon for Light Mode
-                    size: 30,
-                  ),
                   SizedBox(width: 10),
                   Text(
-                    'AQUASENSE',
+                    _titles[_currentIndex],
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 25,
-                      color: isDarkMode ? ASColor.BGfirst : ASColor.txt2Color,
+                      fontSize: 22,
+                      color: isDarkMode ? ASColor.txt2Color : ASColor.txt2Color,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  Spacer(),
-
-                  IconButton(
-                    icon: Icon(
-                      Icons.logout,
-                      color: isDarkMode ? ASColor.BGfirst : ASColor.txt2Color,
-                      size: 28,
-                    ),
-                    onPressed: () {
-                      _showLogoutDialog(context);
-                    },
-                  ),
+                  if (_currentIndex == 0) ...[
+                    
+                  ],
                 ],
               ),
             ),
@@ -150,7 +134,7 @@ class _MainScreenState extends State<Sadmindashboard> {
             body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: Color(0xFF00A650), // Green background
+                color: Color.fromARGB(255, 0, 0, 0), // Green background
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -175,6 +159,10 @@ class _MainScreenState extends State<Sadmindashboard> {
                     BottomNavigationBarItem(
                       icon: Icon(Icons.home),
                       label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person_2_outlined),
+                      label: 'Account',
                     ),
                     BottomNavigationBarItem(
                       icon: Icon(Icons.history),
@@ -247,17 +235,17 @@ class _MainScreenState extends State<Sadmindashboard> {
             //     ),
             //   ),
             // ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _notifier.value =
-                      mode == ThemeMode.light
-                          ? ThemeMode.dark
-                          : ThemeMode.light;
-                });
-              },
-              child: Icon(Icons.dark_mode_outlined),
-            ),
+            // floatingActionButton: FloatingActionButton(
+            //   onPressed: () {
+            //     setState(() {
+            //       _notifier.value =
+            //           mode == ThemeMode.light
+            //               ? ThemeMode.dark
+            //               : ThemeMode.light;
+            //     });
+            //   },
+            //   child: Icon(Icons.dark_mode_outlined),
+            // ),
           ),
         );
       },

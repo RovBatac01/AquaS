@@ -1,7 +1,8 @@
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
-import 'package:aqua/NavBar/Details.dart';
+import 'package:aqua/pages/Details.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
 import 'package:flutter/material.dart';
@@ -19,10 +20,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      theme: ThemeData(
-      ),
-      home: Admindashboard()
+      theme: ThemeData.light(), // 👈 Set light theme
+      darkTheme: ThemeData.dark(), // Optional: define dark theme
+      themeMode: ThemeMode.light,
+      home: Sadmindashboard(),
     );
   }
 }
-

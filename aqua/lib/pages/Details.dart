@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:ui'; // Required for ImageFilter
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +13,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Water Quality',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      debugShowCheckedModeBanner: false,
+      // theme: ThemeData.light().copyWith(
+      //   primaryColor: Colors.blue,
+      //   scaffoldBackgroundColor: Colors.white,
+      // ),
+      // themeMode:
+      //     ThemeMode
+      //         .light, // Uses system theme. Use ThemeMode.dark to force dark mode.
       home: const DetailsScreen(),
     );
   }
@@ -22,7 +30,7 @@ class DetailsScreen extends StatefulWidget {
   const DetailsScreen({super.key});
 
   @override
-  _DetailsScreenState createState() => _DetailsScreenState();
+  State<DetailsScreen> createState() => _DetailsScreenState();
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
@@ -34,26 +42,32 @@ class _DetailsScreenState extends State<DetailsScreen> {
   void updateIndicator(String stat) {
     setState(() {
       selectedStat = stat;
-      if (stat == "Temp") {
-        progress = 28 / 100;
-        label = "28°C";
-        indicatorColor = Colors.blue;
-      } else if (stat == "TDS") {
-        progress = 35 / 100;
-        label = "35 PPM";
-        indicatorColor = Colors.green;
-      } else if (stat == "pH") {
-        progress = 7.2 / 14;
-        label = "pH 7.2";
-        indicatorColor = Colors.purple;
-      } else if (stat == "Turbidity") {
-        progress = 0.5 / 10;
-        label = "0.5 NTU";
-        indicatorColor = Colors.orange;
-      } else if (stat == "Electrical Conductivity") {
-        progress = 35 / 100;
-        label = "35 PPM";
-        indicatorColor = Colors.red;
+      switch (stat) {
+        case "Temp":
+          progress = 28 / 100;
+          label = "28°C";
+          indicatorColor = Colors.blue;
+          break;
+        case "TDS":
+          progress = 35 / 100;
+          label = "35 PPM";
+          indicatorColor = Colors.green;
+          break;
+        case "pH":
+          progress = 7.2 / 14;
+          label = "pH 7.2";
+          indicatorColor = Colors.purple;
+          break;
+        case "Turbidity":
+          progress = 0.5 / 10;
+          label = "0.5 NTU";
+          indicatorColor = Colors.orange;
+          break;
+        case "Electrical Conductivity":
+          progress = 35 / 100;
+          label = "35 PPM";
+          indicatorColor = Colors.red;
+          break;
       }
     });
   }
@@ -61,74 +75,51 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'DETAILS',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-            letterSpacing: 1,
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 15),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Home Water Tank',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            const Text(
-              "Device Status: Connected",
-              style: TextStyle(fontSize: 18, color: Colors.green),
-            ),
-            const SizedBox(height: 20),
-
-            // Circular Temperature Indicator with enhanced style
-            Center(
-              child: CustomPaint(
-                size: const Size(250, 250),
-                painter: CircularIndicator(
-                  progress: progress,
-                  label: label,
-                  color: indicatorColor,
-                  brightness: Theme.of(context).brightness, 
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Home Water Tank',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                  fontFamily: 'Poppins',
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              "Water quality: Great",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Poppins',
+              const Text(
+                "Device Status: Connected",
+                style: TextStyle(fontSize: 18, color: Colors.green),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Horizontal Scrollable Stats with Spacing
-            Column(
-              children: [
-                // First row with 3 cards
-                IntrinsicHeight(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Circular Indicator
+              Center(
+                child: CustomPaint(
+                  size: const Size(250, 250),
+                  painter: CircularIndicator(
+                    progress: progress,
+                    label: label,
+                    color: indicatorColor,
+                    brightness: Theme.of(context).brightness,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const Text(
+                "Water quality: Great",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black, fontFamily: 'Poppins'),
+              ),
+              const SizedBox(height: 20),
+
+              // Cards
+              Column(
+                children: [
+                  Row(
                     children: [
                       Expanded(
                         child: StatCard(
@@ -161,14 +152,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ), // Spacer between top and bottom rows
-                // Second row with 2 cards
-                IntrinsicHeight(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
                       Expanded(
                         child: StatCard(
@@ -192,10 +177,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -225,7 +210,7 @@ class StatCard extends StatelessWidget {
 
     // Set the background color depending on the theme
     Color bgColor = isSelected
-        ? Colors.blueAccent.withOpacity(0.8)
+        ? Colors.greenAccent.withOpacity(0.8)
         : isDarkMode
             ? Colors.grey[800]! // Dark mode background color
             : Colors.white; // Light mode background color
@@ -279,18 +264,17 @@ class StatCard extends StatelessWidget {
   }
 }
 
-// Enhanced Circular Progress Indicator
 class CircularIndicator extends CustomPainter {
   final double progress;
   final String label;
   final Color color;
-  final Brightness brightness; // Add brightness as a parameter
+  final Brightness brightness;
 
   CircularIndicator({
     required this.progress,
     required this.label,
     required this.color,
-    required this.brightness, // Accept brightness
+    required this.brightness,
   });
 
   @override
@@ -310,7 +294,7 @@ class CircularIndicator extends CustomPainter {
     final gradientPaint =
         Paint()
           ..shader = LinearGradient(
-            colors: [color, Colors.lightBlueAccent],
+            colors: [color, Colors.greenAccent],
           ).createShader(Rect.fromCircle(center: center, radius: radius))
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
@@ -326,17 +310,16 @@ class CircularIndicator extends CustomPainter {
       gradientPaint,
     );
 
-    // Determine text color based on brightness
-    Color textColor = brightness == Brightness.dark ? Colors.white : Colors.black;
-
-    // Text in the center
+    // Text in center
+    final textColor =
+        brightness == Brightness.light ? Colors.black : Colors.white;
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
         style: TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.bold,
-          color: textColor, // Set the text color dynamically
+          color: textColor,
           shadows: [
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],

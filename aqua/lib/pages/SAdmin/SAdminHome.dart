@@ -16,21 +16,22 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Water Quality',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomeScreen(),
+      home: const SuperAdminHomeScreen(),
     );
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class SuperAdminHomeScreen extends StatefulWidget {
+  const SuperAdminHomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<SuperAdminHomeScreen> {
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -55,11 +56,46 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               children: [
                 Container(
+                  height: 36,
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? Colors.grey[800]
+                            : const Color.fromARGB(255, 167, 232, 201),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: TextField(
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      icon: Icon(
+                        Icons.search,
+                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        size: 20,
+                      ),
+                      hintText: 'Search Establishments...',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(
+                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                      ),
+                      contentPadding: EdgeInsets.only(bottom: 10),
+                    ),
+                    onChanged: (value) {
+                      print("Searching Home: $value");
+                    },
+                  ),
+                ),
+
+                SizedBox(height: 10),
+
+                Container(
                   height: 70, // Increased height for better vertical spacing
                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 27, 123, 201),
-                  ),
+                  decoration: BoxDecoration(color: Colors.blue),
                   padding: const EdgeInsets.only(
                     left: 10,
                   ), // Padding on left and right
@@ -95,16 +131,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
 
-                      Icon(
-                        Icons.window_outlined, // You can use any icon here
-                        color: Colors.white,
-                        size: 100,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10,),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Icon(
+                            Icons.window_outlined,
+                            color: Colors.white,
+                            size:
+                                60, // Reduced to better fit in the 70px high container
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                SizedBox(height: 10), // Spacing between the two containers
+                SizedBox(
+                  height: 10,
+                ), // Spacing between the two containers// Spacing between the two containers
 
                 Container(
                   height: 70, // Increased height for better vertical spacing
@@ -147,10 +192,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
 
-                      Icon(
-                        Icons.sensors_rounded, // You can use any icon here
-                        color: Colors.white,
-                        size: 100,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10,),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Icon(
+                            Icons.sensors_rounded,
+                            color: Colors.white,
+                            size:
+                                60, // Reduced to better fit in the 70px high container
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -197,10 +249,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
 
-                      Icon(
-                        Icons.people_alt_outlined, // You can use any icon here
-                        color: Colors.white,
-                        size: 100,
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10,),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Icon(
+                            Icons.people_alt_outlined,
+                            color: Colors.white,
+                            size:
+                                60, // Reduced to better fit in the 70px high container
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -216,9 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => DetailsScreen()),
                 );
               },
             ),
@@ -229,9 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => DetailsScreen()),
                 );
               },
             ),
@@ -242,9 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => DetailsScreen()),
                 );
               },
             ),
@@ -255,14 +308,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => DetailsScreen()),
                 );
               },
             ),
-
-            
           ],
         ),
       ),

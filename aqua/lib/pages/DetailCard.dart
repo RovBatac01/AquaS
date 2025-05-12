@@ -1,3 +1,4 @@
+import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:flutter/material.dart';
 import 'Details.dart';// Adjust the import path as needed
 
@@ -68,7 +69,7 @@ class DetailCard extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const DetailsScreen(),
+                          builder: (context) => const AdminDetailsScreen(),
                         ),
                       );
                     },

@@ -1,3 +1,4 @@
+import 'package:aqua/pages/Details.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Statistics.dart';
@@ -29,12 +30,23 @@ class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    HomeScreen(), 
-    Statistics(), 
-    NotificationPage()
-    ];
+    Center(child: DetailsScreen()),
+    Center(child: Statistics()),
+    Center(child: NotificationPage()),
+  ];
 
-  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.dark);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
+  final List<String> _titles = ['Home', 'Statistics', 'Notification'];
+
+  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.light);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
+
+
+//Code for the bottom navigation bar
+  void _onItemTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+  
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -90,112 +102,90 @@ class _MainScreenState extends State<Userdashboard> {
           darkTheme: ThemeData.dark(),
           home: Scaffold(
             appBar: AppBar(
-              centerTitle: true, 
+              centerTitle: true,
               flexibleSpace: Container(
-                decoration: BoxDecoration(
-                  gradient:
-                      mode == ThemeMode.light
-                          ? ASColor
-                              .secondGradient 
-                          : ASColor.firstGradient, 
-                ), 
+                color:
+                    mode == ThemeMode.light
+                        ? ASColor
+                            .BGSixth // Single color for light mode
+                        : ASColor.BGsecond, // Single color for dark mode
               ),
               title: Row(
                 children: [
-                  Icon(
-                    Icons.water_drop,
-                    color: isDarkMode 
-                      ? ASColor.BGfirst // Color of The Icon for Dark Mode
-                      : ASColor.txt2Color, // Color of The Icon for Light Mode
-                    size: 30,
-                  ),
                   SizedBox(width: 10),
                   Text(
-                    'AQUASENSE',
+                    _titles[_currentIndex],
                     style: TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 25,
-                      color: isDarkMode ? ASColor.BGfirst : ASColor.txt2Color,
+                      fontSize: 22,
+                      color: isDarkMode ? ASColor.txt6Color : ASColor.txt2Color,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-            
-                  Spacer(),
-
-            
-                  IconButton(
-                    icon: Icon(
-                      Icons.logout,
-                      color: isDarkMode ? ASColor.BGfirst : ASColor.txt2Color,
-                      size: 28,
-                    ),
-                    onPressed: () {
-                      _showLogoutDialog(context);
-                    },
-                  ),
+                  if (_currentIndex == 0) ...[
+                    
+                  ],
                 ],
               ),
             ),
 
+
             body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                gradient:
-                    isDarkMode
-                        ? ASColor.firstGradient //Background Color of NavBar for Light Mode
-                        : ASColor.secondGradient, //Background Color of NavBar for Dark Mode
+                color: ASColor.BGSixth, // Green background
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: GNav(
-                  gap: 8,
-                  activeColor: 
-                    isDarkMode 
-                      ? ASColor.BGfifth  // Icon Color for Dark Mode
-                      : ASColor.BGthird, // Icon Color for Light Mode
-                  iconSize: 24,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  backgroundColor: Colors.transparent,
-                  color: isDarkMode ? ASColor.BGthird : Colors.white,
-                  tabBackgroundGradient:
-                      isDarkMode
-                          ? ASColor.secondGradient
-                          : ASColor.firstGradient,
-
-                  textStyle: TextStyle(
-                    color:
-                        isDarkMode
-                            ? ASColor.BGfifth // Text Color for Dark Mode
-                            : ASColor.txt3Color, //Text Color for Light Mode
-                    fontWeight: FontWeight.bold,
-                  ),
-
-                  selectedIndex: _currentIndex,
-                  onTabChange: (index) {
-                    setState(() {
-                      _currentIndex = index;
-                    });
-                  },
-                  tabs: [
-                    GButton(icon: Icons.home_outlined, text: 'Home'),
-                    GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
-                    GButton(icon: Icons.notifications_active_outlined, text: 'Notifications'),
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+                child: BottomNavigationBar(
+                  backgroundColor: ASColor.BGSixth, // Match container
+                  type: BottomNavigationBarType.fixed,
+                  selectedItemColor: Colors.white,
+                  unselectedItemColor: Colors.white.withOpacity(0.7),
+                  selectedFontSize: 12,
+                  unselectedFontSize: 12,
+                  elevation: 0,
+                  currentIndex: _currentIndex,
+                  onTap: _onItemTapped,
+                  items: const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: 'Home',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.history),
+                      label: 'History',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.notifications),
+                      label: 'Notifications',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.settings),
+                      label: 'Settings',
+                    ),
                   ],
                 ),
               ),
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _notifier.value =
-                      mode == ThemeMode.light
-                          ? ThemeMode.dark
-                          : ThemeMode.light;
-                });
-              },
-              child: Icon(Icons.dark_mode_outlined),
-            ),
+            // floatingActionButton: FloatingActionButton(
+            //   onPressed: () {
+            //     setState(() {
+            //       _notifier.value =
+            //           mode == ThemeMode.light
+            //               ? ThemeMode.dark
+            //               : ThemeMode.light;
+            //     });
+            //   },
+            //   child: Icon(Icons.dark_mode_outlined),
+            // ),
           ),
         );
       },

@@ -9,7 +9,7 @@ class ASColor {
   static const Color BGthird = Colors.black;
   static const Color BGfourth = Color(0xFF0077b6);
   static const Color BGfifth = Color(0xFF89CFF1);
-  static const Color BGSixth = Color(0xFF00A650);
+  static const Color BGSixth = Color(0xFF006400);
 
   static const LinearGradient firstGradient = LinearGradient(
     begin: Alignment.centerLeft,

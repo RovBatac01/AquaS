@@ -1,3 +1,4 @@
+import 'package:aqua/pages/Admin/AdminHome.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Notification.dart';
@@ -28,7 +29,7 @@ class Admindashboard extends StatefulWidget {
 class _MainScreenState extends State<Admindashboard> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
-    Center(child: HomeScreen()),
+    Center(child: AdminHomeScreen()),
     Center(child: Statistics()),
     Center(child: NotificationPage()),
   ];
@@ -83,42 +84,7 @@ class _MainScreenState extends State<Admindashboard> {
                     ),
                   ),
                   if (_currentIndex == 0) ...[
-                    SizedBox(width: 20),
-                    IntrinsicWidth(
-                      child: Container(
-                        height: 36,
-                        width: 180,
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color:
-                              isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: TextField(
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            fontSize: 14,
-                          ),
-                          decoration: InputDecoration(
-                            icon: Icon(
-                              Icons.search,
-                              color:
-                                  isDarkMode ? Colors.white54 : Colors.black54,
-                              size: 20,
-                            ),
-                            hintText: 'Search...',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color:
-                                  isDarkMode ? Colors.white54 : Colors.black54,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            print("Searching Home: $value");
-                          },
-                        ),
-                      ),
-                    ),
+                    
                   ],
                 ],
               ),
@@ -127,7 +93,7 @@ class _MainScreenState extends State<Admindashboard> {
             body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: Color(0xFF00A650), // Green background
+                color: ASColor.BGSixth, // Green background
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -139,7 +105,7 @@ class _MainScreenState extends State<Admindashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: Color(0xFF00A650), // Match container
+                  backgroundColor: ASColor.BGSixth, // Match container
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),
