@@ -31,7 +31,7 @@ class _MainScreenState extends State<Sadmindashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    Center(child: SuperAdminHomeScreen()),
+    Center(child: HomeScreen()),
     Center(child: Sadminaccountmanagement()),
     Center(child: Statistics()),
     Center(child: NotificationPage()),

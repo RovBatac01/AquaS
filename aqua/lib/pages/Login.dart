@@ -68,13 +68,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _login(
+ void _login(
     BuildContext context,
-    TextEditingController username,
-    TextEditingController password,
+    TextEditingController usernameController, // Changed parameter name for clarity
+    TextEditingController passwordController, // Changed parameter name for clarity
   ) async {
-    String enteredUsername = username.text;
-    String enteredPassword = password.text;
+    String enteredUsername = usernameController.text; // Use the controller's text
+    String enteredPassword = passwordController.text;
 
     if (enteredUsername.isEmpty || enteredPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse("http://localhost:5000/login"), // Ensure this URL matches your Node.js backend
+        Uri.parse("http://localhost:5000/login"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": enteredUsername,
@@ -100,11 +100,9 @@ class _LoginScreenState extends State<LoginScreen> {
         var jsonResponse = jsonDecode(response.body);
         String? userRole = jsonResponse['role'];
 
-        // --- Debugging Line (Keep this for verifying the role) ---
         print('DEBUG: User role received from backend: "$userRole"');
 
         if (userRole != null) {
-          // Normalize the role string to remove any whitespace
           final normalizedRole = userRole.trim();
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -114,24 +112,28 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          // --- Navigate based on the user's role ---
-          if (normalizedRole == 'Super Admin') {
+          // --- NEW: Save the logged-in username to SharedPreferences ---
+          await _prefs.setString('loggedInUsername', enteredUsername);
+          // You might also save the role if you need it persistently on the dashboard
+          // await _prefs.setString('loggedInUserRole', normalizedRole);
+
+
+          if (normalizedRole == 'Super Admin') { // Match the exact role string from backend
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => Sadmindashboard()),
             );
-          } else if (normalizedRole == 'Admin') { // Added condition for 'Admin' role
+          } else if (normalizedRole == 'Admin') {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => Admindashboard()), // Navigate to AdminDashboard
+              MaterialPageRoute(builder: (context) => Admindashboard()),
             );
-          } else if (normalizedRole == 'User') { // Condition for 'User' role
+          } else if (normalizedRole == 'User') {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => Userdashboard()), // Navigate to UserDashboard
+              MaterialPageRoute(builder: (context) => Userdashboard()),
             );
           } else {
-            // This block will catch any roles that don't match 'SAdmin', 'Admin', or 'User'
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text("Unknown user role '$userRole'. Please contact support."),
