@@ -68,37 +68,90 @@ app.post("/register", async (req, res) => {
   }
 });
 
+// Login route
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+    const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
-
-  const sql = "SELECT * FROM users WHERE username = ?";
-  db.query(sql, [username], async (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ error: "Database error occurred" });
+    if (!username || !password) {
+        return res.status(400).json({ error: "All fields are required" });
     }
 
-    if (results.length === 0) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    const sql = "SELECT *, role FROM users WHERE username = ?";
+    db.query(sql, [username], async (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database error occurred" });
+        }
 
-    const user = results[0];
+        if (results.length === 0) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
 
-    // Compare hashed password
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+        const user = results[0];
 
-    res.json({ message: "Login successful!" });
-  });
+        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        console.log("DEBUG: User role being sent from backend:", user.role);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        res.json({
+            message: "Login successful!",
+            role: user.role 
+            // token: "your_jwt_token_here"
+        });
+    });
 });
 
+// NEW: Endpoint to fetch all users
+app.get("/users", (req, res) => {
+    const sql = "SELECT id, username, role FROM users"; 
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Database error fetching users:", err);
+            return res.status(500).json({ error: "Failed to fetch users from database." });
+        }
+        res.status(200).json(results); 
+    });
+});
 
+// NEW: Endpoint to update a user by ID (PUT request)
+app.put("/users/:id", (req, res) => {
+    const userId = req.params.id; 
+    const { username, role } = req.body;
+
+    if (!username || !role) {
+        return res.status(400).json({ error: "Username and role are required for update." });
+    }
+    const sql = "UPDATE users SET username = ?, role = ? WHERE id = ?";
+    db.query(sql, [username, role, userId], (err, result) => {
+        if (err) {
+            console.error("Database error updating user:", err);
+            return res.status(500).json({ error: "Failed to update user in database." });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "User not found or no changes made." });
+        }
+        res.status(200).json({ message: "User updated successfully!" });
+    });
+});
+
+// NEW: Endpoint to delete a user by ID (DELETE request)
+app.delete("/users/:id", (req, res) => {
+    const userId = req.params.id;
+
+    const sql = "DELETE FROM users WHERE id = ?";
+    db.query(sql, [userId], (err, result) => {
+        if (err) {
+            console.error("Database error deleting user:", err);
+            return res.status(500).json({ error: "Failed to delete user from database." });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "User not found." });
+        }
+        res.status(200).json({ message: "User deleted successfully!" });
+    });
+});
 
 // Set up SerialPort (Change COM5 to your correct port)
 // const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 });

@@ -6,7 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'Admin/AdminDashboard.dart';
+import 'User/UserDashboard.dart';
 // import 'package:flutter_application_1/signup.dart';
 
 void main() {
@@ -24,11 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isChecked = false;
   final TextEditingController username = TextEditingController();
   final TextEditingController password = TextEditingController();
-  final String fixedUsername = "admin";
-  final String fixedPassword = "123";
   late SharedPreferences _prefs;
-
-  //------------------------------Function for the password toggle visibility
 
   bool _obscureText = true;
   void _toggleVisibility() {
@@ -36,9 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
       _obscureText = !_obscureText;
     });
   }
-  //-------------------------------------------------------------------------
-
-  //-------------------------------Function for Remember me
 
   @override
   void initState() {
@@ -74,7 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  //Need to be change when connecting to Database
   void _login(
     BuildContext context,
     TextEditingController username,
@@ -95,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse("http://localhost:5000/login"),
+        Uri.parse("http://localhost:5000/login"), // Ensure this URL matches your Node.js backend
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": enteredUsername,
@@ -105,35 +98,69 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
+        String? userRole = jsonResponse['role'];
 
-        // Login successful
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login Successful!"),
-            backgroundColor: Colors.green,
-          ),
-        );
+        // --- Debugging Line (Keep this for verifying the role) ---
+        print('DEBUG: User role received from backend: "$userRole"');
 
-        // Navigate to the admin dashboard
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => Sadmindashboard()),
-        );
+        if (userRole != null) {
+          // Normalize the role string to remove any whitespace
+          final normalizedRole = userRole.trim();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Login Successful!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // --- Navigate based on the user's role ---
+          if (normalizedRole == 'Super Admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Sadmindashboard()),
+            );
+          } else if (normalizedRole == 'Admin') { // Added condition for 'Admin' role
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Admindashboard()), // Navigate to AdminDashboard
+            );
+          } else if (normalizedRole == 'User') { // Condition for 'User' role
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Userdashboard()), // Navigate to UserDashboard
+            );
+          } else {
+            // This block will catch any roles that don't match 'SAdmin', 'Admin', or 'User'
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Unknown user role '$userRole'. Please contact support."),
+                backgroundColor: Colors.yellow,
+              ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Login successful, but no role information found in response."),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
       } else {
-        // Login failed
         var jsonResponse = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(jsonResponse['error'] ?? "Invalid credentials"),
+            content: Text(jsonResponse['error'] ?? "Login failed. Please check credentials."),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (error) {
-      print("Error: $error");
+      print("Error during login request: $error");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Server error. Please try again."),
+          content: Text("Server error. Please try again. ($error)"),
           backgroundColor: Colors.red,
         ),
       );
@@ -161,7 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
           Positioned(
             bottom: -60,
             right: -80,
@@ -177,7 +203,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -214,8 +239,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 20),
-
-                    //Username and Password-------------------------------------
                     TextField(
                       controller: username,
                       decoration: InputDecoration(
@@ -255,11 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       style: TextStyle(color: Colors.white),
                     ),
-
-                    //Username and Password-------------------------------------
                     SizedBox(height: 12),
-
-                    //Remember me and forgot password---------------------------
                     Row(
                       children: [
                         Checkbox(
@@ -304,9 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     SizedBox(height: 20),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -314,7 +331,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(width: 16),
                       ],
                     ),
-
                     SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

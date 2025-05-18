@@ -2,6 +2,7 @@ import 'package:aqua/pages/Admin/AdminDashboard.dart';
 import 'package:aqua/pages/Details.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(), // 👈 Set light theme
       darkTheme: ThemeData.dark(), // Optional: define dark theme
       themeMode: ThemeMode.light,
-      home: Sadmindashboard(),
+      home: LoginScreen(),
     );
   }
 }
