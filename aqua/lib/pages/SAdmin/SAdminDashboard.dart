@@ -1,10 +1,13 @@
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
+import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../components/colors.dart'; // Ensure this file contains your custom colors
 // import 'package:google_nav_bar/google_nav_bar.dart';
 
@@ -13,10 +16,17 @@ void main() {
 }
 
 class MyDrawerAndNavBarApp extends StatelessWidget {
+  const MyDrawerAndNavBarApp({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context); // 👈
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode, // 👈 Connect to ThemeProvider
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
       home: Sadmindashboard(),
     );
   }
@@ -35,6 +45,7 @@ class _MainScreenState extends State<Sadmindashboard> {
     Center(child: Sadminaccountmanagement()),
     Center(child: Statistics()),
     Center(child: NotificationPage()),
+    Center(child: SettingsPage()),
   ];
 
   final List<String> _titles = [
@@ -42,11 +53,8 @@ class _MainScreenState extends State<Sadmindashboard> {
     'Account Management',
     'Statistics',
     'Notification',
+    'Settings',
   ];
-
-  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
-    ThemeMode.light,
-  ); // This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -104,14 +112,12 @@ class _MainScreenState extends State<Sadmindashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: _notifier,
-      builder: (_, mode, __) {
-        final bool isDarkMode = mode == ThemeMode.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          themeMode: mode,
+          themeMode: themeProvider.themeMode,
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           home: Scaffold(
@@ -199,7 +205,6 @@ class _MainScreenState extends State<Sadmindashboard> {
             ),
           ),
         );
-      },
-    );
+      }
   }
-}
+

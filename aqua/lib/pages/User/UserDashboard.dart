@@ -4,8 +4,10 @@ import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:provider/provider.dart';
 import '../../components/colors.dart'; // Ensure this file contains your custom colors
 
 void main() {
@@ -13,10 +15,17 @@ void main() {
 }
 
 class MyDrawerAndNavBarApp extends StatelessWidget {
+  const MyDrawerAndNavBarApp({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context); // 👈
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode, // 👈 Connect to ThemeProvider
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
       home: Userdashboard(),
     );
   }
@@ -38,8 +47,6 @@ class _MainScreenState extends State<Userdashboard> {
   ];
 
   final List<String> _titles = ['Home', 'Statistics', 'Notification', 'Settings'];
-
-  final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.light);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
 
 
 //Code for the bottom navigation bar
@@ -91,14 +98,12 @@ class _MainScreenState extends State<Userdashboard> {
 
    @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: _notifier,
-      builder: (_, mode, __) {
-        final bool isDarkMode = mode == ThemeMode.dark;
+      final themeProvider = Provider.of<ThemeProvider>(context);
+      final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          themeMode: mode,
+          themeMode: themeProvider.themeMode,
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           home: Scaffold(
@@ -182,7 +187,6 @@ class _MainScreenState extends State<Userdashboard> {
             ),
           ),
         );
-      },
-    );
+      }
   }
-}
+
