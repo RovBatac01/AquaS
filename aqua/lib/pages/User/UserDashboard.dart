@@ -1,3 +1,4 @@
+import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Details.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
@@ -33,9 +34,10 @@ class _MainScreenState extends State<Userdashboard> {
     Center(child: DetailsScreen()),
     Center(child: Statistics()),
     Center(child: NotificationPage()),
+    Center(child: SettingsPage()),
   ];
 
-  final List<String> _titles = ['Home', 'Statistics', 'Notification'];
+  final List<String> _titles = ['Home', 'Statistics', 'Notification', 'Settings'];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(ThemeMode.light);// This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
 
@@ -87,12 +89,11 @@ class _MainScreenState extends State<Userdashboard> {
   }
 
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
       valueListenable: _notifier,
       builder: (_, mode, __) {
-        // Define colors based on the theme mode
         final bool isDarkMode = mode == ThemeMode.dark;
 
         return MaterialApp(
@@ -101,39 +102,43 @@ class _MainScreenState extends State<Userdashboard> {
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           home: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              flexibleSpace: Container(
-                color:
-                    mode == ThemeMode.light
-                        ? ASColor
-                            .BGSixth // Single color for light mode
-                        : ASColor.BGsecond, // Single color for dark mode
-              ),
-              title: Row(
-                children: [
-                  SizedBox(width: 10),
-                  Text(
-                    _titles[_currentIndex],
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      color: isDarkMode ? ASColor.txt6Color : ASColor.txt2Color,
-                      fontWeight: FontWeight.bold,
+            body: Stack(
+              children: [
+                // Add spacing at the top (e.g., status bar height or more)
+                Column(
+                  children: [
+                    SizedBox(height: 20), // Space above custom AppBar
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            _titles[_currentIndex],
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 22,
+                              color: ASColor.txt2Color,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (_currentIndex == 0) ...[],
+                        ],
+                      ),
                     ),
-                  ),
-                  if (_currentIndex == 0) ...[
-                    
+                    // Remaining body content
+                    Expanded(child: _screens[_currentIndex]),
                   ],
-                ],
-              ),
+                ),
+              ],
             ),
-
-
-            body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: ASColor.BGSixth, // Green background
+                color: Color.fromARGB(255, 0, 0, 0),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -145,7 +150,7 @@ class _MainScreenState extends State<Userdashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: ASColor.BGSixth, // Match container
+                  backgroundColor: Color(0xFF00A650),
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),
@@ -175,17 +180,6 @@ class _MainScreenState extends State<Userdashboard> {
                 ),
               ),
             ),
-            // floatingActionButton: FloatingActionButton(
-            //   onPressed: () {
-            //     setState(() {
-            //       _notifier.value =
-            //           mode == ThemeMode.light
-            //               ? ThemeMode.dark
-            //               : ThemeMode.light;
-            //     });
-            //   },
-            //   child: Icon(Icons.dark_mode_outlined),
-            // ),
           ),
         );
       },

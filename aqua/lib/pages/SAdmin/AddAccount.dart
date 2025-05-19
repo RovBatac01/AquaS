@@ -6,17 +6,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(MaterialApp(debugShowCheckedModeBanner: false, home: Signup()));
+  runApp(MaterialApp(debugShowCheckedModeBanner: false, home: AddAccount()));
 }
 
-class Signup extends StatefulWidget {
-  const Signup({super.key});
+class AddAccount extends StatefulWidget {
+  const AddAccount({super.key});
 
   @override
-  State<Signup> createState() => _SignupState();
+  State<AddAccount> createState() => _SignupState();
 }
 
-class _SignupState extends State<Signup> {
+class _SignupState extends State<AddAccount> {
   // Form key for validation and submission
   final _formKey = GlobalKey<FormState>();
 
@@ -79,7 +79,7 @@ class _SignupState extends State<Signup> {
               child: Container(
                 width: 180,
                 height: 180,
-                decoration: BoxDecoration(color: ASColor.BGfourth),
+                decoration: BoxDecoration(color: Colors.purple),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
                   child: Container(color: Colors.transparent),
@@ -111,7 +111,7 @@ class _SignupState extends State<Signup> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Sign Up',
+                          'Create Admin',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 26,
@@ -292,64 +292,21 @@ class _SignupState extends State<Signup> {
                         },
                       ),
 
-                      CheckboxListTile(
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(
-                          "I agree to the terms and conditions",
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: ASColor.txt2Color,
-                            fontSize: 12,
-                          ),
-                        ),
-                        value: isChecked,
-                        onChanged: (bool? newValue) {
-                          setState(() {
-                            isChecked = newValue ?? false;
-                          });
-                        },
-                      ),
+                      SizedBox(height: 20),
 
-                      // Sign Up button
                       Center(
                         child: ElevatedButton(
                           onPressed: registerUser,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.purple.shade400,
                           ),
-                          child: const Text('Sign Up',
+                          child: const Text('Add Account',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 16,
                                 color: Colors.white,
                               )),
                         ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Login link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Already have an account? ",
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LoginScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              "Login",
-                              style: TextStyle(color: Colors.purple),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),

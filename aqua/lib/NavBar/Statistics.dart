@@ -147,7 +147,7 @@ class _StatisticsState extends State<Statistics> {
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.blue, width: 1.5),
+                      border: Border.all(color: Colors.green, width: 1.5),
                     ),
                     child: Center(
                       child: DropdownButton<String>(
@@ -177,7 +177,7 @@ class _StatisticsState extends State<Statistics> {
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'Poppins',
-                          color: Colors.lightBlue
+                          color: Colors.green
                         ),
                       ),
                     ),
@@ -287,7 +287,7 @@ class _StatisticsState extends State<Statistics> {
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: Colors.blue,
+                        color: Colors.green,
                         width: 1.5,
                       ),
                     ),
@@ -319,7 +319,7 @@ class _StatisticsState extends State<Statistics> {
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontFamily: 'Poppins',
-                                color: Colors.lightBlue
+                                color: Colors.green
                               ),
                             ),
                           );

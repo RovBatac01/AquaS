@@ -296,6 +296,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
 
+          IconButton(
+            onPressed: (){
+              Navigator.pop(context);
+            }, 
+            icon: Icon(Icons.arrow_back,
+            color: Colors.white,)
+            ),
+
           // Foreground content box
           Center(
             child: Container(

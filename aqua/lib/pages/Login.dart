@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:aqua/pages/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/Signup.dart';
 import 'package:flutter/material.dart';
@@ -298,7 +299,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         Spacer(),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordScreen()),
+                            );
+                          },
                           child: Text(
                             "Forgot password?",
                             style: TextStyle(color: Colors.white70),
