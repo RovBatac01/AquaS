@@ -1,5 +1,6 @@
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
 import 'package:aqua/pages/Details.dart';
+import 'package:aqua/pages/ForgotPass.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Login.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(), // 👈 Set light theme
       darkTheme: ThemeData.dark(), // Optional: define dark theme
       themeMode: ThemeMode.light,
-      home: LoginScreen(),
+      home: ForgotPassword(),
     );
   }
 }
