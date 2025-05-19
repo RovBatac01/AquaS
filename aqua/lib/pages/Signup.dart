@@ -27,7 +27,7 @@ class _SignupState extends State<Signup> {
   final TextEditingController confirm_password = TextEditingController();
   bool isChecked = false;
 
-Future<void> registerUser() async {
+  Future<void> registerUser() async {
     if (!_formKey.currentState!.validate()) return;
 
     final url = Uri.parse('http://localhost:5000/register'); // Backend URL
@@ -38,7 +38,7 @@ Future<void> registerUser() async {
         'username': username.text.trim(),
         'email': email.text.trim(),
         'password': password.text,
-        "confirm_password": password.text
+        "confirm_password": password.text,
       }),
     );
 
@@ -49,7 +49,6 @@ Future<void> registerUser() async {
       print('Error: ${response.body}');
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -135,6 +134,10 @@ Future<void> registerUser() async {
                         controller: username,
                         decoration: InputDecoration(
                           labelText: 'Username',
+                          labelStyle: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -143,7 +146,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is focused
+                                      .txt2Color, // Outline color when the field is focused
                               width: 2.0, // Thickness of the outline
                             ),
                           ),
@@ -152,7 +155,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is not focused
+                                      .txt2Color, // Outline color when the field is not focused
                               width: 1.5, // Thickness of the outline
                             ),
                           ),
@@ -175,6 +178,10 @@ Future<void> registerUser() async {
                         controller: email,
                         decoration: InputDecoration(
                           labelText: 'Email/Phone Number',
+                          labelStyle: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -183,7 +190,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is focused
+                                      .BGsecond, // Outline color when the field is focused
                               width: 2.0, // Thickness of the outline
                             ),
                           ),
@@ -192,7 +199,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is not focused
+                                      .BGsecond, // Outline color when the field is not focused
                               width: 1.5, // Thickness of the outline
                             ),
                           ),
@@ -225,6 +232,10 @@ Future<void> registerUser() async {
                         controller: password,
                         decoration: InputDecoration(
                           labelText: 'Password',
+                          labelStyle: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -233,7 +244,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is focused
+                                      .txt2Color, // Outline color when the field is focused
                               width: 2.0, // Thickness of the outline
                             ),
                           ),
@@ -242,7 +253,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is not focused
+                                      .BGsecond, // Outline color when the field is not focused
                               width: 1.5, // Thickness of the outline
                             ),
                           ),
@@ -262,7 +273,10 @@ Future<void> registerUser() async {
                           bool hasSpecialChar = RegExp(r'[@_]').hasMatch(value);
 
                           // Check if ALL conditions are met
-                          if (hasMinLength && hasUpperCase && hasNumber && hasSpecialChar) {
+                          if (hasMinLength &&
+                              hasUpperCase &&
+                              hasNumber &&
+                              hasSpecialChar) {
                             return null; // Password is valid
                           }
 
@@ -298,6 +312,10 @@ Future<void> registerUser() async {
                         controller: confirm_password,
                         decoration: InputDecoration(
                           labelText: 'Confirm Password',
+                          labelStyle: TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Poppins',
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
                           ),
@@ -306,7 +324,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is focused
+                                      .BGsecond, // Outline color when the field is focused
                               width: 2.0, // Thickness of the outline
                             ),
                           ),
@@ -315,7 +333,7 @@ Future<void> registerUser() async {
                             borderSide: BorderSide(
                               color:
                                   ASColor
-                                      .BGfifth, // Outline color when the field is not focused
+                                      .txt2Color, // Outline color when the field is not focused
                               width: 1.5, // Thickness of the outline
                             ),
                           ),
@@ -334,15 +352,16 @@ Future<void> registerUser() async {
                         },
                       ),
 
-
                       CheckboxListTile(
                         controlAffinity: ListTileControlAffinity.leading,
-                        title: Text("I agree to the terms and conditions",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
-                          fontSize: 14,
-                        ),),
+                        title: Text(
+                          "I agree to the terms and conditions",
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            color: ASColor.txt2Color,
+                            fontSize: 12,
+                          ),
+                        ),
                         value: isChecked,
                         onChanged: (bool? newValue) {
                           setState(() {
@@ -354,12 +373,19 @@ Future<void> registerUser() async {
                       // Sign Up button
                       Center(
                         child: ElevatedButton(
-                        onPressed: registerUser,
-                        style: ElevatedButton.styleFrom(backgroundColor: ASColor.BGfifth),
-                        child: const Text('Sign Up'),
-                                              ),
-                                            ),                      SizedBox(height: 20),
-
+                          onPressed: registerUser,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple.shade400,
+                          ),
+                          child: const Text('Sign Up',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 16,
+                                color: Colors.white,
+                              )),
+                        ),
+                      ),
+                      SizedBox(height: 20),
 
                       // Login link
                       Row(
