@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(), // 👈 Set light theme
       darkTheme: ThemeData.dark(), // Optional: define dark theme
       themeMode: ThemeMode.light,
-      home: ForgotPassword(),
+      home: Sadmindashboard(),
     );
   }
 }
