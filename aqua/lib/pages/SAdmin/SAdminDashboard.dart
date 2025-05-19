@@ -37,12 +37,16 @@ class _MainScreenState extends State<Sadmindashboard> {
     Center(child: NotificationPage()),
   ];
 
-  final List<String> _titles = ['Home','Account Management', 'Statistics', 'Notification'];
+  final List<String> _titles = [
+    'Home',
+    'Account Management',
+    'Statistics',
+    'Notification',
+  ];
 
   final ValueNotifier<ThemeMode> _notifier = ValueNotifier(
     ThemeMode.light,
   ); // This Code is for the default mode of the dashboard change the light to dark if you want the default is Dark Mode
-
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
@@ -56,11 +60,14 @@ class _MainScreenState extends State<Sadmindashboard> {
               onPressed: () {
                 Navigator.pop(context); // Close dialog
               },
-              child: Text("Cancel",
-                  style: TextStyle(
-                    color: ASColor.txt3Color,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w300)),
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: ASColor.txt3Color,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -70,12 +77,17 @@ class _MainScreenState extends State<Sadmindashboard> {
                   MaterialPageRoute(builder: (context) => LoginScreen()),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: ASColor.BGsecond),
-              child: Text("Confirm",
-                  style: TextStyle(
-                    color: ASColor.txt3Color,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w300)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ASColor.BGsecond,
+              ),
+              child: Text(
+                "Confirm",
+                style: TextStyle(
+                  color: ASColor.txt3Color,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
             ),
           ],
         );
@@ -95,7 +107,6 @@ class _MainScreenState extends State<Sadmindashboard> {
     return ValueListenableBuilder(
       valueListenable: _notifier,
       builder: (_, mode, __) {
-        // Define colors based on the theme mode
         final bool isDarkMode = mode == ThemeMode.dark;
 
         return MaterialApp(
@@ -104,37 +115,43 @@ class _MainScreenState extends State<Sadmindashboard> {
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           home: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              flexibleSpace: Container(
-                color:
-                    mode == ThemeMode.light
-                        ? ASColor.BGSixth // Single color for light mode
-                        : ASColor.BGthird, // Single color for dark mode
-              ),
-              title: Row(
-                children: [
-                  SizedBox(width: 10),
-                  Text(
-                    _titles[_currentIndex],
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      color: isDarkMode ? ASColor.txt2Color : ASColor.txt2Color,
-                      fontWeight: FontWeight.bold,
+            body: Stack(
+              children: [
+                // Add spacing at the top (e.g., status bar height or more)
+                Column(
+                  children: [
+                    SizedBox(height: 20), // Space above custom AppBar
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            _titles[_currentIndex],
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 22,
+                              color: ASColor.txt2Color,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (_currentIndex == 0) ...[],
+                        ],
+                      ),
                     ),
-                  ),
-                  if (_currentIndex == 0) ...[
-                    
+                    // Remaining body content
+                    Expanded(child: _screens[_currentIndex]),
                   ],
-                ],
-              ),
+                ),
+              ],
             ),
-
-            body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: Color.fromARGB(255, 0, 0, 0), // Green background
+                color: Color.fromARGB(255, 0, 0, 0),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -146,7 +163,7 @@ class _MainScreenState extends State<Sadmindashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: Color(0xFF00A650), // Match container
+                  backgroundColor: Color(0xFF00A650),
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),
@@ -180,72 +197,6 @@ class _MainScreenState extends State<Sadmindashboard> {
                 ),
               ),
             ),
-            // bottomNavigationBar: Container(
-            //   decoration: BoxDecoration(
-            //     gradient:
-            //         isDarkMode
-            //             ? ASColor
-            //                 .firstGradient // Dark Mode Background
-            //             : ASColor.secondGradient, // Light Mode Background
-            //   ),
-            //   child: Padding(
-            //     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            //     child: SingleChildScrollView(
-            //       scrollDirection:Axis.horizontal, // Enables horizontal scrolling
-            //       child: SizedBox(
-            //         width:
-            //             MediaQuery.of(
-            //               context,
-            //             ).size.width, // Adapts to screen width
-            //         child: GNav(
-            //           gap: 8,
-            //           activeColor:
-            //               isDarkMode
-            //                   ? ASColor.BGfifth
-            //                   : ASColor.BGthird, // Icon Color
-            //           iconSize: 24,
-            //           padding: EdgeInsets.symmetric(
-            //             horizontal: 20,
-            //             vertical: 12,
-            //           ),
-            //           backgroundColor: Colors.transparent,
-            //           color: isDarkMode ? ASColor.BGthird : Colors.white,
-            //           tabBackgroundGradient:
-            //               isDarkMode
-            //                   ? ASColor.secondGradient
-            //                   : ASColor.firstGradient,
-            //           textStyle: TextStyle(
-            //             color: isDarkMode ? ASColor.BGfifth : ASColor.txt3Color,
-            //             fontWeight: FontWeight.bold,
-            //           ),
-            //           selectedIndex: _currentIndex,
-            //           onTabChange: (index) {
-            //             setState(() {
-            //               _currentIndex = index;
-            //             });
-            //           },
-            //           tabs: [
-            //             GButton(icon: Icons.home_outlined, text: 'Home',),
-            //             GButton(icon: Icons.manage_accounts, text: 'View Account',),
-            //             GButton(icon: Icons.stacked_bar_chart_outlined, text: 'Statistics'),
-            //             GButton(icon: Icons.notifications_active_outlined, text: 'Notifications'),
-            //           ],
-            //         ),
-            //       ),
-            //     ),
-            //   ),
-            // ),
-            // floatingActionButton: FloatingActionButton(
-            //   onPressed: () {
-            //     setState(() {
-            //       _notifier.value =
-            //           mode == ThemeMode.light
-            //               ? ThemeMode.dark
-            //               : ThemeMode.light;
-            //     });
-            //   },
-            //   child: Icon(Icons.dark_mode_outlined),
-            // ),
           ),
         );
       },

@@ -242,9 +242,11 @@ class _UserListPageState extends State<UserListPage> {
             // Top Centered Filter Row
             Center(
               child: Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(8),
-                child: IntrinsicWidth(
+                  child: IntrinsicWidth(
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(
@@ -282,21 +284,9 @@ class _UserListPageState extends State<UserListPage> {
                           });
                         },
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          _fetchUsers(); // Refresh button
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(12),
-                        ),
-                        child: const Icon(Icons.refresh, color: Colors.white),
-                      ),
                     ],
                   ),
-                ),
+              ),
               ),
             ),
             const SizedBox(height: 16),
@@ -355,6 +345,18 @@ class _UserListPageState extends State<UserListPage> {
                           ),
                         ),
                       ),
+
+              Container(
+                alignment: Alignment.bottomRight,
+                padding: const EdgeInsets.only(bottom: 20, right: 20),
+                child: FloatingActionButton(
+                onPressed: () {
+                  setState(() {
+                  });
+                },
+                child: Icon(Icons.add),
+                            ),
+              ),
           ],
         ),
       ),
