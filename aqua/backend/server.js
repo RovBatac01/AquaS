@@ -40,9 +40,9 @@ const io = new Server(server, {
 
 // MySQL Connection
 const db = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "",
+  host: "aquasense.c10u8c6s49c0.ap-southeast-2.rds.amazonaws.com",
+  user: "admin",
+  password: "aquasense123",
   database: "aquasense",
   waitForConnections: true, 
   connectionLimit: 10, 

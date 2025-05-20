@@ -1,5 +1,6 @@
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart' hide MyDrawerAndNavBarApp;
+import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: themeProvider.themeMode,
-      home: Userdashboard(),
+      home: LandingPage(),
     );
   }
 }
