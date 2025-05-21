@@ -124,8 +124,8 @@ class _MainScreenState extends State<Userdashboard> {
                 Column(
                   children: [
                     Container(
-                      padding: EdgeInsets.only(top: 20, left: 15, bottom: 15),
-                      height: 60,
+                      padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                      height: 70,
                       decoration: BoxDecoration(
                         color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
                       ),
