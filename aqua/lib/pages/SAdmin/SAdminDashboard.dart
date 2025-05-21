@@ -126,9 +126,8 @@ class _MainScreenState extends State<Sadmindashboard> {
                 // Add spacing at the top (e.g., status bar height or more)
                 Column(
                   children: [
-                    SizedBox(height: 20), // Space above custom AppBar
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: EdgeInsets.only(top: 20, left: 15, bottom: 15),
                       height: 60,
                       decoration: BoxDecoration(
                         color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
@@ -169,7 +168,7 @@ class _MainScreenState extends State<Sadmindashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: Color(0xFF00A650),
+                  backgroundColor: ASColor.BGSixth,
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),

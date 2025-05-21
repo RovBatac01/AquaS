@@ -50,10 +50,18 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
         progress = 0.5 / 10;
         label = "0.5 NTU";
         indicatorColor = Colors.orange;
-      } else if (stat == "Electrical Conductivity") {
+      } else if (stat == "Conductivity") {
         progress = 35 / 100;
         label = "35 PPM";
         indicatorColor = Colors.red;
+      } else if (stat == "Salinity") {
+        progress = 0.7;
+        label = "0.7 ppt";
+        indicatorColor = Colors.teal;
+      } else if (stat == "Electrical Conductivity (Condensed)") {
+        progress = 400 / 1000;
+        label = "400 µS/cm";
+        indicatorColor = Colors.indigo;
       }
     });
   }
@@ -183,16 +191,46 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
                       Expanded(
                         child: StatCard(
                           icon: Icons.flash_on,
-                          label: "Electrical Conductivity",
+                          label: "Conductivity",
                           value: "35 PPM",
-                          isSelected: selectedStat == "Electrical Conductivity",
+                          isSelected: selectedStat == "Conductivity",
                           onTap:
-                              () => updateIndicator("Electrical Conductivity"),
+                              () => updateIndicator("Conductivity"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.bubble_chart,
+                          label: "Salinity",
+                          value: "0.7 ppt",
+                          isSelected: selectedStat == "Salinity",
+                          onTap: () => updateIndicator("Salinity"),
                         ),
                       ),
                     ],
                   ),
                 ),
+
+                const SizedBox(
+                  height: 12,
+                ),
+
+                const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.battery_charging_full,
+                          label: "Electrical Conductivity (Condensed)",
+                          value: "400 mV",
+                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+                          onTap: () => updateIndicator("Electrical Conductivity (Condensed)"),
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ],
