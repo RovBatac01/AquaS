@@ -28,7 +28,7 @@ class Statistics extends StatefulWidget {
 }
 
 class _StatisticsState extends State<Statistics> {
-  String selectedStat = "pH Level";
+  String selectedStat = "Temp";
 
   // Dummy data for each statistic
   List<int> phData = [7, 7, 7, 6, 8, 7, 7]; // pH Level
@@ -44,6 +44,12 @@ class _StatisticsState extends State<Statistics> {
   ]; // Electrical Conductivity
   List<int> tempData = [28, 29, 30, 31, 30, 29, 28]; // Temperature
   List<int> tdsData = [300, 320, 310, 330, 340, 335, 325]; // TDS
+  List<double> salinityData = [0.3, 0.35, 0.32, 0.36, 0.38, 0.37, 0.34];
+  List<int> ecCondensedData = [
+    110,
+    113,
+    127,
+  ]; // Electrical Conductivity Condensed (e.g., averages)
 
   List<double> _convertToDouble(List<int> intList) {
     return intList.map((e) => e.toDouble()).toList();
@@ -59,16 +65,20 @@ class _StatisticsState extends State<Statistics> {
 
   List<double> getCurrentData() {
     switch (selectedStat) {
-      case "pH Level":
-        return _convertToDouble(phData);
-      case "Turbidity":
-        return _convertToDouble(turbidityData);
-      case "EC":
-        return _convertToDouble(ecData);
       case "Temp":
         return _convertToDouble(tempData);
       case "TDS":
         return _convertToDouble(tdsData);
+      case "pH Level":
+        return _convertToDouble(phData);
+      case "Turbidity":
+        return _convertToDouble(turbidityData);
+      case "Conductivity":
+        return _convertToDouble(ecData);
+      case "Salinity":
+        return salinityData;
+      case "Electrical Conductivity (Condensed)":
+        return _convertToDouble(ecCondensedData);
       default:
         return _convertToDouble(phData);
     }
@@ -76,15 +86,19 @@ class _StatisticsState extends State<Statistics> {
 
   Color getStatColor() {
     switch (selectedStat) {
+      case "Temp":
+        return ASColor.BGSixth;
+      case "TDS":
+        return ASColor.BGSixth;
       case "pH Level":
         return ASColor.BGSixth;
       case "Turbidity":
         return ASColor.BGSixth;
-      case "EC":
+      case "Conductivity":
         return ASColor.BGSixth;
-      case "Temp":
+      case "Salinity":
         return ASColor.BGSixth;
-      case "TDS":
+      case "Electrical Conductivity (Condensed)":
         return ASColor.BGSixth;
       default:
         return ASColor.BGSixth;
@@ -157,27 +171,30 @@ class _StatisticsState extends State<Statistics> {
                             selectedPeriod = newValue!;
                           });
                         },
-                        items: <String>[
-                          "Daily",
-                          "Weekly",
-                          "Monthly",
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                        items:
+                            <String>[
+                              "Daily",
+                              "Weekly",
+                              "Monthly",
+                            ].map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Center(
+                                  child: Text(
+                                    value,
+                                    style: const TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'Poppins',
-                          color: Colors.green
+                          color: Colors.green,
                         ),
                       ),
                     ),
@@ -197,10 +214,11 @@ class _StatisticsState extends State<Statistics> {
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 40,
-                          getTitlesWidget: (value, _) => Text(
-                            value.toStringAsFixed(1),
-                            style: const TextStyle(fontSize: 12),
-                          ),
+                          getTitlesWidget:
+                              (value, _) => Text(
+                                value.toStringAsFixed(1),
+                                style: const TextStyle(fontSize: 12),
+                              ),
                         ),
                       ),
                       bottomTitles: AxisTitles(
@@ -235,12 +253,8 @@ class _StatisticsState extends State<Statistics> {
                     borderData: FlBorderData(
                       show: true,
                       border: const Border(
-                        left: BorderSide(
-                          color: Colors.black,
-                        ),
-                        bottom: BorderSide(
-                          color: Colors.black,
-                        ),
+                        left: BorderSide(color: Colors.black),
+                        bottom: BorderSide(color: Colors.black),
                         right: BorderSide.none,
                         top: BorderSide.none,
                       ),
@@ -249,10 +263,8 @@ class _StatisticsState extends State<Statistics> {
                       LineChartBarData(
                         spots: List.generate(
                           getCurrentData().length,
-                          (index) => FlSpot(
-                            index.toDouble(),
-                            getCurrentData()[index],
-                          ),
+                          (index) =>
+                              FlSpot(index.toDouble(), getCurrentData()[index]),
                         ),
                         isCurved: true,
                         color: getStatColor(),
@@ -286,10 +298,7 @@ class _StatisticsState extends State<Statistics> {
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: Colors.green,
-                        width: 1.5,
-                      ),
+                      border: Border.all(color: Colors.green, width: 1.5),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -305,25 +314,30 @@ class _StatisticsState extends State<Statistics> {
                           fontSize: 8,
                           fontFamily: 'Poppins',
                         ),
-                        items: <String>[
-                          "pH Level",
-                          "Turbidity",
-                          "EC",
-                          "Temp",
-                          "TDS",
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(
-                              value,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontFamily: 'Poppins',
-                                color: Colors.green
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                        items:
+                            <String>[
+                              "Temp",
+                              "TDS",
+                              "pH Level",
+                              "Turbidity",
+                              "Conductivity",
+                              "Salinity",
+                              "EC",
+                            ].map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Center(
+                                  child: Text(
+                                    value,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins',
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                       ),
                     ),
                   ),
@@ -336,15 +350,27 @@ class _StatisticsState extends State<Statistics> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: _highlightCard("Highest", getStatMaxValue().toString(), getStatColor()),
+                      child: _highlightCard(
+                        "Highest",
+                        getStatMaxValue().toString(),
+                        getStatColor(),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard("Lowest", getStatMinValue().toString(), getStatColor()),
+                      child: _highlightCard(
+                        "Lowest",
+                        getStatMinValue().toString(),
+                        getStatColor(),
+                      ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard("Average", getStatAverage().toString(), getStatColor()),
+                      child: _highlightCard(
+                        "Average",
+                        getStatAverage().toString(),
+                        getStatColor(),
+                      ),
                     ),
                   ],
                 ),
@@ -358,15 +384,19 @@ class _StatisticsState extends State<Statistics> {
 
   double getStatMaxValue() {
     switch (selectedStat) {
+      case "Temp":
+        return tempData.reduce((a, b) => a > b ? a : b).toDouble();
+      case "TDS":
+        return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
       case "pH Level":
         return phData.reduce((a, b) => a > b ? a : b).toDouble();
       case "Turbidity":
         return turbidityData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "EC":
+      case "Conductivity":
         return ecData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "Temp":
-        return tempData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "TDS":
+      case "Salinity":
+        return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
+      case "Electrical Conductivity (Condensed)":
         return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
       default:
         return phData.reduce((a, b) => a > b ? a : b).toDouble();
@@ -375,15 +405,19 @@ class _StatisticsState extends State<Statistics> {
 
   double getStatMinValue() {
     switch (selectedStat) {
+      case "Temp":
+        return tempData.reduce((a, b) => a < b ? a : b).toDouble();
+      case "TDS":
+        return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
       case "pH Level":
         return phData.reduce((a, b) => a < b ? a : b).toDouble();
       case "Turbidity":
         return turbidityData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "EC":
+      case "Conductivity":
         return ecData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "Temp":
-        return tempData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "TDS":
+      case "Salinity":
+        return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
+      case "Electrical Conductivity (Condensed)":
         return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
       default:
         return phData.reduce((a, b) => a < b ? a : b).toDouble();
@@ -392,15 +426,20 @@ class _StatisticsState extends State<Statistics> {
 
   double getStatAverage() {
     switch (selectedStat) {
-      case "pH Level":
-        return phData.reduce((a, b) => a + b) / phData.length.toDouble();
-      case "Turbidity":
-        return turbidityData.reduce((a, b) => a + b) / turbidityData.length.toDouble();
-      case "EC":
-        return ecData.reduce((a, b) => a + b) / ecData.length.toDouble();
       case "Temp":
         return tempData.reduce((a, b) => a + b) / tempData.length.toDouble();
       case "TDS":
+        return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
+      case "pH Level":
+        return phData.reduce((a, b) => a + b) / phData.length.toDouble();
+      case "Turbidity":
+        return turbidityData.reduce((a, b) => a + b) /
+            turbidityData.length.toDouble();
+      case "Conductivity":
+        return ecData.reduce((a, b) => a + b) / ecData.length.toDouble();
+      case "Salinity":
+        return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
+      case "Electrical Conductivity (Condensed)":
         return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
       default:
         return phData.reduce((a, b) => a + b) / phData.length.toDouble();
@@ -413,10 +452,7 @@ class _StatisticsState extends State<Statistics> {
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color,
-          width: 1.2,
-        ),
+        border: Border.all(color: color, width: 1.2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

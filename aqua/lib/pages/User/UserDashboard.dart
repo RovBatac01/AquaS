@@ -46,16 +46,20 @@ class _MainScreenState extends State<Userdashboard> {
     Center(child: SettingsPage()),
   ];
 
-  final List<String> _titles = ['Home', 'Statistics', 'Notification', 'Settings'];
+  final List<String> _titles = [
+    'Home',
+    'Statistics',
+    'Notification',
+    'Settings',
+  ];
 
-
-//Code for the bottom navigation bar
+  //Code for the bottom navigation bar
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
   }
-  
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -68,11 +72,14 @@ class _MainScreenState extends State<Userdashboard> {
               onPressed: () {
                 Navigator.pop(context); // Close dialog
               },
-              child: Text("Cancel",
-                  style: TextStyle(
-                    color: ASColor.txt3Color,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w300)),
+              child: Text(
+                "Cancel",
+                style: TextStyle(
+                  color: ASColor.txt3Color,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -82,12 +89,17 @@ class _MainScreenState extends State<Userdashboard> {
                   MaterialPageRoute(builder: (context) => LoginScreen()),
                 );
               },
-              style: ElevatedButton.styleFrom(backgroundColor: ASColor.BGsecond),
-              child: Text("Confirm",
-                  style: TextStyle(
-                    color: ASColor.txt3Color,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w300)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ASColor.BGsecond,
+              ),
+              child: Text(
+                "Confirm",
+                style: TextStyle(
+                  color: ASColor.txt3Color,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
             ),
           ],
         );
@@ -95,11 +107,10 @@ class _MainScreenState extends State<Userdashboard> {
     );
   }
 
-
-   @override
+  @override
   Widget build(BuildContext context) {
-      final themeProvider = Provider.of<ThemeProvider>(context);
-      final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -112,10 +123,9 @@ class _MainScreenState extends State<Userdashboard> {
                 // Add spacing at the top (e.g., status bar height or more)
                 Column(
                   children: [
-                    SizedBox(height: 20), // Space above custom AppBar
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      height: 60,
+                      padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                      height: 70,
                       decoration: BoxDecoration(
                         color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
                       ),
@@ -155,7 +165,7 @@ class _MainScreenState extends State<Userdashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: Color(0xFF00A650),
+                  backgroundColor: ASColor.BGSixth,
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),
@@ -188,5 +198,4 @@ class _MainScreenState extends State<Userdashboard> {
           ),
         );
       }
-  }
-
+}

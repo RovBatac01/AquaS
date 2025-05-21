@@ -1,3 +1,4 @@
+import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,13 +41,23 @@ class SettingsPage extends StatelessWidget {
                     ),
                   );
                 },
-                child: Text(
-                  'Logout',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: ASColor.txt3Color,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+
+                    Icon(Icons.logout_outlined,
+                    size: 20,
+                    color: Colors.black,)
+                  ],
                 ),
               ),
             ),

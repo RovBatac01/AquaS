@@ -59,44 +59,49 @@ class _MainScreenState extends State<Admindashboard> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           themeMode: themeProvider.themeMode,
           theme: ThemeData.light(),
           darkTheme: ThemeData.dark(),
           home: Scaffold(
-            appBar: AppBar(
-              centerTitle: true,
-              flexibleSpace: Container(
-                color:
-                    themeProvider == ThemeMode.light
-                        ? ASColor
-                            .BGSixth // Single color for light mode
-                        : ASColor.BGsecond, // Single color for dark mode
-              ),
-              title: Row(
-                children: [
-                  SizedBox(width: 10),
-                  Text(
-                    _titles[_currentIndex],
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 22,
-                      color: isDarkMode ? ASColor.txt6Color : ASColor.txt2Color,
-                      fontWeight: FontWeight.bold,
+            body: Stack(
+              children: [
+                // Add spacing at the top (e.g., status bar height or more)
+                Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            _titles[_currentIndex],
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 22,
+                              color: ASColor.txt2Color,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          if (_currentIndex == 0) ...[],
+                        ],
+                      ),
                     ),
-                  ),
-                  if (_currentIndex == 0) ...[
-                    
+                    // Remaining body content
+                    Expanded(child: _screens[_currentIndex]),
                   ],
-                ],
-              ),
+                ),
+              ],
             ),
-
-            body: _screens[_currentIndex],
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: ASColor.BGSixth, // Green background
+                color: Color.fromARGB(255, 0, 0, 0),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(30),
                   topRight: Radius.circular(30),
@@ -108,7 +113,7 @@ class _MainScreenState extends State<Admindashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: ASColor.BGSixth, // Match container
+                  backgroundColor: ASColor.BGSixth,
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),
@@ -138,18 +143,6 @@ class _MainScreenState extends State<Admindashboard> {
                 ),
               ),
             ),
-
-            // floatingActionButton: FloatingActionButton(
-            //   onPressed: () {
-            //     setState(() {
-            //       _notifier.value =
-            //           mode == ThemeMode.light
-            //               ? ThemeMode.dark
-            //               : ThemeMode.light;
-            //     });
-            //   },
-            //   child: Icon(Icons.dark_mode_outlined),
-            // ),
           ),
         );
       }

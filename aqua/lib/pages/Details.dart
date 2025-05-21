@@ -63,10 +63,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
           label = "0.5 NTU";
           indicatorColor = Colors.orange;
           break;
-        case "Electrical Conductivity":
+        case "Conductivity":
           progress = 35 / 100;
           label = "35 PPM";
           indicatorColor = Colors.red;
+          break;
+        case "Salinity":
+          progress = 0.7;
+          label = "0.7 ppt";
+          indicatorColor = Colors.teal;
+          break;
+
+        case "Electrical Conductivity (Condensed)":
+          progress = 400 / 1000; // Assume 1000 mV max
+          label = "400 mV";
+          indicatorColor = Colors.indigo;
           break;
       }
     });
@@ -112,7 +123,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
               const Text(
                 "Water quality: Great",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black, fontFamily: 'Poppins'),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                  fontFamily: 'Poppins',
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -168,11 +184,37 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       Expanded(
                         child: StatCard(
                           icon: Icons.flash_on,
-                          label: "Electrical Conductivity",
+                          label: "Conductivity",
                           value: "35 PPM",
-                          isSelected: selectedStat == "Electrical Conductivity",
+                          isSelected: selectedStat == "Conductivity",
                           onTap:
-                              () => updateIndicator("Electrical Conductivity"),
+                              () => updateIndicator("Conductivity"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.bubble_chart,
+                          label: "Salinity",
+                          value: "0.7 ppt",
+                          isSelected: selectedStat == "Salinity",
+                          onTap: () => updateIndicator("Salinity"),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.battery_charging_full,
+                          label: "Electrical Conductivity (Condensed)",
+                          value: "400 mV",
+                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+                          onTap: () => updateIndicator("Electrical Conductivity (Condensed)"),
                         ),
                       ),
                     ],
@@ -209,9 +251,10 @@ class StatCard extends StatelessWidget {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     // Set the background color depending on the theme
-    Color bgColor = isSelected
-        ? Colors.greenAccent.withOpacity(0.8)
-        : isDarkMode
+    Color bgColor =
+        isSelected
+            ? Colors.greenAccent.withOpacity(0.8)
+            : isDarkMode
             ? Colors.grey[800]! // Dark mode background color
             : Colors.white; // Light mode background color
 
