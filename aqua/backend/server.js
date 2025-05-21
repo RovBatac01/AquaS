@@ -1,5 +1,5 @@
 const express = require("express");
-const mysql = require("mysql2/promise"); // Use the promise version of mysql2
+const mysql = require('mysql2/promise'); // Use the promise version of mysql2
 const { SerialPort } = require("serialport");
 const { ReadlineParser } = require("@serialport/parser-readline");
 const bodyParser = require("body-parser");
@@ -613,132 +613,141 @@ parser.on("data", (rawData) => {
   }
 });
 
-// Get last 10 Turbidity readings
-app.get("/data/turbidity", (req, res) => {
+/**
+ * @route GET /data/turbidity
+ * @description Get last 10 Turbidity readings from the database.
+ * @returns {Array} An array of turbidity reading objects.
+ */
+app.get("/data/turbidity", async (req, res) => {
   console.log("📥 GET /data/turbidity request received");
-
-  db.query(
-    "SELECT * FROM turbidity_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ Turbidity Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ Turbidity API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    // Execute the query using await, which returns a promise
+    // The result is an array: [rows, fields]
+    const [rows, fields] = await db.query(
+      "SELECT * FROM turbidity_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ Turbidity API Response Sent: ${rows.length} records`);
+    res.json(rows); // Send the rows (data) as JSON
+  } catch (err) {
+    console.error("❌ Turbidity Database Query Error:", err);
+    // Send a 500 status code and a JSON error message
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
 
-// Get last 10 pH readings
-app.get("/data/ph", (req, res) => {
+/**
+ * @route GET /data/ph
+ * @description Get last 10 pH readings from the database.
+ * @returns {Array} An array of pH reading objects.
+ */
+app.get("/data/ph", async (req, res) => {
   console.log("📥 GET /data/ph request received");
-
-  db.query(
-    "SELECT * FROM phlevel_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ pH Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ pH API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    const [rows, fields] = await db.query(
+      "SELECT * FROM phlevel_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ pH API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ pH Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
 
-// Get last 10 TDS readings
-app.get("/data/tds", (req, res) => {
+/**
+ * @route GET /data/tds
+ * @description Get last 10 TDS readings from the database.
+ * @returns {Array} An array of TDS reading objects.
+ */
+app.get("/data/tds", async (req, res) => {
   console.log("📥 GET /data/tds request received");
-
-  db.query(
-    "SELECT * FROM tds_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ TDS Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ TDS API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    const [rows, fields] = await db.query(
+      "SELECT * FROM tds_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ TDS API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ TDS Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
 
-// Get last 10 Salinity readings
-app.get("/data/salinity", (req, res) => {
+/**
+ * @route GET /data/salinity
+ * @description Get last 10 Salinity readings from the database.
+ * @returns {Array} An array of Salinity reading objects.
+ */
+app.get("/data/salinity", async (req, res) => {
   console.log("📥 GET /data/salinity request received");
-
-  db.query(
-    "SELECT * FROM salinity_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ Salinity Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ Salinity API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    const [rows, fields] = await db.query(
+      "SELECT * FROM salinity_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ Salinity API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Salinity Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
 
-// Get last 10 EC readings
-app.get("/data/ec", (req, res) => {
+/**
+ * @route GET /data/ec
+ * @description Get last 10 EC readings from the database.
+ * @returns {Array} An array of EC reading objects.
+ */
+app.get("/data/ec", async (req, res) => {
   console.log("📥 GET /data/ec request received");
-
-  db.query(
-    "SELECT * FROM ec_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ EC Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ EC API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    const [rows, fields] = await db.query(
+      "SELECT * FROM ec_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ EC API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ EC Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
 
-// Get last 10 EC Compensated readings
-app.get("/data/ec_compensated", (req, res) => {
+/**
+ * @route GET /data/ec_compensated
+ * @description Get last 10 EC Compensated readings from the database.
+ * @returns {Array} An array of EC Compensated reading objects.
+ */
+app.get("/data/ec_compensated", async (req, res) => {
   console.log("📥 GET /data/ec_compensated request received");
-
-  db.query(
-    "SELECT * FROM ec_compensated_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ EC Compensated Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ EC Compensated API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    const [rows, fields] = await db.query(
+      "SELECT * FROM ec_compensated_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ EC Compensated API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ EC Compensated Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
 
-// Get last 10 Temperature readings
-app.get("/data/temperature", (req, res) => {
+/**
+ * @route GET /data/temperature
+ * @description Get last 10 Temperature readings from the database.
+ * @returns {Array} An array of Temperature reading objects.
+ */
+app.get("/data/temperature", async (req, res) => {
   console.log("📥 GET /data/temperature request received");
-
-  db.query(
-    "SELECT * FROM temperature_readings ORDER BY id DESC LIMIT 10",
-    (err, results) => {
-      if (err) {
-        console.error("❌ Temperature Database Query Error:", err);
-        return res.status(500).json({ error: "Database Query Error" });
-      }
-
-      console.log(`✅ Temperature API Response Sent: ${results.length} records`);
-      res.json(results);
-    }
-  );
+  try {
+    const [rows, fields] = await db.query(
+      "SELECT * FROM temperature_readings ORDER BY id DESC LIMIT 10"
+    );
+    console.log(`✅ Temperature API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Temperature Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
 });
-
 
 // Start servers
 server.listen(port, () => {

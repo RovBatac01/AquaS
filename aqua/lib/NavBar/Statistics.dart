@@ -2,6 +2,8 @@ import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:aqua/water_quality_model.dart'; // Import your data model
+import 'package:aqua/water_quality_service.dart'; // Import your service
 
 void main() {
   runApp(const MyApp());
@@ -29,59 +31,48 @@ class Statistics extends StatefulWidget {
 
 class _StatisticsState extends State<Statistics> {
   String selectedStat = "Temp";
+  String selectedPeriod = "Daily"; // Default selection
 
-  // Dummy data for each statistic
-  List<int> phData = [7, 7, 7, 6, 8, 7, 7]; // pH Level
-  List<int> turbidityData = [10, 15, 20, 25, 30, 28, 26]; // Turbidity
-  List<int> ecData = [
-    100,
-    120,
-    110,
-    115,
-    125,
-    130,
-    128,
-  ]; // Electrical Conductivity
-  List<int> tempData = [28, 29, 30, 31, 30, 29, 28]; // Temperature
-  List<int> tdsData = [300, 320, 310, 330, 340, 335, 325]; // TDS
-  List<double> salinityData = [0.3, 0.35, 0.32, 0.36, 0.38, 0.37, 0.34];
-  List<int> ecCondensedData = [
-    110,
-    113,
-    127,
-  ]; // Electrical Conductivity Condensed (e.g., averages)
+  List<WaterQualityData> _currentData = [];
+  bool _isLoading = true;
+  String? _errorMessage;
 
-  List<double> _convertToDouble(List<int> intList) {
-    return intList.map((e) => e.toDouble()).toList();
+  final WaterQualityService _waterQualityService = WaterQualityService();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
   }
 
-  List<DateTime> getTimeData() {
-    DateTime now = DateTime.now();
-    return List.generate(
-      7,
-      (index) => now.subtract(Duration(minutes: 5 * (6 - index))),
-    );
-  }
-
-  List<double> getCurrentData() {
-    switch (selectedStat) {
-      case "Temp":
-        return _convertToDouble(tempData);
-      case "TDS":
-        return _convertToDouble(tdsData);
-      case "pH Level":
-        return _convertToDouble(phData);
-      case "Turbidity":
-        return _convertToDouble(turbidityData);
-      case "Conductivity":
-        return _convertToDouble(ecData);
-      case "Salinity":
-        return salinityData;
-      case "Electrical Conductivity (Condensed)":
-        return _convertToDouble(ecCondensedData);
-      default:
-        return _convertToDouble(phData);
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _currentData = []; // Clear previous data
+    });
+    try {
+      final data = await _waterQualityService.fetchHistoricalData(selectedStat);
+      setState(() {
+        _currentData = data.reversed.toList(); // Reverse to show oldest first on chart
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load data: ${e.toString()}';
+        _isLoading = false;
+      });
     }
+  }
+
+  // This function now uses the fetched data
+  List<double> getCurrentChartData() {
+    return _currentData.map((e) => e.value).toList();
+  }
+
+  // This function now uses the fetched data for timestamps
+  List<DateTime> getTimeData() {
+    return _currentData.map((e) => e.timestamp).toList();
   }
 
   Color getStatColor() {
@@ -98,18 +89,31 @@ class _StatisticsState extends State<Statistics> {
         return ASColor.BGSixth;
       case "Salinity":
         return ASColor.BGSixth;
-      case "Electrical Conductivity (Condensed)":
+      case "EC": // Using "EC" as the option for Electrical Conductivity
         return ASColor.BGSixth;
       default:
         return ASColor.BGSixth;
     }
   }
 
-  String selectedPeriod = "Daily"; // Default selection
+  double getStatMaxValue() {
+    if (_currentData.isEmpty) return 0.0;
+    return _currentData.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+  }
+
+  double getStatMinValue() {
+    if (_currentData.isEmpty) return 0.0;
+    return _currentData.map((e) => e.value).reduce((a, b) => a < b ? a : b);
+  }
+
+  double getStatAverage() {
+    if (_currentData.isEmpty) return 0.0;
+    final sum = _currentData.map((e) => e.value).reduce((a, b) => a + b);
+    return sum / _currentData.length;
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<double> data = getCurrentData();
     Color lineColor = getStatColor();
 
     return Scaffold(
@@ -169,28 +173,30 @@ class _StatisticsState extends State<Statistics> {
                         onChanged: (String? newValue) {
                           setState(() {
                             selectedPeriod = newValue!;
+                            // For now, this dropdown doesn't affect fetching,
+                            // but you'd implement logic here to fetch data for
+                            // daily, weekly, or monthly periods if your backend supports it.
                           });
                         },
-                        items:
-                            <String>[
-                              "Daily",
-                              "Weekly",
-                              "Monthly",
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Center(
-                                  child: Text(
-                                    value,
-                                    style: const TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                        items: <String>[
+                          "Daily",
+                          "Weekly",
+                          "Monthly",
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Center(
+                              child: Text(
+                                value,
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'Poppins',
@@ -206,78 +212,88 @@ class _StatisticsState extends State<Statistics> {
               // Line Graph
               SizedBox(
                 height: 300,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: true),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          getTitlesWidget:
-                              (value, _) => Text(
-                                value.toStringAsFixed(1),
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                        ),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 50,
-                          interval: 1,
-                          getTitlesWidget: (value, _) {
-                            List<DateTime> timeData = getTimeData();
-                            int index = value.toInt();
-                            if (index >= 0 && index < timeData.length) {
-                              String formattedTime = DateFormat(
-                                'HH:mm:ss',
-                              ).format(timeData[index]);
-                              return Transform.rotate(
-                                angle: -45 * (3.141592653589793 / 180),
-                                child: Text(
-                                  formattedTime,
-                                  style: const TextStyle(
-                                    fontSize: 9,
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.w500,
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                        ? Center(child: Text(_errorMessage!))
+                        : _currentData.isEmpty
+                            ? const Center(child: Text("No data available for this selection."))
+                            : LineChart(
+                                LineChartData(
+                                  // Set fixed min and max Y values for the graph
+                                  minY: 0,
+                                  maxY: 100,
+                                  gridData: FlGridData(show: true),
+                                  titlesData: FlTitlesData(
+                                    leftTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 40,
+                                        getTitlesWidget: (value, _) => Text(
+                                          value.toStringAsFixed(1),
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                    ),
+                                    bottomTitles: AxisTitles(
+                                      sideTitles: SideTitles(
+                                        showTitles: true,
+                                        reservedSize: 50,
+                                        interval: 1,
+                                        getTitlesWidget: (value, _) {
+                                          List<DateTime> timeData = getTimeData();
+                                          int index = value.toInt();
+                                          if (index >= 0 && index < timeData.length) {
+                                            String formattedTime = DateFormat(
+                                              'HH:mm:ss',
+                                            ).format(timeData[index]);
+                                            return Transform.rotate(
+                                              angle: -45 * (3.141592653589793 / 180),
+                                              child: Text(
+                                                formattedTime,
+                                                style: const TextStyle(
+                                                  fontSize: 9,
+                                                  fontFamily: 'Poppins',
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return const Text("");
+                                        },
+                                      ),
+                                    ),
+                                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                                   ),
+                                  borderData: FlBorderData(
+                                    show: true,
+                                    border: const Border(
+                                      left: BorderSide(color: Colors.black),
+                                      bottom: BorderSide(color: Colors.black),
+                                      right: BorderSide.none,
+                                      top: BorderSide.none,
+                                    ),
+                                  ),
+                                  lineBarsData: [
+                                    LineChartBarData(
+                                      spots: List.generate(
+                                        getCurrentChartData().length,
+                                        (index) =>
+                                            FlSpot(index.toDouble(), getCurrentChartData()[index]),
+                                      ),
+                                      isCurved: true,
+                                      color: getStatColor(),
+                                      barWidth: 4,
+                                      isStrokeCapRound: true,
+                                      belowBarData: BarAreaData(
+                                        show: true,
+                                        color: getStatColor().withOpacity(0.3),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            }
-                            return const Text("");
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(
-                      show: true,
-                      border: const Border(
-                        left: BorderSide(color: Colors.black),
-                        bottom: BorderSide(color: Colors.black),
-                        right: BorderSide.none,
-                        top: BorderSide.none,
-                      ),
-                    ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: List.generate(
-                          getCurrentData().length,
-                          (index) =>
-                              FlSpot(index.toDouble(), getCurrentData()[index]),
-                        ),
-                        isCurved: true,
-                        color: getStatColor(),
-                        barWidth: 4,
-                        isStrokeCapRound: true,
-                        belowBarData: BarAreaData(
-                          show: true,
-                          color: getStatColor().withOpacity(0.3),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                              ),
               ),
               const SizedBox(height: 20),
 
@@ -306,6 +322,7 @@ class _StatisticsState extends State<Statistics> {
                         onChanged: (newValue) {
                           setState(() {
                             selectedStat = newValue!;
+                            _fetchData(); // Fetch new data when statistic changes
                           });
                         },
                         isExpanded: true,
@@ -314,36 +331,35 @@ class _StatisticsState extends State<Statistics> {
                           fontSize: 8,
                           fontFamily: 'Poppins',
                         ),
-                        items:
-                            <String>[
-                              "Temp",
-                              "TDS",
-                              "pH Level",
-                              "Turbidity",
-                              "Conductivity",
-                              "Salinity",
-                              "EC",
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Center(
-                                  child: Text(
-                                    value,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      fontFamily: 'Poppins',
-                                      color: Colors.green,
-                                    ),
-                                  ),
+                        items: <String>[
+                          "Temp",
+                          "TDS",
+                          "pH Level",
+                          "Turbidity",
+                          "Conductivity",
+                          "Salinity",
+                          "EC", // Changed from "Electrical Conductivity (Condensed)"
+                        ].map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Center(
+                              child: Text(
+                                value,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'Poppins',
+                                  color: Colors.green,
                                 ),
-                              );
-                            }).toList(),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               IntrinsicHeight(
                 child: Row(
@@ -352,7 +368,7 @@ class _StatisticsState extends State<Statistics> {
                     Expanded(
                       child: _highlightCard(
                         "Highest",
-                        getStatMaxValue().toString(),
+                        getStatMaxValue().toStringAsFixed(2), // Format to 2 decimal places
                         getStatColor(),
                       ),
                     ),
@@ -360,7 +376,7 @@ class _StatisticsState extends State<Statistics> {
                     Expanded(
                       child: _highlightCard(
                         "Lowest",
-                        getStatMinValue().toString(),
+                        getStatMinValue().toStringAsFixed(2), // Format to 2 decimal places
                         getStatColor(),
                       ),
                     ),
@@ -368,7 +384,7 @@ class _StatisticsState extends State<Statistics> {
                     Expanded(
                       child: _highlightCard(
                         "Average",
-                        getStatAverage().toString(),
+                        getStatAverage().toStringAsFixed(2), // Format to 2 decimal places
                         getStatColor(),
                       ),
                     ),
@@ -380,70 +396,6 @@ class _StatisticsState extends State<Statistics> {
         ),
       ),
     );
-  }
-
-  double getStatMaxValue() {
-    switch (selectedStat) {
-      case "Temp":
-        return tempData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "TDS":
-        return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "pH Level":
-        return phData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "Turbidity":
-        return turbidityData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "Conductivity":
-        return ecData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "Salinity":
-        return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
-      case "Electrical Conductivity (Condensed)":
-        return tdsData.reduce((a, b) => a > b ? a : b).toDouble();
-      default:
-        return phData.reduce((a, b) => a > b ? a : b).toDouble();
-    }
-  }
-
-  double getStatMinValue() {
-    switch (selectedStat) {
-      case "Temp":
-        return tempData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "TDS":
-        return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "pH Level":
-        return phData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "Turbidity":
-        return turbidityData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "Conductivity":
-        return ecData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "Salinity":
-        return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
-      case "Electrical Conductivity (Condensed)":
-        return tdsData.reduce((a, b) => a < b ? a : b).toDouble();
-      default:
-        return phData.reduce((a, b) => a < b ? a : b).toDouble();
-    }
-  }
-
-  double getStatAverage() {
-    switch (selectedStat) {
-      case "Temp":
-        return tempData.reduce((a, b) => a + b) / tempData.length.toDouble();
-      case "TDS":
-        return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
-      case "pH Level":
-        return phData.reduce((a, b) => a + b) / phData.length.toDouble();
-      case "Turbidity":
-        return turbidityData.reduce((a, b) => a + b) /
-            turbidityData.length.toDouble();
-      case "Conductivity":
-        return ecData.reduce((a, b) => a + b) / ecData.length.toDouble();
-      case "Salinity":
-        return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
-      case "Electrical Conductivity (Condensed)":
-        return tdsData.reduce((a, b) => a + b) / tdsData.length.toDouble();
-      default:
-        return phData.reduce((a, b) => a + b) / phData.length.toDouble();
-    }
   }
 
   Widget _highlightCard(String label, String value, Color color) {
