@@ -23,7 +23,9 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screen = MediaQuery.of(context).size;
@@ -36,11 +38,11 @@ class LandingPage extends StatelessWidget {
                 left: 0,
                 right: 0,
                 height: screen.height * 1.5,
-                child: const AnimatedWaves(),
+                child: AnimatedWaves(isDarkMode: isDarkMode),
               ),
 
               // Decorative water drops
-              const Positioned.fill(child: DropDecorations()),
+              Positioned.fill(child: DropDecorations(isDarkMode: isDarkMode)),
 
               // Main scrollable content
               SingleChildScrollView(
@@ -56,44 +58,62 @@ class LandingPage extends StatelessWidget {
                             SizedBox(height: screen.height * 0.08),
                             FadeIn(
                               delay: 300,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.water_drop,
                                 size: 100,
-                                color: Colors.blueAccent,
+                                color:
+                                    isDarkMode
+                                        ? Colors.blue[200]
+                                        : Colors.blueAccent,
                               ),
                             ),
                             SizedBox(height: screen.height * 0.02),
                             FadeIn(
                               delay: 600,
-                              child: const Text(
+                              child: Text(
                                 'AquaSense',
                                 style: TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.blue[200]
+                                          : Colors.blueAccent,
                                 ),
                               ),
                             ),
                             FadeIn(
                               delay: 800,
-                              child: const Text(
+                              child: Text(
                                 'Water Monitoring System',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.teal,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.teal[100]
+                                          : Colors.teal,
                                 ),
                               ),
                             ),
                             SizedBox(height: screen.height * 0.45),
-                            // Move the motivational quote below the button instead
                             FadeIn(
                               delay: 1300,
                               child: Container(
                                 width: screen.width * 0.5,
                                 height: 45,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[900]
+                                          : Colors.white,
                                   borderRadius: BorderRadius.circular(30),
+                                  border: Border.all(
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white54
+                                            : Colors.black26,
+                                    width: 0.8,
+                                  ),
                                 ),
                                 child: TextButton(
                                   onPressed: () {
@@ -105,10 +125,13 @@ class LandingPage extends StatelessWidget {
                                       ),
                                     );
                                   },
-                                  child: const Text(
+                                  child: Text(
                                     'Get Started',
                                     style: TextStyle(
-                                      color: Colors.blueAccent,
+                                      color:
+                                          isDarkMode
+                                              ? Colors.blue[200]
+                                              : Colors.blueAccent,
                                       fontSize: 16,
                                     ),
                                   ),
@@ -118,16 +141,19 @@ class LandingPage extends StatelessWidget {
                             SizedBox(height: screen.height * 0.03),
                             FadeIn(
                               delay: 1500,
-                              child: const Text(
+                              child: Text(
                                 'When it comes to H2O\nWe do not go with the flow',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.black,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white70
+                                          : Colors.black,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 40), // Bottom padding
+                            const SizedBox(height: 40),
                           ],
                         ),
                       ),
@@ -144,7 +170,8 @@ class LandingPage extends StatelessWidget {
 }
 
 class AnimatedWaves extends StatelessWidget {
-  const AnimatedWaves({super.key});
+  final bool isDarkMode;
+  const AnimatedWaves({super.key, this.isDarkMode = false});
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +179,7 @@ class AnimatedWaves extends StatelessWidget {
       tween: Tween(begin: 0.0, end: 2 * pi),
       duration: const Duration(seconds: 5),
       builder: (context, value, child) {
-        return CustomPaint(painter: AnimatedWavePainter(value));
+        return CustomPaint(painter: AnimatedWavePainter(value, isDarkMode));
       },
     );
   }
@@ -160,11 +187,17 @@ class AnimatedWaves extends StatelessWidget {
 
 class AnimatedWavePainter extends CustomPainter {
   final double wavePhase;
-  AnimatedWavePainter(this.wavePhase);
+  final bool isDarkMode;
+  AnimatedWavePainter(this.wavePhase, this.isDarkMode);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.lightBlueAccent.shade200;
+    final paint =
+        Paint()
+          ..color =
+              isDarkMode
+                  ? Colors.lightBlue.shade800
+                  : Colors.lightBlueAccent.shade200;
     final path = Path();
 
     double baseHeight = size.height;
@@ -205,21 +238,27 @@ class FadeIn extends StatelessWidget {
 }
 
 class DropDecorations extends StatelessWidget {
-  const DropDecorations({super.key});
+  final bool isDarkMode;
+  const DropDecorations({super.key, this.isDarkMode = false});
 
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
     final random = Random();
-    final dropletCount = 200;
+    final dropletCount = 200; // or your preferred number
+
+    // Place droplets within the visible wave area at the bottom of the screen
+    final double waveTop =
+        screen.height * 0.6; // Start of the visible wave area
+    final double waveBottom =
+        screen.height * 0.98; // Just above the bottom edge
 
     return IgnorePointer(
       child: Stack(
         children: List.generate(dropletCount, (index) {
-          final top = screen.height * 0.1 + (index * 60);
-          final left =
-              (index.isEven ? index * 30 : index * 25).toDouble() %
-              screen.width;
+          // Only place droplets within the wave area
+          final top = waveTop + random.nextDouble() * (waveBottom - waveTop);
+          final left = random.nextDouble() * screen.width;
           final size = random.nextDouble() * 50;
           final opacity = 0.1 + random.nextDouble() * 0.3;
           return Positioned(
@@ -227,7 +266,11 @@ class DropDecorations extends StatelessWidget {
             left: left,
             child: Opacity(
               opacity: opacity,
-              child: Icon(Icons.water_drop, color: Colors.white, size: size),
+              child: Icon(
+                Icons.water_drop,
+                color: isDarkMode ? Colors.white24 : Colors.white,
+                size: size,
+              ),
             ),
           );
         }),

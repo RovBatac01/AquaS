@@ -224,188 +224,244 @@ class _LoginScreenState extends State<LoginScreen> {
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.black87 : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color:
-                        isDarkMode
-                            ? Colors.black.withOpacity(0.3)
-                            : Colors.black,
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                        ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: (isDarkMode ? Colors.black87 : Colors.white)
+                          .withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        width: 0.8, // Thin outline
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Glad you're back",
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    TextField(
-                      controller: username,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: isDarkMode ? Colors.white10 : Colors.black12,
-                        hintText: 'Username',
-                        hintStyle: TextStyle(
-                          color: isDarkMode ? Colors.white54 : Colors.black54,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    TextField(
-                      controller: password,
-                      obscureText: _obscureText,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: isDarkMode ? Colors.white10 : Colors.black12,
-                        hintText: 'Password',
-                        hintStyle: TextStyle(
-                          color: isDarkMode ? Colors.white54 : Colors.black54,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureText
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: isDarkMode ? Colors.white : Colors.black,
-                          ),
-                          onPressed: _toggleVisibility,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Row(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Checkbox(
-                          value: _isChecked,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              _isChecked = value ?? false;
-                            });
-                            _saveCredentials();
-                          },
-                          checkColor: isDarkMode ? Colors.black : Colors.white,
-                          activeColor:
-                              isDarkMode ? Colors.white : Colors.purple,
-                        ),
-                        Text(
-                          "Remember me",
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                        Spacer(),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ForgotPasswordScreen(),
-                              ),
-                            );
-                          },
+                        Align(
+                          alignment: Alignment.centerLeft,
                           child: Text(
-                            "Forgot password?",
+                            'Login',
                             style: TextStyle(
-                              color:
-                                  isDarkMode ? Colors.white70 : Colors.black54,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {
-                        _login(context, username, password);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.purple,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Login",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          FontAwesomeIcons.google,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                        SizedBox(width: 16),
-                      ],
-                    ),
-                    SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don’t have an account ?",
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white70 : Colors.black87,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => Signup()),
-                            );
-                          },
+                        SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
                           child: Text(
-                            "Signup",
-                            style: TextStyle(color: Colors.purple),
+                            "Glad you're back",
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              fontSize: 14,
+                            ),
                           ),
+                        ),
+                        SizedBox(height: 20),
+                        TextField(
+                          controller: username,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDarkMode ? Colors.white10 : Colors.black12,
+                            hintText: 'Username',
+                            hintStyle: TextStyle(
+                              color:
+                                  isDarkMode ? Colors.white54 : Colors.black54,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        TextField(
+                          controller: password,
+                          obscureText: _obscureText,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor:
+                                isDarkMode ? Colors.white10 : Colors.black12,
+                            hintText: 'Password',
+                            hintStyle: TextStyle(
+                              color:
+                                  isDarkMode ? Colors.white54 : Colors.black54,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: isDarkMode ? Colors.white : Colors.black,
+                              ),
+                              onPressed: _toggleVisibility,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            /// Container holding the CheckboxListTile
+                            Expanded(
+                              child: Container(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: _isChecked,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _isChecked = value ?? false;
+                                        });
+                                        _saveCredentials();
+                                      },
+                                      activeColor:
+                                          isDarkMode
+                                              ? Colors.white
+                                              : Colors.purple,
+                                      checkColor:
+                                          isDarkMode
+                                              ? Colors.black
+                                              : Colors.white,
+                                      visualDensity:
+                                          VisualDensity.compact, // Reduces size
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize
+                                              .shrinkWrap, // Reduces space
+                                    ),
+                                    Text(
+                                      "Remember me",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white70
+                                                : Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            /// Forgot Password Button
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => ForgotPasswordScreen(),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size(0, 0),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                "Forgot password?",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: 'Poppins',
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: 12),
+
+                        ElevatedButton(
+                          onPressed: () {
+                            _login(context, username, password);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            backgroundColor: Colors.purple,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              "Login",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.google,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                            SizedBox(width: 16),
+                          ],
+                        ),
+                        SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don’t have an account ?",
+                              style: TextStyle(
+                                color:
+                                    isDarkMode
+                                        ? Colors.white70
+                                        : Colors.black87,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Signup(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "Signup",
+                                style: TextStyle(color: Colors.purple),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

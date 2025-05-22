@@ -331,234 +331,266 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
 
           // Foreground content box
           Center(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black),
-              ),
-              child: SingleChildScrollView(
-                // Added SingleChildScrollView
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Verify Your Email',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: (Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black87
+                              : Colors.white)
+                          .withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
                         color:
                             Theme.of(context).brightness == Brightness.dark
-                                ? ASColor.txt3Color
-                                : ASColor.txt3Color,
-                        fontFamily: 'poppins',
+                                ? Colors.white54
+                                : Colors.black54,
+                        width: 0.8, // Thin outline
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Conditional rendering of UI based on the current stage
-                    if (!_isOTPSent) ...[
-                      // Show email input
-                      Text(
-                        'Enter the OTP',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? ASColor.txt3Color
-                                  : ASColor.txt3Color,
-                          fontFamily: 'poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextField(
-                        controller: _otpController,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          labelText: 'Verification Code',
-                          labelStyle: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: Icon(
-                            Iconsax.verify,
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                          ),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _sendOTP(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple.shade400,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Verify Your Email',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? ASColor.txt3Color
+                                      : ASColor.txt3Color,
+                              fontFamily: 'poppins',
                             ),
                           ),
-                          child:
-                              _isLoading
-                                  ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                  : const Text(
-                                    'Confirm OTP',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontFamily: 'poppins',
-                                    ),
-                                  ),
-                        ),
-                      ),
-                    ],
-                    if (_isOTPSent && !_isOTPVerified) ...[
-                      // Show OTP input
-                      const Text(
-                        'Enter the OTP sent to your email',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontFamily: 'poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextField(
-                        controller: _otpController,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.9),
-                          labelText: 'OTP',
-                          labelStyle: const TextStyle(color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.lock,
-                            color: Colors.black,
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _verifyOTP(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple.shade400,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                          const SizedBox(height: 16),
+                          // Conditional rendering of UI based on the current stage
+                          if (!_isOTPSent) ...[
+                            // Show email input
+                            Text(
+                              'Enter the OTP',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color:
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? ASColor.txt3Color
+                                        : ASColor.txt3Color,
+                                fontFamily: 'poppins',
+                              ),
                             ),
-                          ),
-                          child:
-                              _isLoading
-                                  ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                  : const Text(
-                                    'Verify OTP',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontFamily: 'poppins',
-                                    ),
-                                  ),
-                        ),
-                      ),
-                    ],
-                    if (_isOTPVerified) ...[
-                      // Show new password inputs
-                      const Text(
-                        'Enter your new password',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          fontFamily: 'poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextField(
-                        controller: _newPasswordController,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.9),
-                          labelText: 'New Password',
-                          labelStyle: const TextStyle(color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.lock,
-                            color: Colors.black,
-                          ),
-                        ),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _confirmPasswordController,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.9),
-                          labelText: 'Confirm New Password',
-                          labelStyle: const TextStyle(color: Colors.black),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(
-                            Icons.lock,
-                            color: Colors.black,
-                          ),
-                        ),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _changePassword(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple.shade400,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                            const SizedBox(height: 24),
+                            TextField(
+                              controller: _otpController,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white10,
+                                labelText: 'Verification Code',
+                                labelStyle: TextStyle(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                prefixIcon: Icon(
+                                  Iconsax.verify,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                ),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
                             ),
-                          ),
-                          child:
-                              _isLoading
-                                  ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                  : const Text(
-                                    'Change Password',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontFamily: 'poppins',
-                                    ),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => _sendOTP(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple.shade400,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
                                   ),
-                        ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child:
+                                    _isLoading
+                                        ? const CircularProgressIndicator(
+                                          color: Colors.white,
+                                        )
+                                        : const Text(
+                                          'Confirm OTP',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontFamily: 'poppins',
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ],
+                          if (_isOTPSent && !_isOTPVerified) ...[
+                            // Show OTP input
+                            const Text(
+                              'Enter the OTP sent to your email',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontFamily: 'poppins',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            TextField(
+                              controller: _otpController,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.9),
+                                labelText: 'OTP',
+                                labelStyle: const TextStyle(
+                                  color: Colors.black,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.lock,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => _verifyOTP(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple.shade400,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child:
+                                    _isLoading
+                                        ? const CircularProgressIndicator(
+                                          color: Colors.white,
+                                        )
+                                        : const Text(
+                                          'Verify OTP',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontFamily: 'poppins',
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ],
+                          if (_isOTPVerified) ...[
+                            // Show new password inputs
+                            const Text(
+                              'Enter your new password',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontFamily: 'poppins',
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            TextField(
+                              controller: _newPasswordController,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.9),
+                                labelText: 'New Password',
+                                labelStyle: const TextStyle(
+                                  color: Colors.black,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.lock,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _confirmPasswordController,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.9),
+                                labelText: 'Confirm New Password',
+                                labelStyle: const TextStyle(
+                                  color: Colors.black,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.lock,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => _changePassword(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple.shade400,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child:
+                                    _isLoading
+                                        ? const CircularProgressIndicator(
+                                          color: Colors.white,
+                                        )
+                                        : const Text(
+                                          'Change Password',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontFamily: 'poppins',
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
-                  ],
+                    ),
+                  ),
                 ),
               ),
             ),
