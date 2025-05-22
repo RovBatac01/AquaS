@@ -27,11 +27,44 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-
     return MaterialApp(
       title: 'Flutter Demo',
+      // theme: ThemeData(
+      //   brightness: Brightness.light,
+      //   scaffoldBackgroundColor: Colors.white,
+      //   primaryColor: Colors.purple,
+      //   colorScheme: ColorScheme.light(
+      //     background: Colors.white,
+      //     primary: Colors.purple,
+      //     secondary: Colors.purpleAccent,
+      //     onBackground: Colors.black,
+      //     onPrimary: Colors.white,
+      //   ),
+      //   textTheme: ThemeData.light().textTheme.apply(
+      //     bodyColor: Colors.black,
+      //     displayColor: Colors.black,
+      //     fontFamily: 'Poppins',
+      //   ),
+      // ),
+      // darkTheme: ThemeData(
+      //   brightness: Brightness.dark,
+      //   scaffoldBackgroundColor: Colors.black,
+      //   primaryColor: Colors.purple,
+      //   colorScheme: ColorScheme.dark(
+      //     background: Colors.black,
+      //     primary: Colors.purple,
+      //     secondary: Colors.purpleAccent,
+      //     onBackground: Colors.white,
+      //     onPrimary: Colors.white,
+      //   ),
+      //   textTheme: ThemeData.dark().textTheme.apply(
+      //     bodyColor: Colors.white,
+      //     displayColor: Colors.white,
+      //     fontFamily: 'Poppins',
+      //   ),
+      // ),
       themeMode: themeProvider.themeMode,
-      home: LandingPage(),
+      home: Admindashboard(),
     );
   }
 }

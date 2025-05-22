@@ -69,12 +69,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
- void _login(
+  void _login(
     BuildContext context,
-    TextEditingController usernameController, // Changed parameter name for clarity
-    TextEditingController passwordController, // Changed parameter name for clarity
+    TextEditingController
+    usernameController, // Changed parameter name for clarity
+    TextEditingController
+    passwordController, // Changed parameter name for clarity
   ) async {
-    String enteredUsername = usernameController.text; // Use the controller's text
+    String enteredUsername =
+        usernameController.text; // Use the controller's text
     String enteredPassword = passwordController.text;
 
     if (enteredUsername.isEmpty || enteredPassword.isEmpty) {
@@ -118,8 +121,8 @@ class _LoginScreenState extends State<LoginScreen> {
           // You might also save the role if you need it persistently on the dashboard
           // await _prefs.setString('loggedInUserRole', normalizedRole);
 
-
-          if (normalizedRole == 'Super Admin') { // Match the exact role string from backend
+          if (normalizedRole == 'Super Admin') {
+            // Match the exact role string from backend
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => Sadmindashboard()),
@@ -137,7 +140,9 @@ class _LoginScreenState extends State<LoginScreen> {
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text("Unknown user role '$userRole'. Please contact support."),
+                content: Text(
+                  "Unknown user role '$userRole'. Please contact support.",
+                ),
                 backgroundColor: Colors.yellow,
               ),
             );
@@ -145,7 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Login successful, but no role information found in response."),
+              content: Text(
+                "Login successful, but no role information found in response.",
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -154,7 +161,10 @@ class _LoginScreenState extends State<LoginScreen> {
         var jsonResponse = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(jsonResponse['error'] ?? "Login failed. Please check credentials."),
+            content: Text(
+              jsonResponse['error'] ??
+                  "Login failed. Please check credentials.",
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -172,10 +182,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor:
+          isDarkMode
+              ? Colors.black
+              : Colors.white, // Change background based on theme
       body: Stack(
         children: [
+          // Always show blurred violet circles in both light and dark mode
           Positioned(
             top: -100,
             left: -100,
@@ -212,10 +227,13 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 padding: EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.black87,
+                  color: isDarkMode ? Colors.black87 : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color:
+                        isDarkMode
+                            ? Colors.black.withOpacity(0.3)
+                            : Colors.black,
                     width: 1,
                   ),
                 ),
@@ -227,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'Login',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: isDarkMode ? Colors.white : Colors.black,
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                         ),
@@ -238,7 +256,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Glad you're back",
-                        style: TextStyle(color: Colors.white, fontSize: 14),
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                     SizedBox(height: 20),
@@ -246,15 +267,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: username,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.white10,
+                        fillColor: isDarkMode ? Colors.white10 : Colors.black12,
                         hintText: 'Username',
-                        hintStyle: TextStyle(color: Colors.white54),
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.white54 : Colors.black54,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
                     ),
                     SizedBox(height: 12),
                     TextField(
@@ -262,15 +287,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscureText,
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: Colors.white10,
+                        fillColor: isDarkMode ? Colors.white10 : Colors.black12,
                         hintText: 'Password',
-                        hintStyle: TextStyle(color: Colors.white54),
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.white54 : Colors.black54,
+                        ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscureText
                                 ? Icons.visibility_off
                                 : Icons.visibility,
-                            color: Colors.white,
+                            color: isDarkMode ? Colors.white : Colors.black,
                           ),
                           onPressed: _toggleVisibility,
                         ),
@@ -279,7 +306,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
                     ),
                     SizedBox(height: 12),
                     Row(
@@ -292,10 +321,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
                             _saveCredentials();
                           },
+                          checkColor: isDarkMode ? Colors.black : Colors.white,
+                          activeColor:
+                              isDarkMode ? Colors.white : Colors.purple,
                         ),
                         Text(
                           "Remember me",
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white70 : Colors.black87,
+                          ),
                         ),
                         Spacer(),
                         TextButton(
@@ -303,12 +337,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ForgotPasswordScreen()),
+                                builder: (context) => ForgotPasswordScreen(),
+                              ),
                             );
                           },
                           child: Text(
                             "Forgot password?",
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(
+                              color:
+                                  isDarkMode ? Colors.white70 : Colors.black54,
+                            ),
                           ),
                         ),
                       ],
@@ -336,7 +374,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(FontAwesomeIcons.google, color: Colors.white),
+                        Icon(
+                          FontAwesomeIcons.google,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
                         SizedBox(width: 16),
                       ],
                     ),
@@ -346,7 +387,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Text(
                           "Don’t have an account ?",
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white70 : Colors.black87,
+                          ),
                         ),
                         TextButton(
                           onPressed: () {

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http; // For making HTTP requests
 import 'dart:convert'; // For JSON encoding/decoding
 import 'package:aqua/pages/Login.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:aqua/components/colors.dart';
 
 void main() {
   runApp(const ForgotPassword());
@@ -283,10 +284,13 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : Colors.white,
       body: Stack(
         children: [
-          // Background blur decorations (same as in your original code)
+          // Always show blurred violet circles in both light and dark mode
           Positioned(
             top: -100,
             left: -100,
@@ -333,19 +337,27 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white24),
+                border: Border.all(
+                  color:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? ASColor.txt6Color
+                          : ASColor.txt3Color,
+                ),
               ),
               child: IntrinsicHeight(
                 // Added SingleChildScrollView
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Confirm Password',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? ASColor.txt6Color
+                                : ASColor.txt3Color,
                         fontFamily: 'poppins',
                       ),
                     ),
@@ -358,13 +370,24 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                         controller: _newPasswordController,
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Colors.white10,
+                          fillColor: Colors.white54,
                           labelText: 'New Password',
-                          labelStyle: const TextStyle(color: Colors.white54),
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? ASColor.txt6Color
+                                    : ASColor.txt3Color,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          prefixIcon: Icon(Iconsax.lock, color: Colors.white54),
+                          prefixIcon: Icon(
+                            Iconsax.lock,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? ASColor.txt6Color
+                                    : ASColor.txt3Color,
+                          ),
                         ),
                         keyboardType: TextInputType.emailAddress,
                       ),
@@ -377,13 +400,21 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                           filled: true,
                           fillColor: Colors.white10,
                           labelText: 'Confirm Password',
-                          labelStyle: const TextStyle(color: Colors.white54),
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? ASColor.txt6Color
+                                    : ASColor.txt3Color,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           prefixIcon: Icon(
                             Iconsax.password_check,
-                            color: Colors.white54,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? ASColor.txt6Color
+                                    : ASColor.txt3Color,
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,

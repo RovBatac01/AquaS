@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http; // For making HTTP requests
 import 'dart:convert'; // For JSON encoding/decoding
 import 'package:aqua/pages/Login.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:aqua/components/colors.dart';
 
 void main() {
   runApp(const ForgotPassword());
@@ -41,8 +42,7 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
   bool _isOTPSent = false;
   bool _isOTPVerified = false;
   String _userEmail = ''; // Store the email for later use
-  bool _isLoading =
-      false; // Track loading state to prevent multiple requests
+  bool _isLoading = false; // Track loading state to prevent multiple requests
 
   // Function to send OTP
   Future<void> _sendOTP(BuildContext context) async {
@@ -65,7 +65,9 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'}, // Important for sending JSON
+        headers: {
+          'Content-Type': 'application/json',
+        }, // Important for sending JSON
         body: json.encode({'email': email}), // Encode the email as JSON
       );
 
@@ -78,19 +80,23 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
             _userEmail = email; // Store the email
           });
           _showSuccessDialog(
-              context, responseData['message'] ?? 'OTP sent to your email!');
+            context,
+            responseData['message'] ?? 'OTP sent to your email!',
+          );
         } else {
           // Handle error from the API
           _showErrorDialog(
-              context,
-              responseData['message'] ??
-                  'Failed to send OTP. Please check your email address.');
+            context,
+            responseData['message'] ??
+                'Failed to send OTP. Please check your email address.',
+          );
         }
       } else {
         // Handle HTTP error
         _showErrorDialog(
-            context,
-            'Failed to connect to the server. Status code: ${response.statusCode}');
+          context,
+          'Failed to connect to the server. Status code: ${response.statusCode}',
+        );
       }
     } catch (error) {
       // Handle network error
@@ -134,17 +140,22 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
             _isOTPVerified = true;
           });
           _showSuccessDialog(
-              context, responseData['message'] ?? 'OTP verified successfully!');
+            context,
+            responseData['message'] ?? 'OTP verified successfully!',
+          );
         } else {
           // Handle error from the API
           _showErrorDialog(
-              context, responseData['message'] ?? 'Invalid OTP. Please try again.');
+            context,
+            responseData['message'] ?? 'Invalid OTP. Please try again.',
+          );
         }
       } else {
         // Handle HTTP error
         _showErrorDialog(
-            context,
-            'Failed to connect to the server. Status code: ${response.statusCode}');
+          context,
+          'Failed to connect to the server. Status code: ${response.statusCode}',
+        );
       }
     } catch (error) {
       // Handle network error
@@ -167,7 +178,9 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
 
     if (newPassword.isEmpty || confirmPassword.isEmpty) {
       _showErrorDialog(
-          context, 'Please enter both new password and confirm password.');
+        context,
+        'Please enter both new password and confirm password.',
+      );
       setState(() {
         _isLoading = false;
       });
@@ -196,24 +209,31 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
         if (responseData['success'] == true) {
           // Password changed successfully
           _showSuccessDialog(
-              context, responseData['message'] ?? 'Password changed successfully!');
+            context,
+            responseData['message'] ?? 'Password changed successfully!',
+          );
           // Navigate to login screen after successful password change.
-          Navigator.of(context).pushReplacement( // Use pushReplacement
+          Navigator.of(context).pushReplacement(
+            // Use pushReplacement
             MaterialPageRoute(
-              builder: (context) =>
-                  const LoginScreen(), // Replace LoginScreen() with your actual login page widget
+              builder:
+                  (context) =>
+                      const LoginScreen(), // Replace LoginScreen() with your actual login page widget
             ),
           );
         } else {
           // Handle error from the API
           _showErrorDialog(
-              context, responseData['message'] ?? 'Failed to change password.');
+            context,
+            responseData['message'] ?? 'Failed to change password.',
+          );
         }
       } else {
         // Handle HTTP error
         _showErrorDialog(
-            context,
-            'Failed to connect to the server. Status code: ${response.statusCode}');
+          context,
+          'Failed to connect to the server. Status code: ${response.statusCode}',
+        );
       }
     } catch (error) {
       // Handle network error
@@ -229,16 +249,17 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
   void _showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -246,26 +267,30 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
   void _showSuccessDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Success'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Success'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : Colors.white,
       body: Stack(
         children: [
-          // Background blur decorations (same as in your original code)
+          // Always show blurred violet circles in both light and dark mode
           Positioned(
             top: -100,
             left: -100,
@@ -298,12 +323,11 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
           ),
 
           IconButton(
-            onPressed: (){
+            onPressed: () {
               Navigator.pop(context);
-            }, 
-            icon: Icon(Icons.arrow_back,
-            color: Colors.white,)
-            ),
+            },
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+          ),
 
           // Foreground content box
           Center(
@@ -313,19 +337,22 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
               decoration: BoxDecoration(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white24),
+                border: Border.all(color: Colors.black),
               ),
               child: SingleChildScrollView(
                 // Added SingleChildScrollView
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       'Verify Your Email',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? ASColor.txt3Color
+                                : ASColor.txt3Color,
                         fontFamily: 'poppins',
                       ),
                     ),
@@ -333,12 +360,15 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                     // Conditional rendering of UI based on the current stage
                     if (!_isOTPSent) ...[
                       // Show email input
-                      const Text(
+                      Text(
                         'Enter the OTP',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white,
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? ASColor.txt3Color
+                                  : ASColor.txt3Color,
                           fontFamily: 'poppins',
                         ),
                       ),
@@ -349,11 +379,22 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                           filled: true,
                           fillColor: Colors.white10,
                           labelText: 'Verification Code',
-                          labelStyle: const TextStyle(color: Colors.white54),
+                          labelStyle: TextStyle(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          prefixIcon: Icon(Iconsax.verify, color: Colors.white54),
+                          prefixIcon: Icon(
+                            Iconsax.verify,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                          ),
                         ),
                         keyboardType: TextInputType.emailAddress,
                       ),
@@ -369,18 +410,19 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  'Confirm OTP',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator(
                                     color: Colors.white,
-                                    fontFamily: 'poppins',
+                                  )
+                                  : const Text(
+                                    'Confirm OTP',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontFamily: 'poppins',
+                                    ),
                                   ),
-                                ),
                         ),
                       ),
                     ],
@@ -406,8 +448,10 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          prefixIcon:
-                              const Icon(Icons.lock, color: Colors.black),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.black,
+                          ),
                         ),
                         keyboardType: TextInputType.number,
                       ),
@@ -423,18 +467,19 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  'Verify OTP',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator(
                                     color: Colors.white,
-                                    fontFamily: 'poppins',
+                                  )
+                                  : const Text(
+                                    'Verify OTP',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontFamily: 'poppins',
+                                    ),
                                   ),
-                                ),
                         ),
                       ),
                     ],
@@ -460,8 +505,10 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          prefixIcon:
-                              const Icon(Icons.lock, color: Colors.black),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.black,
+                          ),
                         ),
                         obscureText: true,
                       ),
@@ -476,8 +523,10 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          prefixIcon:
-                              const Icon(Icons.lock, color: Colors.black),
+                          prefixIcon: const Icon(
+                            Icons.lock,
+                            color: Colors.black,
+                          ),
                         ),
                         obscureText: true,
                       ),
@@ -493,18 +542,19 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  'Change Password',
-                                  style: TextStyle(
-                                    fontSize: 16,
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator(
                                     color: Colors.white,
-                                    fontFamily: 'poppins',
+                                  )
+                                  : const Text(
+                                    'Change Password',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontFamily: 'poppins',
+                                    ),
                                   ),
-                                ),
                         ),
                       ),
                     ],
