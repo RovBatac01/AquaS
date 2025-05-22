@@ -6,11 +6,11 @@ class NotificationDetailPage extends StatelessWidget {
   final String time;
 
   const NotificationDetailPage({
-    Key? key,
+    super.key,
     required this.title,
     required this.subtitle,
     required this.time,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

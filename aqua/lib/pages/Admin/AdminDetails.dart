@@ -248,13 +248,13 @@ class StatCard extends StatelessWidget {
   final bool isSelected;
 
   const StatCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.value,
     required this.onTap,
     required this.isSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
