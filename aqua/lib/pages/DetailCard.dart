@@ -8,15 +8,15 @@ class DetailCard extends StatelessWidget {
   final VoidCallback? onEdit;
 
   const DetailCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.quality,
     this.onEdit,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: 170,
       child: Card(
         shape: RoundedRectangleBorder(

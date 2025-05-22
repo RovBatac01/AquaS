@@ -32,6 +32,8 @@ class MyDrawerAndNavBarApp extends StatelessWidget {
 }
 
 class Admindashboard extends StatefulWidget {
+  const Admindashboard({super.key});
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }

@@ -31,7 +31,7 @@ class Statistics extends StatefulWidget {
 
 class _StatisticsState extends State<Statistics> {
   String selectedStat = "Temp";
-  String selectedPeriod = "Daily"; // Default selection
+  String selectedPeriod = "Daily"; // Default selection: "Daily" (maps to 24h)
 
   List<WaterQualityData> _currentData = [];
   bool _isLoading = true;
@@ -42,9 +42,10 @@ class _StatisticsState extends State<Statistics> {
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _fetchData(); // Initial fetch with default period
   }
 
+  // Modified to accept a 'period' parameter
   Future<void> _fetchData() async {
     setState(() {
       _isLoading = true;
@@ -52,7 +53,8 @@ class _StatisticsState extends State<Statistics> {
       _currentData = []; // Clear previous data
     });
     try {
-      final data = await _waterQualityService.fetchHistoricalData(selectedStat);
+      // Pass both selectedStat and selectedPeriod to the service
+      final data = await _waterQualityService.fetchHistoricalData(selectedStat, selectedPeriod);
       setState(() {
         _currentData = data.reversed.toList(); // Reverse to show oldest first on chart
         _isLoading = false;
@@ -65,12 +67,10 @@ class _StatisticsState extends State<Statistics> {
     }
   }
 
-  // This function now uses the fetched data
   List<double> getCurrentChartData() {
     return _currentData.map((e) => e.value).toList();
   }
 
-  // This function now uses the fetched data for timestamps
   List<DateTime> getTimeData() {
     return _currentData.map((e) => e.timestamp).toList();
   }
@@ -89,7 +89,7 @@ class _StatisticsState extends State<Statistics> {
         return ASColor.BGSixth;
       case "Salinity":
         return ASColor.BGSixth;
-      case "EC": // Using "EC" as the option for Electrical Conductivity
+      case "EC":
         return ASColor.BGSixth;
       default:
         return ASColor.BGSixth;
@@ -112,9 +112,51 @@ class _StatisticsState extends State<Statistics> {
     return sum / _currentData.length;
   }
 
+  // Get the last (most recent) reading from the fetched data
+  double getStatLastValue() {
+    if (_currentData.isEmpty) return 0.0;
+    return _currentData.last.value; // Assuming _currentData is sorted oldest to newest
+  }
+
   @override
   Widget build(BuildContext context) {
     Color lineColor = getStatColor();
+
+    // Helper function to create a highlight card structure
+    Widget buildHighlightCard(String label, String value, Color color) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color, width: 1.2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -173,15 +215,13 @@ class _StatisticsState extends State<Statistics> {
                         onChanged: (String? newValue) {
                           setState(() {
                             selectedPeriod = newValue!;
-                            // For now, this dropdown doesn't affect fetching,
-                            // but you'd implement logic here to fetch data for
-                            // daily, weekly, or monthly periods if your backend supports it.
+                            _fetchData(); // Trigger data fetch with new period
                           });
                         },
                         items: <String>[
-                          "Daily",
-                          "Weekly",
-                          "Monthly",
+                          "Daily",   // Maps to 24h
+                          "Weekly",  // Maps to 7d
+                          "Monthly", // Maps to 30d
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -220,7 +260,6 @@ class _StatisticsState extends State<Statistics> {
                             ? const Center(child: Text("No data available for this selection."))
                             : LineChart(
                                 LineChartData(
-                                  // Set fixed min and max Y values for the graph
                                   minY: 0,
                                   maxY: 100,
                                   gridData: FlGridData(show: true),
@@ -239,14 +278,12 @@ class _StatisticsState extends State<Statistics> {
                                       sideTitles: SideTitles(
                                         showTitles: true,
                                         reservedSize: 50,
-                                        interval: 1,
+                                        interval: _getBottomTitleInterval(), // Dynamic interval
                                         getTitlesWidget: (value, _) {
                                           List<DateTime> timeData = getTimeData();
                                           int index = value.toInt();
                                           if (index >= 0 && index < timeData.length) {
-                                            String formattedTime = DateFormat(
-                                              'HH:mm:ss',
-                                            ).format(timeData[index]);
+                                            String formattedTime = _formatTimestamp(timeData[index]);
                                             return Transform.rotate(
                                               angle: -45 * (3.141592653589793 / 180),
                                               child: Text(
@@ -338,7 +375,7 @@ class _StatisticsState extends State<Statistics> {
                           "Turbidity",
                           "Conductivity",
                           "Salinity",
-                          "EC", // Changed from "Electrical Conductivity (Condensed)"
+                          "EC",
                         ].map<DropdownMenuItem<String>>((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
@@ -366,25 +403,33 @@ class _StatisticsState extends State<Statistics> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: _highlightCard(
+                      child: buildHighlightCard( // Using the new inline helper
                         "Highest",
-                        getStatMaxValue().toStringAsFixed(2), // Format to 2 decimal places
+                        getStatMaxValue().toStringAsFixed(2),
                         getStatColor(),
                       ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard(
+                      child: buildHighlightCard( // Using the new inline helper
                         "Lowest",
-                        getStatMinValue().toStringAsFixed(2), // Format to 2 decimal places
+                        getStatMinValue().toStringAsFixed(2),
                         getStatColor(),
                       ),
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: _highlightCard(
+                      child: buildHighlightCard( // Using the new inline helper
                         "Average",
-                        getStatAverage().toStringAsFixed(2), // Format to 2 decimal places
+                        getStatAverage().toStringAsFixed(2),
+                        getStatColor(),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: buildHighlightCard( // Using the new inline helper
+                        "Last Reading",
+                        getStatLastValue().toStringAsFixed(2),
                         getStatColor(),
                       ),
                     ),
@@ -398,38 +443,23 @@ class _StatisticsState extends State<Statistics> {
     );
   }
 
-  Widget _highlightCard(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color, width: 1.2),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
+  // Helper to format timestamp based on selected period
+  String _formatTimestamp(DateTime timestamp) {
+    switch (selectedPeriod) {
+      case "Daily":
+        return DateFormat('HH:mm').format(timestamp); // Show hour and minute for daily
+      case "Weekly":
+      case "Monthly":
+        return DateFormat('MMM d').format(timestamp); // Show month and day for weekly/monthly
+      default:
+        return DateFormat('HH:mm:ss').format(timestamp);
+    }
+  }
+
+  // Helper to determine interval for bottom titles based on selected period
+  double _getBottomTitleInterval() {
+    if (_currentData.length <= 1) return 1.0; // Avoid division by zero or single point
+    // Adjust interval based on the number of data points to prevent overcrowding
+    return (_currentData.length / 5).ceilToDouble(); // Show approx 5 labels
   }
 }

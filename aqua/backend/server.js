@@ -757,3 +757,187 @@ server.listen(port, () => {
 io.listen(3001, () => {
   console.log("🔌 WebSocket server running on port 3001");
 });
+
+// Helper function to get the WHERE clause for time filtering
+function getTimeFilterClause(period) {
+  let timeClause = '';
+  switch (period) {
+    case '24h':
+      // Assumes 'timestamp' or 'created_at' or 'reading_time' is the column name
+      timeClause = "WHERE timestamp >= NOW() - INTERVAL 24 HOUR";
+      break;
+    case '7d':
+      timeClause = "WHERE timestamp >= NOW() - INTERVAL 7 DAY";
+      break;
+    case '30d':
+      timeClause = "WHERE timestamp >= NOW() - INTERVAL 30 DAY";
+      break;
+    default:
+      // Default to 24 hours if no valid period is provided
+      timeClause = "WHERE timestamp >= NOW() - INTERVAL 24 HOUR";
+      break;
+  }
+  return timeClause;
+}
+
+// 5. API Routes (Updated to handle 'period' query parameter)
+
+/**
+ * @route GET /data/turbidity
+ * @description Get historical Turbidity readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of turbidity reading objects.
+ */
+app.get("/data/turbidity", async (req, res) => {
+  console.log("📥 GET /data/turbidity request received");
+  const period = req.query.period || '24h'; // Default to 24h if not provided
+  const timeFilter = getTimeFilterClause(period);
+
+  // IMPORTANT: Adjust 'timestamp' to your actual timestamp column name (e.g., 'created_at', 'reading_time')
+  // For this example, I'm using 'timestamp'. If your table has 'created_at', change the timeFilter function.
+  // Also, consider removing 'LIMIT 10' if you want all data for the period.
+  // For now, I'm keeping 'LIMIT 10' as per your original request, but it might not show all data for longer periods.
+  const query = `SELECT * FROM turbidity_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit for better graph data
+  console.log(`Executing query for turbidity: ${query}`);
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ Turbidity API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Turbidity Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
+
+/**
+ * @route GET /data/ph
+ * @description Get historical pH readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of pH reading objects.
+ */
+app.get("/data/ph", async (req, res) => {
+  console.log("📥 GET /data/ph request received");
+  const period = req.query.period || '24h';
+  const timeFilter = getTimeFilterClause(period);
+  const query = `SELECT * FROM phlevel_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ pH API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ pH Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
+
+/**
+ * @route GET /data/tds
+ * @description Get historical TDS readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of TDS reading objects.
+ */
+app.get("/data/tds", async (req, res) => {
+  console.log("📥 GET /data/tds request received");
+  const period = req.query.period || '24h';
+  const timeFilter = getTimeFilterClause(period);
+  const query = `SELECT * FROM tds_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ TDS API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ TDS Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
+
+/**
+ * @route GET /data/salinity
+ * @description Get historical Salinity readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of Salinity reading objects.
+ */
+app.get("/data/salinity", async (req, res) => {
+  console.log("📥 GET /data/salinity request received");
+  const period = req.query.period || '24h';
+  const timeFilter = getTimeFilterClause(period);
+  const query = `SELECT * FROM salinity_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ Salinity API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Salinity Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
+
+/**
+ * @route GET /data/ec
+ * @description Get historical EC readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of EC reading objects.
+ */
+app.get("/data/ec", async (req, res) => {
+  console.log("📥 GET /data/ec request received");
+  const period = req.query.period || '24h';
+  const timeFilter = getTimeFilterClause(period);
+  const query = `SELECT * FROM ec_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ EC API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ EC Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
+
+/**
+ * @route GET /data/ec_compensated
+ * @description Get historical EC Compensated readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of EC Compensated reading objects.
+ */
+app.get("/data/ec_compensated", async (req, res) => {
+  console.log("📥 GET /data/ec_compensated request received");
+  const period = req.query.period || '24h';
+  const timeFilter = getTimeFilterClause(period);
+  const query = `SELECT * FROM ec_compensated_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ EC Compensated API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ EC Compensated Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
+
+/**
+ * @route GET /data/temperature
+ * @description Get historical Temperature readings based on the period (24h, 7d, 30d).
+ * @queryParam {string} period - '24h', '7d', '30d'
+ * @returns {Array} An array of Temperature reading objects.
+ */
+app.get("/data/temperature", async (req, res) => {
+  console.log("📥 GET /data/temperature request received");
+  const period = req.query.period || '24h';
+  const timeFilter = getTimeFilterClause(period);
+  const query = `SELECT * FROM temperature_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
+
+  try {
+    const [rows, fields] = await db.query(query);
+    console.log(`✅ Temperature API Response Sent: ${rows.length} records`);
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Temperature Database Query Error:", err);
+    return res.status(500).json({ error: "Database Query Error" });
+  }
+});
