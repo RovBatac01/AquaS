@@ -75,7 +75,7 @@ class _MainScreenState extends State<Userdashboard> {
               child: Text(
                 "Cancel",
                 style: TextStyle(
-                  color: ASColor.txt3Color,
+                  color: ASColor.getTextColor(context),
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w300,
                 ),
@@ -95,7 +95,7 @@ class _MainScreenState extends State<Userdashboard> {
               child: Text(
                 "Confirm",
                 style: TextStyle(
-                  color: ASColor.txt3Color,
+                  color: ASColor.getTextColor(context),
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w300,
                 ),
@@ -127,7 +127,7 @@ class _MainScreenState extends State<Userdashboard> {
                       padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
                       height: 70,
                       decoration: BoxDecoration(
-                        color: isDarkMode ? ASColor.BGthird : ASColor.BGSixth,
+                        color: isDarkMode? ASColor.BGFifth : ASColor.BGsixth,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -137,7 +137,7 @@ class _MainScreenState extends State<Userdashboard> {
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 22,
-                              color: ASColor.txt2Color,
+                              color: ASColor.txt6Color,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -165,7 +165,7 @@ class _MainScreenState extends State<Userdashboard> {
                   topRight: Radius.circular(30),
                 ),
                 child: BottomNavigationBar(
-                  backgroundColor: ASColor.BGSixth,
+                  backgroundColor: isDarkMode? ASColor.BGFifth : ASColor.BGsixth,
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Colors.white,
                   unselectedItemColor: Colors.white.withOpacity(0.7),

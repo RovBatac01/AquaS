@@ -26,7 +26,17 @@ class SettingsPage extends StatelessWidget {
                   Expanded(
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Text('Dark Mode', style: TextStyle(fontSize: 16, fontFamily: 'Poppins', color: ASColor.txt3Color)),
+                      child: Text(
+                        'Dark Mode',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: 'Poppins',
+                          color:
+                              Theme.of(
+                                context,
+                              ).colorScheme.onBackground, // Use theme color
+                        ),
+                      ),
                     ),
                   ),
                   Switch(
@@ -44,21 +54,42 @@ class SettingsPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 9.0),
               child: TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor:
+                      Theme.of(
+                        context,
+                      ).colorScheme.onBackground, // text/icon color
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.secondary.withOpacity(0.1), // subtle bg
+                ),
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
                   );
                 },
                 child: Row(
                   children: [
-                    Text('Log Out', 
+                    Text(
+                      'Log Out',
                       style: TextStyle(
                         fontSize: 16,
-                        color: ASColor.txt3Color,
-                        fontFamily: 'Poppins',)),
+                        color:
+                            Theme.of(
+                              context,
+                            ).colorScheme.onBackground, // Use theme color
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
                     const Spacer(),
-                    const Icon(Icons.logout, size: 20),
+                    Icon(
+                      Icons.logout,
+                      size: 20,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
                   ],
                 ),
               ),

@@ -12,12 +12,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Water Quality',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const SuperAdminHomeScreen(),
-    );
+    return SuperAdminHomeScreen(); // Remove inner MaterialApp
   }
 }
 
@@ -45,7 +40,11 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                 children: [
                   Text(
                     'Hi, (Fetch Username)',
-                    style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 27,
+                      fontWeight: FontWeight.bold,
+                      color: ASColor.getTextColor(context),
+                    ),
                   ),
                 ],
               ),
@@ -60,10 +59,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color:
-                        isDarkMode
-                            ? Colors.grey[800]
-                            : const Color.fromARGB(255, 167, 232, 201),
+                    color: ASColor.BGsixth,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: TextField(
@@ -92,177 +88,26 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
 
                 SizedBox(height: 10),
 
-                Container(
-                  height: 70, // Increased height for better vertical spacing
-                  width: double.infinity,
-                  decoration: BoxDecoration(color: Colors.blue),
-                  padding: const EdgeInsets.only(
-                    left: 10,
-                  ), // Padding on left and right
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .center, // Vertically center the texts
-                        children: [
-                          Text(
-                            'Total Establishments',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(height: 4), // Spacing between the two texts
-                          Text(
-                            '125',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10,),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Icon(
-                            Icons.window_outlined,
-                            color: Colors.white,
-                            size:
-                                60, // Reduced to better fit in the 70px high container
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                buildInfoCard(
+                  context: context,
+                  title: 'Total Establishments',
+                  value: '125',
+                  icon: Icons.window_outlined,
+                  color: Colors.blue,
                 ),
-
-                SizedBox(
-                  height: 10,
-                ), // Spacing between the two containers// Spacing between the two containers
-
-                Container(
-                  height: 70, // Increased height for better vertical spacing
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 75, 202, 140),
-                  ),
-                  padding: const EdgeInsets.only(
-                    left: 10,
-                  ), // Padding on left and right
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .center, // Vertically center the texts
-                        children: [
-                          Text(
-                            'Total Sensors',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(height: 4), // Spacing between the two texts
-                          Text(
-                            '125',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10,),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Icon(
-                            Icons.sensors_rounded,
-                            color: Colors.white,
-                            size:
-                                60, // Reduced to better fit in the 70px high container
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                buildInfoCard(
+                  context: context,
+                  title: 'Total Sensors',
+                  value: '125',
+                  icon: Icons.sensors_rounded,
+                  color: const Color(0xFF4BCA8C),
                 ),
-
-                SizedBox(height: 10), // Spacing between the two containers
-
-                Container(
-                  height: 70, // Increased height for better vertical spacing
-                  width: double.infinity,
-                  decoration: BoxDecoration(color: Colors.redAccent),
-                  padding: const EdgeInsets.only(
-                    left: 10,
-                  ), // Padding on left and right
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .center, // Vertically center the texts
-                        children: [
-                          Text(
-                            'Total Users',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(height: 4), // Spacing between the two texts
-                          Text(
-                            '125',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.only(right: 10,),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Icon(
-                            Icons.people_alt_outlined,
-                            color: Colors.white,
-                            size:
-                                60, // Reduced to better fit in the 70px high container
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                buildInfoCard(
+                  context: context,
+                  title: 'Total Users',
+                  value: '125',
+                  icon: Icons.people_alt_outlined,
+                  color: Colors.redAccent,
                 ),
               ],
             ),
@@ -318,3 +163,64 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
     );
   }
 }
+
+Widget buildInfoCard({
+    required BuildContext context,
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      height: 90,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[900] : color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                    ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Poppins',
+                      color:  Colors.white,
+                    ),
+              ),
+            ],
+          ),
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 40,
+          ),
+        ],
+      ),
+    );
+  }

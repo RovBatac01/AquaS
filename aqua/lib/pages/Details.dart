@@ -97,7 +97,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black,
                   fontFamily: 'Poppins',
                 ),
               ),
@@ -126,7 +125,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black,
                   fontFamily: 'Poppins',
                 ),
               ),

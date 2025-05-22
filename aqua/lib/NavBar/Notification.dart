@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax/iconsax.dart';
+
 import 'NotificationDetailPage.dart';
+import 'package:aqua/components/colors.dart';
 
 void main() {
   runApp(
@@ -38,10 +42,6 @@ class _NotificationPageState extends State<NotificationPage> {
     },
   ];
 
-  //Start of the code for the selection and deletion of the notification
-  Set<int> selectedIndexes = {};
-  bool get isSelectionMode => selectedIndexes.isNotEmpty;
-
   Icon _getNotificationIcon(String title) {
     switch (title.toLowerCase()) {
       case 'warning!!':
@@ -57,87 +57,38 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  void _toggleSelection(int index) {
-    setState(() {
-      if (selectedIndexes.contains(index)) {
-        selectedIndexes.remove(index);
-      } else {
-        selectedIndexes.add(index);
-      }
-    });
-  }
-
-  void _deleteSelected() {
-    setState(() {
-      notifications = notifications
-          .asMap()
-          .entries
-          .where((entry) => !selectedIndexes.contains(entry.key))
-          .map((entry) => entry.value)
-          .toList();
-      selectedIndexes.clear();
-    });
-  }
-
-  void _selectAll() {
-    setState(() {
-      selectedIndexes = Set.from(List.generate(notifications.length, (i) => i));
-    });
-  }
-  //End of the code for the selection and deletion of the notification
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: isSelectionMode
-          ? AppBar(
-              title: Text('${selectedIndexes.length} selected'),
-              backgroundColor: Colors.deepPurple,
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.select_all),
-                  onPressed: _selectAll,
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: _deleteSelected,
-                ),
-              ],
-            )
-          : null,
       body: ListView.separated(
         itemCount: notifications.length,
-        separatorBuilder: (context, index) =>
-            Divider(height: 1, color: Colors.grey[300]),
+        separatorBuilder:
+            (context, index) => Divider(height: 1, color: Colors.grey[300]),
         itemBuilder: (context, index) {
           final notification = notifications[index];
-          final isSelected = selectedIndexes.contains(index);
 
           return GestureDetector(
-            onLongPress: () => _toggleSelection(index),
             onTap: () {
-              if (isSelectionMode) {
-                _toggleSelection(index);
-              } else {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => NotificationDetailPage(
-                      title: notification['title']!,
-                      subtitle: notification['subtitle']!,
-                      time: notification['time']!,
-                    ),
-                  ),
-                );
-              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => NotificationDetailPage(
+                        title: notification['title']!,
+                        subtitle: notification['subtitle']!,
+                        time: notification['time']!,
+                      ),
+                ),
+              );
             },
             child: Card(
-              color: isSelected ? Colors.deepPurple[50] : null,
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: ASColor.getCardColor(context),
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              
               child: ListTile(
                 contentPadding: EdgeInsets.all(16),
                 leading: _getNotificationIcon(notification['title']!),
@@ -146,15 +97,65 @@ class _NotificationPageState extends State<NotificationPage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: isSelected ? Colors.deepPurple : Colors.black,
+                    color: ASColor.getTextColor(context),
                   ),
                 ),
-                subtitle: Text(notification['subtitle']!),
-                trailing: Text(
-                  notification['time']!,
-                  style: TextStyle(
-                      color: Colors.grey[600], fontSize: 12),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification['subtitle']!,
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      notification['time']!,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ],
                 ),
+                trailing: Icon(
+                  Iconsax.trash,
+                  size: 16,
+                  color: Colors.red,
+                ),
+                // trailing: PopupMenuButton<String>(
+                //   icon: Container(
+                //     padding: EdgeInsets.all(4),
+                //     child: Icon(
+                //       Icons.more_horiz,
+                //       size: 16,
+                //       color: ASColor.getTextColor(context),
+                //     ),
+                //   ),
+                //   color:
+                //       Theme.of(
+                //         context,
+                //       ).cardColor, // Use theme card color for popup background
+                //   itemBuilder:
+                //       (context) => [
+                //         PopupMenuItem<String>(
+                //           value: 'delete',
+                //           child: Center(
+                //             child: Icon(
+                //               Icons.delete,
+                //               color:
+                //                   Theme.of(context)
+                //                       .colorScheme
+                //                       .onSurface, // Use theme text/icon color
+                //               size: 20, // Adjust the size as needed
+                //             ),
+                //           ),
+                //         ),
+                //       ],
+                //   onSelected: (value) {
+                //     if (value == 'delete') {
+                //       setState(() {
+                //         notifications.removeAt(index);
+                //       });
+                //     }
+                //   },
+                // ),
               ),
             ),
           );
@@ -163,6 +164,3 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 }
-
-
-

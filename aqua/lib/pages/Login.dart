@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:aqua/pages/ForgotPass.dart';
+import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/Signup.dart';
 import 'package:flutter/material.dart';

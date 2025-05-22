@@ -1,3 +1,4 @@
+import 'package:aqua/pages/SAdmin/AddAccount.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -11,10 +12,7 @@ class Sadminaccountmanagement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: UserListPage(),
-      debugShowCheckedModeBanner: false,
-    );
+    return UserListPage(); // Removed inner MaterialApp
   }
 }
 
@@ -77,15 +75,16 @@ class _UserListPageState extends State<UserListPage> {
   }
 
   // --- NEW: Function to handle user updates ---
-  Future<void> _updateUser(int userId, String newUsername, String newRole) async {
+  Future<void> _updateUser(
+    int userId,
+    String newUsername,
+    String newRole,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('http://localhost:5000/users/$userId'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': newUsername,
-          'role': newRole,
-        }),
+        body: jsonEncode({'username': newUsername, 'role': newRole}),
       );
 
       if (response.statusCode == 200) {
@@ -96,37 +95,48 @@ class _UserListPageState extends State<UserListPage> {
       } else {
         final errorBody = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update user: ${errorBody['error'] ?? response.reasonPhrase}')),
+          SnackBar(
+            content: Text(
+              'Failed to update user: ${errorBody['error'] ?? response.reasonPhrase}',
+            ),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating user: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating user: $e')));
     }
   }
 
   // --- NEW: Function to handle user deletion ---
   Future<void> _deleteUser(int userId, String username) async {
-    final bool confirm = await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete user "$username"?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    ) ?? false; // In case dialog is dismissed by tapping outside
+    final bool confirm =
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Confirm Deletion'),
+              content: Text(
+                'Are you sure you want to delete user "$username"?',
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // In case dialog is dismissed by tapping outside
 
     if (confirm) {
       try {
@@ -142,21 +152,28 @@ class _UserListPageState extends State<UserListPage> {
         } else {
           final errorBody = jsonDecode(response.body);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete user: ${errorBody['error'] ?? response.reasonPhrase}')),
+            SnackBar(
+              content: Text(
+                'Failed to delete user: ${errorBody['error'] ?? response.reasonPhrase}',
+              ),
+            ),
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting user: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting user: $e')));
       }
     }
   }
 
   // --- NEW: Function to show edit dialog ---
   void _showEditDialog(Map<String, dynamic> user) {
-    final TextEditingController usernameController = TextEditingController(text: user['username']);
-    String selectedRole = user['role'] ?? 'User'; // Default to 'User' if role is null
+    final TextEditingController usernameController = TextEditingController(
+      text: user['username'],
+    );
+    String selectedRole =
+        user['role'] ?? 'User'; // Default to 'User' if role is null
 
     showDialog(
       context: context,
@@ -174,7 +191,10 @@ class _UserListPageState extends State<UserListPage> {
                 value: selectedRole,
                 decoration: const InputDecoration(labelText: 'Role'),
                 items: const [
-                  DropdownMenuItem(value: 'Super Admin', child: Text('Super Admin')),
+                  DropdownMenuItem(
+                    value: 'Super Admin',
+                    child: Text('Super Admin'),
+                  ),
                   DropdownMenuItem(value: 'Admin', child: Text('Admin')),
                   DropdownMenuItem(value: 'User', child: Text('User')),
                 ],
@@ -217,15 +237,17 @@ class _UserListPageState extends State<UserListPage> {
 
     if (_searchController.text.isNotEmpty) {
       final query = _searchController.text.toLowerCase();
-      filtered = filtered.where((user) {
-        return user['username']?.toLowerCase().contains(query) ?? false;
-      }).toList();
+      filtered =
+          filtered.where((user) {
+            return user['username']?.toLowerCase().contains(query) ?? false;
+          }).toList();
     }
 
     if (_selectedRoleFilter != 'All') {
-      filtered = filtered.where((user) {
-        return user['role'] == _selectedRoleFilter;
-      }).toList();
+      filtered =
+          filtered.where((user) {
+            return user['role'] == _selectedRoleFilter;
+          }).toList();
     }
 
     return filtered;
@@ -234,7 +256,7 @@ class _UserListPageState extends State<UserListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xfff1edeb),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -244,7 +266,7 @@ class _UserListPageState extends State<UserListPage> {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
-                  child: IntrinsicWidth(
+                child: IntrinsicWidth(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -274,8 +296,14 @@ class _UserListPageState extends State<UserListPage> {
                         value: _selectedRoleFilter,
                         items: const [
                           DropdownMenuItem(value: 'All', child: Text('All')),
-                          DropdownMenuItem(value: 'Super Admin', child: Text('Super Admin')),
-                          DropdownMenuItem(value: 'Admin', child: Text('Admin')),
+                          DropdownMenuItem(
+                            value: 'Super Admin',
+                            child: Text('Super Admin'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Admin',
+                            child: Text('Admin'),
+                          ),
                           DropdownMenuItem(value: 'User', child: Text('User')),
                         ],
                         onChanged: (value) {
@@ -286,7 +314,7 @@ class _UserListPageState extends State<UserListPage> {
                       ),
                     ],
                   ),
-              ),
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -294,72 +322,77 @@ class _UserListPageState extends State<UserListPage> {
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Text(
-                          _error!,
-                          style: const TextStyle(color: Colors.red, fontSize: 16),
-                        ),
-                      )
-                    : Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: _fetchUsers,
-                          child: ListView.builder(
-                            itemCount: _filteredUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = _filteredUsers[index];
-                              return Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                color: Colors.grey.shade300,
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                child: ListTile(
-                                  leading: const Icon(Icons.face),
-                                  title: Text(user['username']!),
-                                  subtitle: Text(user['role']!),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      // --- Call edit function on press ---
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.purple),
-                                        onPressed: () {
-                                          _showEditDialog(user); // Open edit dialog
-                                        },
-                                      ),
-                                      // --- Call delete function on press ---
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.indigo,
-                                        ),
-                                        onPressed: () {
-                                          _deleteUser(user['id'], user['username']); // Pass ID and username
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                ? Center(
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+                )
+                : Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _fetchUsers,
+                    child: ListView.builder(
+                      itemCount: _filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = _filteredUsers[index];
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                      ),
-
-              Container(
-                alignment: Alignment.bottomRight,
-                padding: const EdgeInsets.only(bottom: 20, right: 20),
-                child: FloatingActionButton(
-                onPressed: () {
-                  setState(() {
-                  });
-                },
-                child: Icon(Icons.add),
+                          color: Colors.grey.shade300,
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          child: ListTile(
+                            leading: const Icon(Icons.face),
+                            title: Text(user['username']!),
+                            subtitle: Text(user['role']!),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // --- Call edit function on press ---
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    color: Colors.purple,
+                                  ),
+                                  onPressed: () {
+                                    _showEditDialog(user); // Open edit dialog
+                                  },
+                                ),
+                                // --- Call delete function on press ---
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.indigo,
+                                  ),
+                                  onPressed: () {
+                                    _deleteUser(
+                                      user['id'],
+                                      user['username'],
+                                    ); // Pass ID and username
+                                  },
+                                ),
+                              ],
                             ),
-              ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            // Add your action here, e.g., navigate to a new page
+            Navigator.push(context, MaterialPageRoute(builder: (context) => AddAccount())); 
+          });
+        },
+        child: Icon(Icons.add),
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.endFloat, // Bottom right
     );
   }
 }

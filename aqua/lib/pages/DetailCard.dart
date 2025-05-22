@@ -1,6 +1,7 @@
+import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:flutter/material.dart';
-import 'Details.dart';// Adjust the import path as needed
+import 'Details.dart'; // Adjust the import path as needed
 
 class DetailCard extends StatelessWidget {
   final String title;
@@ -19,9 +20,10 @@ class DetailCard extends StatelessWidget {
     return SizedBox(
       height: 170,
       child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        color: ASColor.getCardColor(
+          context,
+        ), // Use theme card color, or set a custom color
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: 5,
         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         child: Padding(
@@ -40,7 +42,10 @@ class DetailCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: Colors.blueAccent,
+                    ),
                     onPressed: onEdit ?? () {},
                   ),
                 ],

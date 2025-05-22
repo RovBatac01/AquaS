@@ -4,6 +4,7 @@ import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:iconsax/iconsax.dart';
 
 void main() {
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: AddAccount()));
@@ -88,6 +89,12 @@ class _SignupState extends State<AddAccount> {
             ),
           ),
 
+          IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+          ),
           // Form content
           Center(
             child: Padding(
@@ -147,7 +154,7 @@ class _SignupState extends State<AddAccount> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -156,7 +163,7 @@ class _SignupState extends State<AddAccount> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: 20),
 
                       // Email/Phone field
                       TextFormField(
@@ -176,7 +183,7 @@ class _SignupState extends State<AddAccount> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -195,7 +202,7 @@ class _SignupState extends State<AddAccount> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: 20),
 
                       // Password field
                       TextFormField(
@@ -215,7 +222,7 @@ class _SignupState extends State<AddAccount> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -260,7 +267,7 @@ class _SignupState extends State<AddAccount> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: 20),
 
                       // Confirm Password field
                       TextFormField(
@@ -280,7 +287,7 @@ class _SignupState extends State<AddAccount> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {

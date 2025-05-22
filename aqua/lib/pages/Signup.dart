@@ -50,6 +50,8 @@ class _SignupState extends State<Signup> {
     }
   }
 
+  bool termsAccepted = false; // Variable to track if terms are accepted
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,12 +144,12 @@ class _SignupState extends State<Signup> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none
+                            borderSide: BorderSide.none,
                           ),
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -171,12 +173,12 @@ class _SignupState extends State<Signup> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none
+                            borderSide: BorderSide.none,
                           ),
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -210,12 +212,12 @@ class _SignupState extends State<Signup> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none
+                            borderSide: BorderSide.none,
                           ),
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -275,12 +277,12 @@ class _SignupState extends State<Signup> {
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none
+                            borderSide: BorderSide.none,
                           ),
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt2Color,
+                          color: ASColor.txt6Color,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -292,24 +294,195 @@ class _SignupState extends State<Signup> {
                         },
                       ),
 
-                      CheckboxListTile(
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text(
-                          "I agree to the terms and conditions",
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: ASColor.txt2Color,
-                            fontSize: 12,
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: isChecked,
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                isChecked = newValue ?? false;
+                              });
+                            },
                           ),
-                        ),
-                        value: isChecked,
-                        onChanged: (bool? newValue) {
-                          setState(() {
-                            isChecked = newValue ?? false;
-                          });
-                        },
-                      ),
+                          Flexible(
+                            child: TextButton(
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible:
+                                      false, // Prevent closing by tapping outside
+                                  builder: (BuildContext context) {
+                                    bool localAccepted = false;
 
+                                    return StatefulBuilder(
+                                      builder: (context, setState) {
+                                        return Dialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: SizedBox(
+                                            height:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.height *
+                                                0.75,
+                                            child: Column(
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    16.0,
+                                                  ),
+                                                  child: Text(
+                                                    'Terms and Conditions',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 18,
+                                                      fontFamily: 'Poppins',
+                                                    ),
+                                                  ),
+                                                ),
+                                                const Divider(height: 1),
+                                                Expanded(
+                                                  child: SingleChildScrollView(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 16.0,
+                                                        ),
+                                                    child: Text(
+                                                      '''1. Acceptance of Terms
+
+By creating an account or using our services, you acknowledge that you have read, understood, and agree to be bound by these Terms.
+
+2. User Accounts
+
+You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.
+
+3. Use of Services
+
+You agree to use our services only for lawful purposes and in a manner that does not infringe the rights of or restrict or inhibit anyone else's use and enjoyment of our services.
+
+4. Privacy Policy
+
+Your use of our services is also governed by our Privacy Policy, which is incorporated into these Terms by reference. Please review our Privacy Policy to understand our practices regarding your personal information.
+
+5. Intellectual Property
+
+The content, trademarks, service marks, and logos on our services are owned by or licensed to us and are subject to copyright and other intellectual property rights.
+
+6. Disclaimer of Warranties
+
+Our services are provided on an "as is" and "as available" basis without any warranties of any kind, express or implied.
+
+7. Limitation of Liability
+
+To the fullest extent permitted by applicable law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of our services.
+
+8. Governing Law
+
+These Terms shall be governed by and construed in accordance with the laws of [Your Country/State], without regard to its conflict of law provisions.
+
+9. Changes to Terms
+
+We reserve the right to modify or revise these Terms at any time. Your continued use of our services after any such changes constitutes your acceptance of the new Terms.
+
+10. Contact Us
+
+If you have any questions about these Terms, please contact us at [Your Contact Information].
+''',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontFamily: 'Poppins',
+                                                        color: Colors.black87,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16.0,
+                                                      ),
+                                                  child: CheckboxListTile(
+                                                    contentPadding:
+                                                        EdgeInsets.zero,
+                                                    controlAffinity:
+                                                        ListTileControlAffinity
+                                                            .leading,
+                                                    title: Text(
+                                                      "I have read and agree to the terms and conditions",
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontFamily: 'Poppins',
+                                                      ),
+                                                    ),
+                                                    value: localAccepted,
+                                                    onChanged: (bool? value) {
+                                                      setState(() {
+                                                        localAccepted =
+                                                            value ?? false;
+                                                      });
+                                                    },
+                                                  ),
+                                                ),
+                                                TextButton(
+                                                  onPressed:
+                                                      localAccepted
+                                                          ? () {
+                                                            Navigator.of(
+                                                              context,
+                                                            ).pop();
+                                                          }
+                                                          : null, // Disable if not accepted
+                                                  child: Text(
+                                                    "Close",
+                                                    style: TextStyle(
+                                                      color:
+                                                          localAccepted
+                                                              ? Colors.blue
+                                                              : Colors.grey,
+                                                      fontSize: 14,
+                                                      fontFamily: 'Poppins',
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+
+                              style: ButtonStyle(
+                                overlayColor: MaterialStateProperty.all(
+                                  Colors.transparent,
+                                ), // No ripple
+                                splashFactory:
+                                    NoSplash
+                                        .splashFactory, // Optional: remove all splash behavior
+                                padding: MaterialStateProperty.all(
+                                  EdgeInsets.zero,
+                                ), // Optional: remove default padding
+                              ),
+                              child: Text(
+                                "I agree to the terms and conditions",
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: ASColor.txt6Color,
+                                  fontSize: 12,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       // Sign Up button
                       Center(
                         child: ElevatedButton(
@@ -317,12 +490,14 @@ class _SignupState extends State<Signup> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.purple.shade400,
                           ),
-                          child: const Text('Sign Up',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16,
-                                color: Colors.white,
-                              )),
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(height: 20),

@@ -54,9 +54,13 @@ class _StatisticsState extends State<Statistics> {
     });
     try {
       // Pass both selectedStat and selectedPeriod to the service
-      final data = await _waterQualityService.fetchHistoricalData(selectedStat, selectedPeriod);
+      final data = await _waterQualityService.fetchHistoricalData(
+        selectedStat,
+        selectedPeriod,
+      );
       setState(() {
-        _currentData = data.reversed.toList(); // Reverse to show oldest first on chart
+        _currentData =
+            data.reversed.toList(); // Reverse to show oldest first on chart
         _isLoading = false;
       });
     } catch (e) {
@@ -78,21 +82,21 @@ class _StatisticsState extends State<Statistics> {
   Color getStatColor() {
     switch (selectedStat) {
       case "Temp":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       case "TDS":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       case "pH Level":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       case "Turbidity":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       case "Conductivity":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       case "Salinity":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       case "EC":
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
       default:
-        return ASColor.BGSixth;
+        return ASColor.getCardColor(context);
     }
   }
 
@@ -115,7 +119,9 @@ class _StatisticsState extends State<Statistics> {
   // Get the last (most recent) reading from the fetched data
   double getStatLastValue() {
     if (_currentData.isEmpty) return 0.0;
-    return _currentData.last.value; // Assuming _currentData is sorted oldest to newest
+    return _currentData
+        .last
+        .value; // Assuming _currentData is sorted oldest to newest
   }
 
   @override
@@ -127,7 +133,10 @@ class _StatisticsState extends State<Statistics> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color:
+              Theme.of(context).brightness == Brightness.dark
+                  ? color.withOpacity(0.1)
+                  : ASColor.BGsixth,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color, width: 1.2),
         ),
@@ -138,9 +147,9 @@ class _StatisticsState extends State<Statistics> {
               label,
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: color,
+                color: ASColor.getTextColor(context),
               ),
             ),
             const SizedBox(height: 5),
@@ -150,7 +159,7 @@ class _StatisticsState extends State<Statistics> {
                 fontFamily: 'Poppins',
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: color,
+                color: ASColor.getTextColor(context),
               ),
             ),
           ],
@@ -207,40 +216,46 @@ class _StatisticsState extends State<Statistics> {
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.green, width: 1.5),
+                      border: Border.all(
+                        color: ASColor.getTextColor(context),
+                        width: 1.5,
+                      ),
                     ),
                     child: Center(
-                      child: DropdownButton<String>(
-                        value: selectedPeriod,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedPeriod = newValue!;
-                            _fetchData(); // Trigger data fetch with new period
-                          });
-                        },
-                        items: <String>[
-                          "Daily",   // Maps to 24h
-                          "Weekly",  // Maps to 7d
-                          "Monthly", // Maps to 30d
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Center(
-                              child: Text(
-                                value,
-                                style: const TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'Poppins',
-                          color: Colors.green,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedPeriod,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedPeriod = newValue!;
+                              _fetchData(); // Trigger data fetch with new period
+                            });
+                          },
+                          items:
+                              <String>[
+                                "Daily", // Maps to 24h
+                                "Weekly", // Maps to 7d
+                                "Monthly", // Maps to 30d
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Center(
+                                    child: Text(
+                                      value,
+                                      style: const TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: 'Poppins',
+                            color: ASColor.getTextColor(context),
+                          ),
                         ),
                       ),
                     ),
@@ -252,85 +267,98 @@ class _StatisticsState extends State<Statistics> {
               // Line Graph
               SizedBox(
                 height: 300,
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage != null
+                child:
+                    _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _errorMessage != null
                         ? Center(child: Text(_errorMessage!))
                         : _currentData.isEmpty
-                            ? const Center(child: Text("No data available for this selection."))
-                            : LineChart(
-                                LineChartData(
-                                  minY: 0,
-                                  maxY: 100,
-                                  gridData: FlGridData(show: true),
-                                  titlesData: FlTitlesData(
-                                    leftTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        reservedSize: 40,
-                                        getTitlesWidget: (value, _) => Text(
-                                          value.toStringAsFixed(1),
-                                          style: const TextStyle(fontSize: 12),
-                                        ),
+                        ? const Center(
+                          child: Text("No data available for this selection."),
+                        )
+                        : LineChart(
+                          LineChartData(
+                            minY: 0,
+                            maxY: 100,
+                            gridData: FlGridData(show: true),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 40,
+                                  getTitlesWidget:
+                                      (value, _) => Text(
+                                        value.toStringAsFixed(1),
+                                        style: const TextStyle(fontSize: 12),
                                       ),
-                                    ),
-                                    bottomTitles: AxisTitles(
-                                      sideTitles: SideTitles(
-                                        showTitles: true,
-                                        reservedSize: 50,
-                                        interval: _getBottomTitleInterval(), // Dynamic interval
-                                        getTitlesWidget: (value, _) {
-                                          List<DateTime> timeData = getTimeData();
-                                          int index = value.toInt();
-                                          if (index >= 0 && index < timeData.length) {
-                                            String formattedTime = _formatTimestamp(timeData[index]);
-                                            return Transform.rotate(
-                                              angle: -45 * (3.141592653589793 / 180),
-                                              child: Text(
-                                                formattedTime,
-                                                style: const TextStyle(
-                                                  fontSize: 9,
-                                                  fontFamily: 'Poppins',
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                          return const Text("");
-                                        },
-                                      ),
-                                    ),
-                                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  ),
-                                  borderData: FlBorderData(
-                                    show: true,
-                                    border: const Border(
-                                      left: BorderSide(color: Colors.black),
-                                      bottom: BorderSide(color: Colors.black),
-                                      right: BorderSide.none,
-                                      top: BorderSide.none,
-                                    ),
-                                  ),
-                                  lineBarsData: [
-                                    LineChartBarData(
-                                      spots: List.generate(
-                                        getCurrentChartData().length,
-                                        (index) =>
-                                            FlSpot(index.toDouble(), getCurrentChartData()[index]),
-                                      ),
-                                      isCurved: true,
-                                      color: getStatColor(),
-                                      barWidth: 4,
-                                      isStrokeCapRound: true,
-                                      belowBarData: BarAreaData(
-                                        show: true,
-                                        color: getStatColor().withOpacity(0.3),
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ),
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  reservedSize: 50,
+                                  interval:
+                                      _getBottomTitleInterval(), // Dynamic interval
+                                  getTitlesWidget: (value, _) {
+                                    List<DateTime> timeData = getTimeData();
+                                    int index = value.toInt();
+                                    if (index >= 0 && index < timeData.length) {
+                                      String formattedTime = _formatTimestamp(
+                                        timeData[index],
+                                      );
+                                      return Transform.rotate(
+                                        angle: -45 * (3.141592653589793 / 180),
+                                        child: Text(
+                                          formattedTime,
+                                          style: const TextStyle(
+                                            fontSize: 9,
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return const Text("");
+                                  },
+                                ),
+                              ),
+                              topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                              rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false),
+                              ),
+                            ),
+                            borderData: FlBorderData(
+                              show: true,
+                              border: const Border(
+                                left: BorderSide(color: Colors.black),
+                                bottom: BorderSide(color: Colors.black),
+                                right: BorderSide.none,
+                                top: BorderSide.none,
+                              ),
+                            ),
+                            lineBarsData: [
+                              LineChartBarData(
+                                spots: List.generate(
+                                  getCurrentChartData().length,
+                                  (index) => FlSpot(
+                                    index.toDouble(),
+                                    getCurrentChartData()[index],
+                                  ),
+                                ),
+                                isCurved: true,
+                                color: getStatColor(),
+                                barWidth: 4,
+                                isStrokeCapRound: true,
+                                belowBarData: BarAreaData(
+                                  show: true,
+                                  color: getStatColor().withOpacity(0.3),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
               ),
               const SizedBox(height: 20),
 
@@ -351,7 +379,10 @@ class _StatisticsState extends State<Statistics> {
                     decoration: BoxDecoration(
                       color: Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.green, width: 1.5),
+                      border: Border.all(
+                        color: ASColor.getTextColor(context),
+                        width: 1.5,
+                      ),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -368,29 +399,30 @@ class _StatisticsState extends State<Statistics> {
                           fontSize: 8,
                           fontFamily: 'Poppins',
                         ),
-                        items: <String>[
-                          "Temp",
-                          "TDS",
-                          "pH Level",
-                          "Turbidity",
-                          "Conductivity",
-                          "Salinity",
-                          "EC",
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Center(
-                              child: Text(
-                                value,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'Poppins',
-                                  color: Colors.green,
+                        items:
+                            <String>[
+                              "Temp",
+                              "TDS",
+                              "pH Level",
+                              "Turbidity",
+                              "Conductivity",
+                              "Salinity",
+                              "EC",
+                            ].map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Center(
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'Poppins',
+                                      color: ASColor.getTextColor(context),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
                       ),
                     ),
                   ),
@@ -403,7 +435,8 @@ class _StatisticsState extends State<Statistics> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: buildHighlightCard( // Using the new inline helper
+                      child: buildHighlightCard(
+                        // Using the new inline helper
                         "Highest",
                         getStatMaxValue().toStringAsFixed(2),
                         getStatColor(),
@@ -411,7 +444,8 @@ class _StatisticsState extends State<Statistics> {
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: buildHighlightCard( // Using the new inline helper
+                      child: buildHighlightCard(
+                        // Using the new inline helper
                         "Lowest",
                         getStatMinValue().toStringAsFixed(2),
                         getStatColor(),
@@ -419,7 +453,8 @@ class _StatisticsState extends State<Statistics> {
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: buildHighlightCard( // Using the new inline helper
+                      child: buildHighlightCard(
+                        // Using the new inline helper
                         "Average",
                         getStatAverage().toStringAsFixed(2),
                         getStatColor(),
@@ -427,7 +462,8 @@ class _StatisticsState extends State<Statistics> {
                     ),
                     SizedBox(width: 10),
                     Expanded(
-                      child: buildHighlightCard( // Using the new inline helper
+                      child: buildHighlightCard(
+                        // Using the new inline helper
                         "Last Reading",
                         getStatLastValue().toStringAsFixed(2),
                         getStatColor(),
@@ -447,10 +483,14 @@ class _StatisticsState extends State<Statistics> {
   String _formatTimestamp(DateTime timestamp) {
     switch (selectedPeriod) {
       case "Daily":
-        return DateFormat('HH:mm').format(timestamp); // Show hour and minute for daily
+        return DateFormat(
+          'HH:mm',
+        ).format(timestamp); // Show hour and minute for daily
       case "Weekly":
       case "Monthly":
-        return DateFormat('MMM d').format(timestamp); // Show month and day for weekly/monthly
+        return DateFormat(
+          'MMM d',
+        ).format(timestamp); // Show month and day for weekly/monthly
       default:
         return DateFormat('HH:mm:ss').format(timestamp);
     }
@@ -458,7 +498,8 @@ class _StatisticsState extends State<Statistics> {
 
   // Helper to determine interval for bottom titles based on selected period
   double _getBottomTitleInterval() {
-    if (_currentData.length <= 1) return 1.0; // Avoid division by zero or single point
+    if (_currentData.length <= 1)
+      return 1.0; // Avoid division by zero or single point
     // Adjust interval based on the number of data points to prevent overcrowding
     return (_currentData.length / 5).ceilToDouble(); // Show approx 5 labels
   }

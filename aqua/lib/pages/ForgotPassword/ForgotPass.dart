@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:aqua/pages/Login.dart';
+import 'package:aqua/pages/Signup.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
 import 'dart:convert'; // For JSON encoding/decoding
@@ -346,14 +347,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         controller: _emailController,
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: Colors.white.withOpacity(0.9),
+                          fillColor: Colors.white10,
                           labelText: 'Email',
-                          labelStyle: const TextStyle(color: Colors.black),
+                          labelStyle: const TextStyle(color: Colors.white54),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           prefixIcon:
-                              const Icon(Icons.email, color: Colors.black),
+                              const Icon(Icons.email, color: Colors.white54),
                         ),
                         keyboardType: TextInputType.emailAddress,
                       ),
@@ -522,7 +523,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => Signup(),
+                              ),
+                            );
                           },
                           child: const Text(
                             'Sign up',
