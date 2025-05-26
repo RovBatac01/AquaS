@@ -5,6 +5,7 @@ import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
+import 'package:aqua/pages/User/Request.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +23,7 @@ class MyDrawerAndNavBarApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context); // 👈
 
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false, // Hides the debug ribbon
       themeMode: themeProvider.themeMode, // 👈 Connect to ThemeProvider
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),

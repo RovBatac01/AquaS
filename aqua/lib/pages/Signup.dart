@@ -23,6 +23,7 @@ class _SignupState extends State<Signup> {
   // Controllers for text fields
   final TextEditingController username = TextEditingController();
   final TextEditingController email = TextEditingController();
+  final TextEditingController phoneNumber = TextEditingController();
   final TextEditingController password = TextEditingController();
   final TextEditingController confirm_password = TextEditingController();
   bool isChecked = false;
@@ -160,13 +161,13 @@ class _SignupState extends State<Signup> {
                       ),
                       SizedBox(height: 12),
 
-                      // Email/Phone field
+                      // Email field
                       TextFormField(
                         controller: email,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.white10,
-                          labelText: 'Email/Phone Number',
+                          labelText: 'Email',
                           labelStyle: TextStyle(
                             color: Colors.white54,
                             fontFamily: 'Poppins',
@@ -187,12 +188,42 @@ class _SignupState extends State<Signup> {
                           bool isEmail = RegExp(
                             r'^\S+@\S+\.\S+$',
                           ).hasMatch(value);
+                          if (!isEmail) {
+                            return 'Please enter a valid Email';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 12),
 
-                          // Regular expression for phone number validation (10-15 digits)
+                      // Phone Number field
+                      TextFormField(
+                        controller: phoneNumber,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white10,
+                          labelText: 'Phone Number',
+                          labelStyle: TextStyle(
+                            color: Colors.white54,
+                            fontFamily: 'Poppins',
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.txt6Color,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your Phone Number';
+                          }
+                          // Regular expression for phone number validation (11 digits)
                           bool isPhone = RegExp(r'^\d{11}$').hasMatch(value);
-
-                          if (!isEmail && !isPhone) {
-                            return 'Please enter a valid Email or Phone number';
+                          if (!isPhone) {
+                            return 'Please enter a valid Phone number (11 digits)';
                           }
                           return null;
                         },
@@ -486,7 +517,7 @@ If you have any questions about these Terms, please contact us at [Your Contact 
                       // Sign Up button
                       Center(
                         child: ElevatedButton(
-                          onPressed: registerUser,
+                          onPressed: isChecked ? registerUser : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.purple.shade400,
                           ),
