@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:ui'; // Required for ImageFilter
+import 'dart:async'; // Required for Timer
+
+import 'package:aqua/water_quality_model.dart'; // Corrected import path
+import 'package:aqua/water_quality_service.dart'; // Corrected import path
+import 'package:aqua/components/colors.dart'; // Assuming you have this file for ASColor
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Water Quality',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      debugShowCheckedModeBanner: false, // Removed theme: ThemeData(primarySwatch: Colors.blue) for consistency with previous versions
       home: const AdminDetailsScreen(),
     );
   }
@@ -22,49 +28,182 @@ class AdminDetailsScreen extends StatefulWidget {
   const AdminDetailsScreen({super.key});
 
   @override
-  _DetailsScreenState createState() => _DetailsScreenState();
+  State<AdminDetailsScreen> createState() => _AdminDetailsScreenState(); // Changed to _AdminDetailsScreenState
 }
 
-class _DetailsScreenState extends State<AdminDetailsScreen> {
-  String selectedStat = "Temp";
-  double progress = 28 / 100;
-  String label = "28°C";
-  Color indicatorColor = Colors.blue;
+class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to _AdminDetailsScreenState
+  String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
 
-  void updateIndicator(String stat) {
-    setState(() {
-      selectedStat = stat;
-      if (stat == "Temp") {
-        progress = 28 / 100;
-        label = "28°C";
-        indicatorColor = Colors.blue;
-      } else if (stat == "TDS") {
-        progress = 35 / 100;
-        label = "35 PPM";
-        indicatorColor = Colors.green;
-      } else if (stat == "pH") {
-        progress = 7.2 / 14;
-        label = "pH 7.2";
-        indicatorColor = Colors.purple;
-      } else if (stat == "Turbidity") {
-        progress = 0.5 / 10;
-        label = "0.5 NTU";
-        indicatorColor = Colors.orange;
-      } else if (stat == "Conductivity") {
-        progress = 35 / 100;
-        label = "35 PPM";
-        indicatorColor = Colors.red;
-      } else if (stat == "Salinity") {
-        progress = 0.7;
-        label = "0.7 ppt";
-        indicatorColor = Colors.teal;
-      } else if (stat == "Electrical Conductivity (Condensed)") {
-        progress = 400 / 1000;
-        label = "400 µS/cm";
-        indicatorColor = Colors.indigo;
-      }
+  // State variables to hold the latest fetched RAW data for each parameter
+  double _latestTemp = 0.0;
+  double _latestTDS = 0.0;
+  double _latestPH = 0.0;
+  double _latestTurbidity = 0.0;
+  double _latestConductivity = 0.0; // Corresponds to 'ec_value_mS'
+  double _latestSalinity = 0.0;
+  double _latestECCompensated = 0.0; // Corresponds to 'ec_compensated_mS'
+
+  bool _isLoading = true;
+  String? _errorMessage;
+  Timer? _timer; // Timer for auto-refresh
+
+  final WaterQualityService _waterQualityService = WaterQualityService();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLatestDataForAllStats(); // Initial fetch
+    // Set up a timer to fetch data every 1 second
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      _fetchLatestDataForAllStats();
     });
   }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer to prevent memory leaks
+    super.dispose();
+  }
+
+  // Fetches the latest data (raw value only) for all water quality parameters
+  Future<void> _fetchLatestDataForAllStats() async {
+    if (_isLoading) {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
+
+    try {
+      // Fetch data for each statistic and update the corresponding state variable
+      // We fetch 'Daily' (24h) and take the first element, assuming it's the most recent.
+      final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
+      if (temp.isNotEmpty) {
+        _latestTemp = temp.first.value;
+      }
+
+      final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
+      if (tds.isNotEmpty) {
+        _latestTDS = tds.first.value;
+      }
+
+      final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
+      if (ph.isNotEmpty) {
+        _latestPH = ph.first.value;
+      }
+
+      final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
+      if (turbidity.isNotEmpty) {
+        _latestTurbidity = turbidity.first.value;
+      }
+
+      final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
+      if (conductivity.isNotEmpty) {
+        _latestConductivity = conductivity.first.value;
+      }
+
+      final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
+      if (salinity.isNotEmpty) {
+        _latestSalinity = salinity.first.value;
+      }
+
+      final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
+      if (ecCompensated.isNotEmpty) {
+        _latestECCompensated = ecCompensated.first.value;
+      }
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = null;
+        // Update the circular indicator based on the currently selected stat
+        _updateCircularIndicatorValues();
+      });
+    } catch (e) {
+      print('ERROR fetching latest data: $e'); // Debugging print
+      setState(() {
+        _errorMessage = 'Failed to load latest data: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Helper to update the circular indicator's progress, label, and color
+  // based on the current `selectedStat` and the fetched `_latestX` values.
+  void _updateCircularIndicatorValues() {
+    double currentProgress = 0.0;
+    String currentLabel = "N/A";
+    Color currentColor = Colors.blue; // Default color for indicator
+
+    // Define max values for progress calculation (adjust as needed for your sensors)
+    // These values determine what 100% on the circular indicator represents.
+    const double maxTemp = 50.0; // Example: Max expected temperature in Celsius
+    const double maxTDS = 1000.0; // Example: Max expected TDS in PPM
+    const double maxPH = 14.0; // Max pH scale
+    const double maxTurbidity = 100.0; // Max turbidity percentage (0-100%)
+    const double maxConductivity = 2.0; // Example: Max expected conductivity in mS/cm
+    const double maxSalinity = 50.0; // Example: Max expected salinity in ppt
+    const double maxECCompensated = 2.0; // Example: Max expected compensated EC in mS/cm
+
+
+    switch (selectedStat) {
+      case "Temp":
+        currentProgress = _latestTemp / maxTemp;
+        currentLabel = "${_latestTemp.toStringAsFixed(1)}°C";
+        currentColor = Colors.blue;
+        break;
+      case "TDS":
+        currentProgress = _latestTDS / maxTDS;
+        currentLabel = "${_latestTDS.toStringAsFixed(1)} PPM";
+        currentColor = Colors.green;
+        break;
+      case "pH":
+        currentProgress = _latestPH / maxPH;
+        currentLabel = "pH ${_latestPH.toStringAsFixed(1)}";
+        currentColor = Colors.purple;
+        break;
+      case "Turbidity":
+        currentProgress = _latestTurbidity / maxTurbidity;
+        currentLabel = "${_latestTurbidity.toStringAsFixed(1)}%";
+        currentColor = Colors.orange;
+        break;
+      case "Conductivity":
+        currentProgress = _latestConductivity / maxConductivity;
+        currentLabel = "${_latestConductivity.toStringAsFixed(1)} mS/cm";
+        currentColor = Colors.red;
+        break;
+      case "Salinity":
+        currentProgress = _latestSalinity / maxSalinity;
+        currentLabel = "${_latestSalinity.toStringAsFixed(1)} ppt";
+        currentColor = Colors.teal;
+        break;
+      case "Electrical Conductivity (Condensed)":
+        currentProgress = _latestECCompensated / maxECCompensated;
+        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} mS/cm";
+        currentColor = Colors.indigo;
+        break;
+    }
+
+    // Ensure progress is between 0 and 1
+    currentProgress = currentProgress.clamp(0.0, 1.0);
+
+    setState(() {
+      progress = currentProgress;
+      label = currentLabel;
+      indicatorColor = currentColor;
+    });
+  }
+
+  // Update the circular indicator when a stat card is tapped
+  void _onStatCardTap(String stat) {
+    setState(() {
+      selectedStat = stat;
+      _updateCircularIndicatorValues(); // Recalculate indicator values for the new selection
+    });
+  }
+
+  // Current values for the circular indicator
+  double progress = 0.0;
+  String label = "Loading...";
+  Color indicatorColor = Colors.grey;
 
   @override
   Widget build(BuildContext context) {
@@ -87,64 +226,74 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
           },
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Home Water Tank',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            const Text(
-              "Device Status: Connected",
-              style: TextStyle(fontSize: 18, color: Colors.green),
-            ),
-            const SizedBox(height: 20),
-
-            // Circular Temperature Indicator with enhanced style
-            Center(
-              child: CustomPaint(
-                size: const Size(250, 250),
-                painter: CircularIndicator(
-                  progress: progress,
-                  label: label,
-                  color: indicatorColor,
-                  brightness: Theme.of(context).brightness, 
+      body: SafeArea( // Added SafeArea for better layout on different devices
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Home Water Tank',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                  fontFamily: 'Poppins',
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              "Water quality: Great",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Poppins',
+              Text(
+                _isLoading ? "Device Status: Connecting..." : "Device Status: Connected",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: _isLoading ? Colors.orange : Colors.green,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Horizontal Scrollable Stats with Spacing
-            Column(
-              children: [
-                // First row with 3 cards
-                IntrinsicHeight(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Circular Indicator
+              Center(
+                child: _isLoading
+                    ? const CircularProgressIndicator() // Show loading for indicator
+                    : CustomPaint(
+                        size: const Size(250, 250),
+                        painter: CircularIndicator(
+                          progress: progress,
+                          label: label,
+                          color: indicatorColor,
+                          brightness: Theme.of(context).brightness,
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 20),
+
+              // Simplified Water Quality Status text
+              Text(
+                _isLoading
+                    ? "Water quality: Fetching..."
+                    : _errorMessage != null
+                        ? "Water quality: Error"
+                        : "Water quality: Live Reading", // Simplified status
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: _isLoading || _errorMessage != null ? Colors.orange : Colors.black,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Cards
+              Column(
+                children: [
+                  Row(
                     children: [
                       Expanded(
                         child: StatCard(
                           icon: Icons.thermostat,
                           label: "Temp",
-                          value: "28°C",
+                          value: _isLoading ? "..." : "${_latestTemp.toStringAsFixed(1)}°C",
                           isSelected: selectedStat == "Temp",
-                          onTap: () => updateIndicator("Temp"),
+                          onTap: () => _onStatCardTap("Temp"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -152,9 +301,9 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
                         child: StatCard(
                           icon: Icons.water,
                           label: "TDS",
-                          value: "35 PPM",
+                          value: _isLoading ? "..." : "${_latestTDS.toStringAsFixed(1)} PPM",
                           isSelected: selectedStat == "TDS",
-                          onTap: () => updateIndicator("TDS"),
+                          onTap: () => _onStatCardTap("TDS"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -162,29 +311,23 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
                         child: StatCard(
                           icon: Icons.opacity,
                           label: "pH",
-                          value: "7.2",
+                          value: _isLoading ? "..." : "${_latestPH.toStringAsFixed(1)}",
                           isSelected: selectedStat == "pH",
-                          onTap: () => updateIndicator("pH"),
+                          onTap: () => _onStatCardTap("pH"),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(
-                  height: 12,
-                ), // Spacer between top and bottom rows
-                // Second row with 2 cards
-                IntrinsicHeight(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
                       Expanded(
                         child: StatCard(
                           icon: Icons.water_damage,
                           label: "Turbidity",
-                          value: "0.5 NTU",
+                          value: _isLoading ? "..." : "${_latestTurbidity.toStringAsFixed(1)}%",
                           isSelected: selectedStat == "Turbidity",
-                          onTap: () => updateIndicator("Turbidity"),
+                          onTap: () => _onStatCardTap("Turbidity"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -192,10 +335,9 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
                         child: StatCard(
                           icon: Icons.flash_on,
                           label: "Conductivity",
-                          value: "35 PPM",
+                          value: _isLoading ? "..." : "${_latestConductivity.toStringAsFixed(1)} mS/cm",
                           isSelected: selectedStat == "Conductivity",
-                          onTap:
-                              () => updateIndicator("Conductivity"),
+                          onTap: () => _onStatCardTap("Conductivity"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -203,37 +345,34 @@ class _DetailsScreenState extends State<AdminDetailsScreen> {
                         child: StatCard(
                           icon: Icons.bubble_chart,
                           label: "Salinity",
-                          value: "0.7 ppt",
+                          value: _isLoading ? "..." : "${_latestSalinity.toStringAsFixed(1)} ppt",
                           isSelected: selectedStat == "Salinity",
-                          onTap: () => updateIndicator("Salinity"),
+                          onTap: () => _onStatCardTap("Salinity"),
                         ),
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(
-                  height: 12,
-                ),
-
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      const SizedBox(width: 12),
                       Expanded(
                         child: StatCard(
                           icon: Icons.battery_charging_full,
                           label: "Electrical Conductivity (Condensed)",
-                          value: "400 mV",
+                          value: _isLoading ? "..." : "${_latestECCompensated.toStringAsFixed(1)} mS/cm",
                           isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                          onTap: () => updateIndicator("Electrical Conductivity (Condensed)"),
+                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
                         ),
                       ),
+                      // Added empty Expanded widgets to fill space for a consistent 3-column layout
+                      const Expanded(child: SizedBox.shrink()),
+                      const Expanded(child: SizedBox.shrink()),
                     ],
                   ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -258,17 +397,15 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the current theme brightness (light or dark)
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // Set the background color depending on the theme
-    Color bgColor = isSelected
-        ? Colors.greenAccent.withOpacity(0.8)
-        : isDarkMode
-            ? Colors.grey[800]! // Dark mode background color
-            : Colors.white; // Light mode background color
+    Color bgColor =
+        isSelected
+            ? Colors.greenAccent.withOpacity(0.8)
+            : isDarkMode
+                ? Colors.grey[800]!
+                : Colors.white;
 
-    // Set text color based on the theme
     Color textColor = isDarkMode ? Colors.white : Colors.black;
 
     return GestureDetector(
@@ -279,7 +416,7 @@ class StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
+          boxShadow: const [ // Added const for performance
             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
           ],
         ),
@@ -290,14 +427,14 @@ class StatCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 30,
-                color: textColor, // Apply the textColor here
+                color: textColor,
               ),
               const SizedBox(height: 10),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 14,
-                  color: textColor, // Apply the textColor here
+                  color: textColor,
                 ),
               ),
               const SizedBox(height: 5),
@@ -306,7 +443,7 @@ class StatCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: textColor, // Apply the textColor here
+                  color: textColor,
                 ),
               ),
             ],
@@ -317,18 +454,17 @@ class StatCard extends StatelessWidget {
   }
 }
 
-// Enhanced Circular Progress Indicator
 class CircularIndicator extends CustomPainter {
   final double progress;
   final String label;
   final Color color;
-  final Brightness brightness; // Add brightness as a parameter
+  final Brightness brightness;
 
   CircularIndicator({
     required this.progress,
     required this.label,
     required this.color,
-    required this.brightness, // Accept brightness
+    required this.brightness,
   });
 
   @override
@@ -336,7 +472,6 @@ class CircularIndicator extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width / 2, size.height / 2) - 12;
 
-    // Background circle
     final backgroundPaint =
         Paint()
           ..color = Colors.grey.withOpacity(0.2)
@@ -344,7 +479,6 @@ class CircularIndicator extends CustomPainter {
           ..strokeWidth = 12.0;
     canvas.drawCircle(center, radius, backgroundPaint);
 
-    // Gradient progress circle
     final gradientPaint =
         Paint()
           ..shader = LinearGradient(
@@ -364,18 +498,16 @@ class CircularIndicator extends CustomPainter {
       gradientPaint,
     );
 
-    // Determine text color based on brightness
-    Color textColor = brightness == Brightness.dark ? Colors.white : Colors.black;
-
-    // Text in the center
+    final textColor =
+        brightness == Brightness.light ? Colors.black : Colors.white;
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
         style: TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.bold,
-          color: textColor, // Set the text color dynamically
-          shadows: [
+          color: textColor,
+          shadows: const [ // Added const for performance
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],
         ),

@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: OTPScreen(),
+      home: LandingPage(),
     );
   }
 }

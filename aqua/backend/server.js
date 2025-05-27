@@ -470,148 +470,148 @@ app.post("/api/change-password", async (req, res) => {
 // });
 
 // SerialPort setup
-const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 });
-const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
+// const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 });
+// const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
 
-serialPort.on("open", () => {
-  console.log("✅ Serial Port Opened: COM5");
-});
+// serialPort.on("open", () => {
+//   console.log("✅ Serial Port Opened: COM5");
+// });
 
-parser.on("data", (rawData) => {
-  console.log("📡 Raw Data Received:", rawData.trim());
+// parser.on("data", (rawData) => {
+//   console.log("📡 Raw Data Received:", rawData.trim());
 
-  const jsonStartIndex = rawData.indexOf("{");
+//   const jsonStartIndex = rawData.indexOf("{");
 
-  if (jsonStartIndex !== -1) {
-    const jsonString = rawData.substring(jsonStartIndex);
+//   if (jsonStartIndex !== -1) {
+//     const jsonString = rawData.substring(jsonStartIndex);
 
-    try {
-      const jsonData = JSON.parse(jsonString);
+//     try {
+//       const jsonData = JSON.parse(jsonString);
 
-      console.log("🔄 Parsed Data:", jsonData);
+//       console.log("🔄 Parsed Data:", jsonData);
 
-      // Example timestamp if available or generate here
-      const timestamp = new Date();
+//       // Example timestamp if available or generate here
+//       const timestamp = new Date();
 
-      // Handling Turbidity
-      if (jsonData.turbidity_value !== undefined) {
-        const turbidityValue = jsonData.turbidity_value;
-        console.log("🔄 Parsed Turbidity Value:", turbidityValue, "Timestamp:", timestamp);
-        const query = "INSERT INTO turbidity_readings (turbidity_value, timestamp) VALUES (?, ?)";
-        db.query(query, [turbidityValue, timestamp], (err, result) => {
-          if (err) {
-            console.error("❌ Turbidity Database Insert Error:", err);
-          } else {
-            console.log("✅ Turbidity Data Inserted Successfully: ID", result.insertId);
-            io.emit("updateData", { value: turbidityValue, timestamp });
-            console.log("📢 WebSocket Event Emitted: updateData", { value: turbidityValue, timestamp });
-          }
-        });
-      }
+//       // Handling Turbidity
+//       if (jsonData.turbidity_value !== undefined) {
+//         const turbidityValue = jsonData.turbidity_value;
+//         console.log("🔄 Parsed Turbidity Value:", turbidityValue, "Timestamp:", timestamp);
+//         const query = "INSERT INTO turbidity_readings (turbidity_value, timestamp) VALUES (?, ?)";
+//         db.query(query, [turbidityValue, timestamp], (err, result) => {
+//           if (err) {
+//             console.error("❌ Turbidity Database Insert Error:", err);
+//           } else {
+//             console.log("✅ Turbidity Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updateData", { value: turbidityValue, timestamp });
+//             console.log("📢 WebSocket Event Emitted: updateData", { value: turbidityValue, timestamp });
+//           }
+//         });
+//       }
 
-      // Handling pH data
-      if (jsonData.ph_value !== undefined) {
-        const phValue = jsonData.ph_value;
-        console.log("📡 Received pH Level Data:", phValue);
-        const query = "INSERT INTO phlevel_readings (ph_value) VALUES (?)";
-        db.query(query, [phValue], (err, result) => {
-          if (err) {
-            console.error("❌ pH Database Insert Error:", err);
-          } else {
-            console.log("✅ pH Data Inserted Successfully: ID", result.insertId);
-            io.emit("updatePHData", { value: phValue });
-            console.log("📢 WebSocket Event Emitted: updatePHData", { value: phValue });
-          }
-        });
-      }
+//       // Handling pH data
+//       if (jsonData.ph_value !== undefined) {
+//         const phValue = jsonData.ph_value;
+//         console.log("📡 Received pH Level Data:", phValue);
+//         const query = "INSERT INTO phlevel_readings (ph_value) VALUES (?)";
+//         db.query(query, [phValue], (err, result) => {
+//           if (err) {
+//             console.error("❌ pH Database Insert Error:", err);
+//           } else {
+//             console.log("✅ pH Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updatePHData", { value: phValue });
+//             console.log("📢 WebSocket Event Emitted: updatePHData", { value: phValue });
+//           }
+//         });
+//       }
 
-      // Handling TDS data
-      if (jsonData.tds_value !== undefined) {
-        const tdsValue = jsonData.tds_value;
-        console.log("📡 Received TDS Data:", tdsValue);
-        const query = "INSERT INTO tds_readings (tds_value) VALUES (?)";
-        db.query(query, [tdsValue], (err, result) => {
-          if (err) {
-            console.error("❌ TDS Database Insert Error:", err);
-          } else {
-            console.log("✅ TDS Data Inserted Successfully: ID", result.insertId);
-            io.emit("updateTDSData", { value: tdsValue });
-            console.log("📢 WebSocket Event Emitted: updateTDSData", { value: tdsValue });
-          }
-        });
-      }
+//       // Handling TDS data
+//       if (jsonData.tds_value !== undefined) {
+//         const tdsValue = jsonData.tds_value;
+//         console.log("📡 Received TDS Data:", tdsValue);
+//         const query = "INSERT INTO tds_readings (tds_value) VALUES (?)";
+//         db.query(query, [tdsValue], (err, result) => {
+//           if (err) {
+//             console.error("❌ TDS Database Insert Error:", err);
+//           } else {
+//             console.log("✅ TDS Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updateTDSData", { value: tdsValue });
+//             console.log("📢 WebSocket Event Emitted: updateTDSData", { value: tdsValue });
+//           }
+//         });
+//       }
 
-      // Handling Salinity data
-      if (jsonData.salinity_value !== undefined) {
-        const salinityValue = jsonData.salinity_value;
-        console.log("📡 Received Salinity Data:", salinityValue);
-        const query = "INSERT INTO salinity_readings (salinity_value) VALUES (?)";
-        db.query(query, [salinityValue], (err, result) => {
-          if (err) {
-            console.error("❌ Salinity Database Insert Error:", err);
-          } else {
-            console.log("✅ Salinity Data Inserted Successfully: ID", result.insertId);
-            io.emit("updateSalinityData", { value: salinityValue });
-            console.log("📢 WebSocket Event Emitted: updateSalinityData", { value: salinityValue });
-          }
-        });
-      }
+//       // Handling Salinity data
+//       if (jsonData.salinity_value !== undefined) {
+//         const salinityValue = jsonData.salinity_value;
+//         console.log("📡 Received Salinity Data:", salinityValue);
+//         const query = "INSERT INTO salinity_readings (salinity_value) VALUES (?)";
+//         db.query(query, [salinityValue], (err, result) => {
+//           if (err) {
+//             console.error("❌ Salinity Database Insert Error:", err);
+//           } else {
+//             console.log("✅ Salinity Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updateSalinityData", { value: salinityValue });
+//             console.log("📢 WebSocket Event Emitted: updateSalinityData", { value: salinityValue });
+//           }
+//         });
+//       }
 
-      // Handling EC data
-      if (jsonData.ec_value !== undefined) {
-        const ecValue = jsonData.ec_value;
-        console.log("📡 Received EC Data (mS/cm):", ecValue);
-        const query = "INSERT INTO ec_readings (ec_value_mS) VALUES (?)";
-        db.query(query, [ecValue], (err, result) => {
-          if (err) {
-            console.error("❌ EC Database Insert Error:", err);
-          } else {
-            console.log("✅ EC Data Inserted Successfully: ID", result.insertId);
-            io.emit("updateECData", { value: ecValue });
-            console.log("📢 WebSocket Event Emitted: updateECData", { value: ecValue });
-          }
-        });
-      }
+//       // Handling EC data
+//       if (jsonData.ec_value !== undefined) {
+//         const ecValue = jsonData.ec_value;
+//         console.log("📡 Received EC Data (mS/cm):", ecValue);
+//         const query = "INSERT INTO ec_readings (ec_value_mS) VALUES (?)";
+//         db.query(query, [ecValue], (err, result) => {
+//           if (err) {
+//             console.error("❌ EC Database Insert Error:", err);
+//           } else {
+//             console.log("✅ EC Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updateECData", { value: ecValue });
+//             console.log("📢 WebSocket Event Emitted: updateECData", { value: ecValue });
+//           }
+//         });
+//       }
 
-      // Handling EC Compensated data
-      if (jsonData.ec_compensated_value !== undefined) {
-        const ecCompensatedValue = jsonData.ec_compensated_value;
-        console.log("📡 Received Compensated EC Data (mS/cm):", ecCompensatedValue);
-        const query = "INSERT INTO ec_compensated_readings (ec_compensated_mS) VALUES (?)";
-        db.query(query, [ecCompensatedValue], (err, result) => {
-          if (err) {
-            console.error("❌ Compensated EC Database Insert Error:", err);
-          } else {
-            console.log("✅ Compensated EC Data Inserted Successfully: ID", result.insertId);
-            io.emit("updateECCompensatedData", { value: ecCompensatedValue });
-            console.log("📢 WebSocket Event Emitted: updateECCompensatedData", { value: ecCompensatedValue });
-          }
-        });
-      }
+//       // Handling EC Compensated data
+//       if (jsonData.ec_compensated_value !== undefined) {
+//         const ecCompensatedValue = jsonData.ec_compensated_value;
+//         console.log("📡 Received Compensated EC Data (mS/cm):", ecCompensatedValue);
+//         const query = "INSERT INTO ec_compensated_readings (ec_compensated_mS) VALUES (?)";
+//         db.query(query, [ecCompensatedValue], (err, result) => {
+//           if (err) {
+//             console.error("❌ Compensated EC Database Insert Error:", err);
+//           } else {
+//             console.log("✅ Compensated EC Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updateECCompensatedData", { value: ecCompensatedValue });
+//             console.log("📢 WebSocket Event Emitted: updateECCompensatedData", { value: ecCompensatedValue });
+//           }
+//         });
+//       }
 
-      // Handling Temperature data
-      if (jsonData.temperature_value !== undefined) {
-        const temperatureValue = jsonData.temperature_value;
-        console.log("📡 Received Temperature Data (°C):", temperatureValue);
-        const query = "INSERT INTO temperature_readings (temperature_celsius) VALUES (?)";
-        db.query(query, [temperatureValue], (err, result) => {
-          if (err) {
-            console.error("❌ Temperature Database Insert Error:", err);
-          } else {
-            console.log("✅ Temperature Data Inserted Successfully: ID", result.insertId);
-            io.emit("updateTemperatureData", { value: temperatureValue });
-            console.log("📢 WebSocket Event Emitted: updateTemperatureData", { value: temperatureValue });
-          }
-        });
-      }
+//       // Handling Temperature data
+//       if (jsonData.temperature_value !== undefined) {
+//         const temperatureValue = jsonData.temperature_value;
+//         console.log("📡 Received Temperature Data (°C):", temperatureValue);
+//         const query = "INSERT INTO temperature_readings (temperature_celsius) VALUES (?)";
+//         db.query(query, [temperatureValue], (err, result) => {
+//           if (err) {
+//             console.error("❌ Temperature Database Insert Error:", err);
+//           } else {
+//             console.log("✅ Temperature Data Inserted Successfully: ID", result.insertId);
+//             io.emit("updateTemperatureData", { value: temperatureValue });
+//             console.log("📢 WebSocket Event Emitted: updateTemperatureData", { value: temperatureValue });
+//           }
+//         });
+//       }
 
-    } catch (err) {
-      console.error("❌ JSON Parse Error:", err);
-    }
-  } else {
-    console.warn("⚠️ No JSON object found in raw data");
-  }
-});
+//     } catch (err) {
+//       console.error("❌ JSON Parse Error:", err);
+//     }
+//   } else {
+//     console.warn("⚠️ No JSON object found in raw data");
+//   }
+// });
 
 /**
  * @route GET /data/turbidity
