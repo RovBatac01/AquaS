@@ -298,14 +298,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                         });
                                         _saveCredentials();
                                       },
-                                      activeColor:
-                                          isDarkMode
-                                              ? Colors.white
-                                              : Colors.purple,
-                                      checkColor:
-                                          isDarkMode
-                                              ? Colors.black
-                                              : Colors.white,
+                                      activeColor: ASColor.buttonBackground(context),
+                                      
                                       visualDensity:
                                           VisualDensity.compact, // Reduces size
                                       materialTapTargetSize:
@@ -367,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: ASColor.Background(context),
+                            backgroundColor: ASColor.buttonBackground(context),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

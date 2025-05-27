@@ -1,6 +1,7 @@
-import 'package:aqua/pages/DetailCard.dart';
-import 'package:aqua/pages/Details.dart';
+import 'package:aqua/pages/User/DetailCard.dart';
+import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/pages/SAdmin/SAdminDetails.dart'; // Import SAdminDetails
 import 'package:flutter/material.dart';
 
 void main() {
@@ -120,7 +121,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => SAdminDetails()),
                 );
               },
             ),
@@ -131,7 +132,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => SAdminDetails()),
                 );
               },
             ),
@@ -142,7 +143,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => SAdminDetails()),
                 );
               },
             ),
@@ -153,7 +154,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => SAdminDetails()),
                 );
               },
             ),

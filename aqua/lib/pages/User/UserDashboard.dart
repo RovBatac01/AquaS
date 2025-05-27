@@ -1,5 +1,5 @@
 import 'package:aqua/NavBar/Settings.dart';
-import 'package:aqua/pages/Details.dart';
+import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Statistics.dart';

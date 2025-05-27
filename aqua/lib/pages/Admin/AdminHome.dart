@@ -1,5 +1,7 @@
-import 'package:aqua/pages/DetailCard.dart';
-import 'package:aqua/pages/Details.dart';
+import 'package:aqua/components/colors.dart';
+import 'package:aqua/pages/Admin/AdminDetails.dart';
+import 'package:aqua/pages/User/DetailCard.dart';
+import 'package:aqua/pages/User/Details.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // NEW: Import shared_preferences
 
@@ -84,31 +86,28 @@ class _HomeScreenState extends State<AdminHomeScreen> {
                 Container(
                   height: 36,
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color:
-                        isDarkMode
-                            ? Colors.grey[800]
-                            : const Color.fromARGB(255, 167, 232, 201),
+                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: TextField(
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
+                      color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
                       fontSize: 14,
                     ),
                     decoration: InputDecoration(
                       icon: Icon(
                         Icons.search,
-                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
                         size: 20,
                       ),
                       hintText: 'Search Establishments...',
                       border: InputBorder.none,
                       hintStyle: TextStyle(
-                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        color: Colors.grey,
                       ),
-                      contentPadding: const EdgeInsets.only(bottom: 10),
+                      contentPadding: EdgeInsets.only(bottom: 10),
                     ),
                     onChanged: (value) {
                       print("Searching Home: $value");
@@ -149,7 +148,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => AdminDetails()),
                 );
               },
             ),
@@ -160,7 +159,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => AdminDetails()),
                 );
               },
             ),
@@ -171,7 +170,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => AdminDetails()),
                 );
               },
             ),
@@ -182,7 +181,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => DetailsScreen()),
+                  MaterialPageRoute(builder: (context) => AdminDetails()),
                 );
               },
             ),

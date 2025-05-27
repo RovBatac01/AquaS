@@ -1,3 +1,4 @@
+import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/SAdmin/AddAccount.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -339,10 +340,9 @@ class _UserListPageState extends State<UserListPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          color:
-                              Theme.of(
-                                context,
-                              ).cardColor, // Use theme card color
+                          color: ASColor.getCardColor(
+                            context,
+                          ), // Use adaptive card color
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           child: ListTile(
                             leading: const Icon(Icons.face),
@@ -399,6 +399,7 @@ class _UserListPageState extends State<UserListPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: ASColor.buttonBackground(context),
         onPressed: () {
           setState(() {
             // Add your action here, e.g., navigate to a new page
@@ -408,7 +409,7 @@ class _UserListPageState extends State<UserListPage> {
             );
           });
         },
-        child: Icon(Icons.add),
+        child: Icon(Icons.add, color: ASColor.BGFifth),
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.endFloat, // Bottom right

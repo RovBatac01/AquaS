@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: AddAccount()));
@@ -53,55 +54,17 @@ class _SignupState extends State<AddAccount> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).brightness == Brightness.dark
-              ? Colors.black
-              : Colors.white,
+      backgroundColor: ASColor.Background(context),
       body: Stack(
         children: [
-          // Always show blurred violet circles in both light and dark mode
-          Positioned(
-            top: -100,
-            left: -100,
-            child: ClipOval(
-              child: Container(
-                width: 300,
-                height: 400,
-                decoration: BoxDecoration(color: Colors.purple),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 70, sigmaY: 50),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -60,
-            right: -80,
-            child: ClipOval(
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(color: Colors.purple),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-          ),
+          // Always show blurred violet circles in both light and dark mod
           IconButton(
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Icon(
-              Icons.arrow_back,
-              color:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : Colors.black,
-            ),
+            icon: Icon(Icons.arrow_back, color: ASColor.getTextColor(context)),
           ),
           Center(
             child: Padding(
@@ -113,16 +76,11 @@ class _SignupState extends State<AddAccount> {
                   child: Container(
                     padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.black87
-                              : Colors.white)
+                      color: (isDarkMode ? ASColor.BGthird : ASColor.BGFifth)
                           .withOpacity(0.4),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white54
-                                : Colors.black54,
+                        color: isDarkMode ? Colors.white54 : Colors.black54,
                         width: 0.8, // Thin outline
                       ),
                     ),
@@ -136,13 +94,10 @@ class _SignupState extends State<AddAccount> {
                             child: Text(
                               'Create Admin',
                               style: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
+                                color: ASColor.getTextColor(context),
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
+                                fontFamily: 'Montserrat',
                               ),
                             ),
                           ),
@@ -152,12 +107,11 @@ class _SignupState extends State<AddAccount> {
                             child: Text(
                               "Just some details to get you in!",
                               style: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
                                 fontSize: 14,
+                                fontFamily: 'Poppins',
                               ),
                             ),
                           ),
@@ -168,31 +122,30 @@ class _SignupState extends State<AddAccount> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white10
-                                      : Colors.black12,
+                                  isDarkMode ? Colors.white10 : Colors.black12,
                               labelText: 'Username',
                               labelStyle: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white54
-                                        : Colors.black54,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
                                 fontFamily: 'Poppins',
+                                fontSize: 14,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                                 borderSide: BorderSide.none,
                               ),
+                              prefixIcon: Icon(
+                                Iconsax.user,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
+                              ),
                             ),
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
+                              color: ASColor.getTextColor(context),
+                              fontSize: 14,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -208,41 +161,40 @@ class _SignupState extends State<AddAccount> {
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white10
-                                      : Colors.black12,
+                                  isDarkMode ? Colors.white10 : Colors.black12,
                               labelText: 'Email/Phone Number',
                               labelStyle: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white54
-                                        : Colors.black54,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
                                 fontFamily: 'Poppins',
+                                fontSize: 14,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                                 borderSide: BorderSide.none,
                               ),
+                              prefixIcon: Icon(
+                                Icons.email,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
+                              ),
                             ),
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
+                              color: ASColor.getTextColor(context),
+                              fontSize: 14,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your Email';
                               }
                               bool isEmail = RegExp(
-                                r'^\S+@\S+\.\S+$',
+                                r'^\S+@\S+\.\S+[0m',
                               ).hasMatch(value);
                               bool isPhone = RegExp(
-                                r'^\d{11}$',
+                                r'^\d{11}[0m',
                               ).hasMatch(value);
                               if (!isEmail && !isPhone) {
                                 return 'Please enter a valid Email or Phone number';
@@ -254,34 +206,34 @@ class _SignupState extends State<AddAccount> {
                           // Password field
                           TextFormField(
                             controller: password,
+                            obscureText: true,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white10
-                                      : Colors.black12,
+                                  isDarkMode ? Colors.white10 : Colors.black12,
                               labelText: 'Password',
                               labelStyle: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white54
-                                        : Colors.black54,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
                                 fontFamily: 'Poppins',
+                                fontSize: 14,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                                 borderSide: BorderSide.none,
                               ),
+                              prefixIcon: Icon(
+                                Iconsax.lock,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
+                              ),
                             ),
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
+                              color: ASColor.getTextColor(context),
+                              fontSize: 14,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -326,40 +278,40 @@ class _SignupState extends State<AddAccount> {
                           // Confirm Password field
                           TextFormField(
                             controller: confirm_password,
+                            obscureText: true,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white10
-                                      : Colors.black12,
+                                  isDarkMode ? Colors.white10 : Colors.black12,
                               labelText: 'Confirm Password',
                               labelStyle: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white54
-                                        : Colors.black54,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
                                 fontFamily: 'Poppins',
+                                fontSize: 14,
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
                                 borderSide: BorderSide.none,
                               ),
+                              prefixIcon: Icon(
+                                Iconsax.lock,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.7),
+                              ),
                             ),
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
+                              color: ASColor.getTextColor(context),
+                              fontSize: 14,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Please confirm the passowrd';
+                                return 'Please confirm the password';
                               } else if (value != password.text) {
-                                return 'It is not match to the password';
+                                return 'It does not match the password';
                               }
                               return null;
                             },
@@ -369,7 +321,19 @@ class _SignupState extends State<AddAccount> {
                             child: ElevatedButton(
                               onPressed: registerUser,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple.shade400,
+                                backgroundColor: ASColor.buttonBackground(context),
+                                foregroundColor: Colors.white,
+                                textStyle: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                  vertical: 12,
+                                ),
                               ),
                               child: const Text(
                                 'Add Account',

@@ -81,7 +81,7 @@ class _MainScreenState extends State<Admindashboard> {
                   padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
                   height: 70,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFourth,
+                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -93,7 +93,7 @@ class _MainScreenState extends State<Admindashboard> {
                           fontSize: 22,
                           color: ASColor.getTextColor(
                             context,
-                          ), // theme-adaptive text color
+                          ), // Use theme-adaptive text color
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -109,51 +109,47 @@ class _MainScreenState extends State<Admindashboard> {
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
-            ),
+            color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
-            ),
-            child: BottomNavigationBar(
-              backgroundColor: isDarkMode ? ASColor.BGSecond : ASColor.BGFourth,
-              type: BottomNavigationBarType.fixed,
-              selectedItemColor: isDarkMode ? Colors.white : Colors.black,
-              unselectedItemColor: isDarkMode ? Colors.white70 : Colors.black54,
-              selectedIconTheme: IconThemeData(
-                color: isDarkMode ? Colors.white : Colors.black,
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 80, // <-- Total height of nav bar
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(Icons.home, 'Home', 0),
+                    _buildNavItem(Icons.history, 'History', 1),
+                    _buildNavItem(Icons.notifications, 'Notifications', 2),
+                    _buildNavItem(Icons.settings, 'Settings', 3),
+                  ],
+                ),
               ),
-              unselectedIconTheme: IconThemeData(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-              ),
-              selectedFontSize: 12,
-              unselectedFontSize: 12,
-              elevation: 0,
-              currentIndex: _currentIndex,
-              onTap: _onItemTapped,
-              items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.history),
-                  label: 'History',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.notifications),
-                  label: 'Notifications',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings),
-                  label: 'Settings',
-                ),
-              ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    final color =
+        isSelected
+            ? ASColor.getTextColor(context)
+            : ASColor.getTextColor(context).withOpacity(0.6);
+
+    return GestureDetector(
+      onTap: () => _onItemTapped(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: color)),
+        ],
       ),
     );
   }

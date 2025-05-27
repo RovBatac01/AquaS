@@ -1,6 +1,7 @@
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'Details.dart'; // Adjust the import path as needed
 import 'package:aqua/components/colors.dart';
 
@@ -39,7 +40,7 @@ class DetailCard extends StatelessWidget {
                     title,
                     style: TextStyle(
                       color: ASColor.getTextColor(context),
-                      fontSize: 17,
+                      fontSize: 17.sp,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -55,49 +56,22 @@ class DetailCard extends StatelessWidget {
               Text(
                 "Water Quality",
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13.sp,
                   fontWeight: FontWeight.bold,
                   color: ASColor.getTextColor(context),
                 ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    quality,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w200,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AdminDetailsScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(60, 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: const Text(
-                      'Details',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+
+              SizedBox(height: 5.h), // Use ScreenUtil for responsive height
+
+              Text(
+                "Good",
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                  fontFamily: 'Poppins',
+                ),
               ),
             ],
           ),

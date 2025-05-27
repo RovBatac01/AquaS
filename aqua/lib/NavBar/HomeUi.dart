@@ -1,5 +1,5 @@
-import 'package:aqua/pages/DetailCard.dart';
-import 'package:aqua/pages/Details.dart';
+import 'package:aqua/pages/User/DetailCard.dart';
+import 'package:aqua/pages/User/Details.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // <--- NEW: Import shared_preferences
 
