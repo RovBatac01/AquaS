@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/Signup.dart';
@@ -184,43 +185,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          isDarkMode
-              ? Colors.black
-              : Colors.white, // Change background based on theme
+      backgroundColor: ASColor.Background(context),
       body: Stack(
         children: [
-          // Always show blurred violet circles in both light and dark mode
-          Positioned(
-            top: -100,
-            left: -100,
-            child: ClipOval(
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(color: Colors.purple),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 70, sigmaY: 50),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -60,
-            right: -80,
-            child: ClipOval(
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(color: Colors.purple),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-          ),
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -231,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Container(
                     padding: EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: (isDarkMode ? Colors.black87 : Colors.white)
+                      color: (isDarkMode ? ASColor.BGthird : ASColor.BGFifth)
                           .withOpacity(0.4),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
@@ -273,9 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 isDarkMode ? Colors.white10 : Colors.black12,
                             hintText: 'Username',
                             hintStyle: TextStyle(
-                              color:
-                                  isDarkMode ? Colors.white54 : Colors.black54,
-                            ),
+                              color: ASColor.getTextColor(context),),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
@@ -295,9 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 isDarkMode ? Colors.white10 : Colors.black12,
                             hintText: 'Password',
                             hintStyle: TextStyle(
-                              color:
-                                  isDarkMode ? Colors.white54 : Colors.black54,
-                            ),
+                              color: ASColor.getTextColor(context), ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureText
@@ -404,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: Colors.purple,
+                            backgroundColor: ASColor.Background(context),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

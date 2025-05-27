@@ -59,9 +59,9 @@ class SettingsPage extends StatelessWidget {
                       Theme.of(
                         context,
                       ).colorScheme.onBackground, // text/icon color
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.secondary.withOpacity(0.1), // subtle bg
+                  backgroundColor:
+                      Colors.transparent, // Remove rounded background
+                  shape: null, // Remove any shape
                 ),
                 onPressed: () {
                   Navigator.pushReplacement(

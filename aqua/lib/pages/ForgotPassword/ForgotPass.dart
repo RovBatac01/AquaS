@@ -284,10 +284,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).brightness == Brightness.dark
-              ? Colors.black
-              : Colors.white,
+      backgroundColor: ASColor.Background(context),
       body: Stack(
         children: [
           // Always show blurred violet circles in both light and dark mode
@@ -362,11 +359,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? ASColor.txt6Color
-                                      : ASColor.txt3Color,
+                              color: ASColor.getTextColor(context),
                               fontFamily: 'poppins',
                             ),
                           ),
@@ -379,11 +372,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? ASColor.txt6Color
-                                        : ASColor.txt3Color,
+                                color: ASColor.getTextColor(context),
                                 fontFamily: 'poppins',
                               ),
                             ),
@@ -395,22 +384,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 fillColor: Colors.white10,
                                 labelText: 'Email',
                                 labelStyle: TextStyle(
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 prefixIcon: Icon(
                                   Icons.email,
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                 ),
                               ),
                               keyboardType: TextInputType.emailAddress,
@@ -594,11 +575,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               Text(
                                 'Don\'t have an account?',
                                 style: TextStyle(
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                   fontSize: 14,
                                   fontFamily: 'poppins',
                                 ),
@@ -615,11 +592,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 child: Text(
                                   'Sign up',
                                   style: TextStyle(
-                                    color:
-                                        Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? ASColor.txt6Color
-                                            : ASColor.txt3Color,
+                                    color: ASColor.getTextColor(context),
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'poppins',

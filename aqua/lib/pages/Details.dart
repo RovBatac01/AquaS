@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:ui'; // Required for ImageFilter
+import 'package:aqua/components/colors.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,7 +38,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   String selectedStat = "Temp";
   double progress = 28 / 100;
   String label = "28°C";
-  Color indicatorColor = Colors.blue;
+  Color indicatorColor = Colors.green; // Default to green for good quality
+  String quality = "good"; // Track quality: 'good', 'bad', 'warning'
 
   void updateIndicator(String stat) {
     setState(() {
@@ -46,38 +48,100 @@ class _DetailsScreenState extends State<DetailsScreen> {
         case "Temp":
           progress = 28 / 100;
           label = "28°C";
-          indicatorColor = Colors.blue;
+          if (28 >= 10 && 28 <= 35) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (28 < 10 || 28 > 40) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
         case "TDS":
           progress = 35 / 100;
           label = "35 PPM";
-          indicatorColor = Colors.green;
+          if (35 >= 0 && 35 <= 300) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (35 > 500) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
         case "pH":
           progress = 7.2 / 14;
           label = "pH 7.2";
-          indicatorColor = Colors.purple;
+          if (7.2 >= 6.5 && 7.2 <= 8.5) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (7.2 < 5.5 || 7.2 > 9.5) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
         case "Turbidity":
           progress = 0.5 / 10;
           label = "0.5 NTU";
-          indicatorColor = Colors.orange;
+          if (0.5 <= 1) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (0.5 > 5) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
         case "Conductivity":
           progress = 35 / 100;
           label = "35 PPM";
-          indicatorColor = Colors.red;
+          if (35 >= 0 && 35 <= 100) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (35 > 200) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
         case "Salinity":
           progress = 0.7;
           label = "0.7 ppt";
-          indicatorColor = Colors.teal;
+          if (0.7 < 1) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (0.7 > 2) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
-
         case "Electrical Conductivity (Condensed)":
-          progress = 400 / 1000; // Assume 1000 mV max
+          progress = 400 / 1000;
           label = "400 mV";
-          indicatorColor = Colors.indigo;
+          if (400 < 500) {
+            indicatorColor = Colors.green;
+            quality = "good";
+          } else if (400 > 800) {
+            indicatorColor = Colors.red;
+            quality = "bad";
+          } else {
+            indicatorColor = Colors.orange;
+            quality = "warning";
+          }
           break;
       }
     });
@@ -92,17 +156,23 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Home Water Tank',
                 style: TextStyle(
+                  color: ASColor.getTextColor(context),
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  fontFamily: 'Poppins',
+                  fontFamily: 'Montserrat',
                 ),
               ),
-              const Text(
+              
+              Text(
                 "Device Status: Connected",
-                style: TextStyle(fontSize: 18, color: Colors.green),
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.green,
+                  fontFamily: 'Poppins',
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -120,12 +190,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
               ),
               const SizedBox(height: 20),
 
-              const Text(
+              Text(
                 "Water quality: Great",
                 style: TextStyle(
+                  color: ASColor.getTextColor(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  fontFamily: 'Poppins',
+                  fontFamily: 'Montserrat',
                 ),
               ),
               const SizedBox(height: 20),
@@ -185,8 +256,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           label: "Conductivity",
                           value: "35 PPM",
                           isSelected: selectedStat == "Conductivity",
-                          onTap:
-                              () => updateIndicator("Conductivity"),
+                          onTap: () => updateIndicator("Conductivity"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -211,8 +281,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           icon: Icons.battery_charging_full,
                           label: "Electrical Conductivity (Condensed)",
                           value: "400 mV",
-                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                          onTap: () => updateIndicator("Electrical Conductivity (Condensed)"),
+                          isSelected:
+                              selectedStat ==
+                              "Electrical Conductivity (Condensed)",
+                          onTap:
+                              () => updateIndicator(
+                                "Electrical Conductivity (Condensed)",
+                              ),
                         ),
                       ),
                     ],
@@ -257,7 +332,7 @@ class StatCard extends StatelessWidget {
             : Colors.white; // Light mode background color
 
     // Set text color based on the theme
-    Color textColor = isDarkMode ? Colors.white : Colors.black;
+    Color textColor = isDarkMode ? ASColor.txt1Color : ASColor.txt2Color;
 
     return GestureDetector(
       onTap: onTap,
@@ -286,6 +361,7 @@ class StatCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   color: textColor, // Apply the textColor here
+                  fontFamily: 'Poppins',
                 ),
               ),
               const SizedBox(height: 5),
@@ -295,6 +371,7 @@ class StatCard extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: textColor, // Apply the textColor here
+                  fontFamily: 'Poppins',
                 ),
               ),
             ],
@@ -331,12 +408,10 @@ class CircularIndicator extends CustomPainter {
           ..strokeWidth = 12.0;
     canvas.drawCircle(center, radius, backgroundPaint);
 
-    // Gradient progress circle
-    final gradientPaint =
+    // Solid progress circle (no gradient)
+    final progressPaint =
         Paint()
-          ..shader = LinearGradient(
-            colors: [color, Colors.greenAccent],
-          ).createShader(Rect.fromCircle(center: center, radius: radius))
+          ..color = color
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
           ..strokeWidth = 12.0;
@@ -348,7 +423,7 @@ class CircularIndicator extends CustomPainter {
       startAngle,
       sweepAngle,
       false,
-      gradientPaint,
+      progressPaint,
     );
 
     // Text in center

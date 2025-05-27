@@ -284,10 +284,7 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).brightness == Brightness.dark
-              ? Colors.black
-              : Colors.white,
+      backgroundColor: ASColor.Background(context),
       body: Stack(
         children: [
           // Always show blurred violet circles in both light and dark mode
@@ -362,11 +359,7 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? ASColor.txt3Color
-                                      : ASColor.txt3Color,
+                              color: ASColor.getTextColor(context),
                               fontFamily: 'poppins',
                             ),
                           ),
@@ -379,11 +372,7 @@ class _ForgotPasswordScreenState extends State<OTPScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? ASColor.txt3Color
-                                        : ASColor.txt3Color,
+                                color: ASColor.getTextColor(context),
                                 fontFamily: 'poppins',
                               ),
                             ),

@@ -91,6 +91,11 @@ flutter:
         - asset: fonts/Poppins-Medium.ttf
         - asset: fonts/Poppins-Bold.ttf
         - asset: fonts/Poppins-Regular.ttf
+    - family: Montserrat
+      fonts:
+        - asset: fonts/Montserrat-Regular.ttf
+        - asset: fonts/Montserrat-Bold.ttf
+        - asset: fonts/Montserrat-Medium.ttf
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

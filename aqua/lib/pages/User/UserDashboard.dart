@@ -7,8 +7,10 @@ import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:aqua/pages/User/Request.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:provider/provider.dart';
+import 'dart:ui';
 import '../../components/colors.dart'; // Ensure this file contains your custom colors
 
 void main() {
@@ -91,7 +93,7 @@ class _MainScreenState extends State<Userdashboard> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: ASColor.BGsecond,
+                backgroundColor: ASColor.BGSecond,
               ),
               child: Text(
                 "Confirm",
@@ -113,90 +115,171 @@ class _MainScreenState extends State<Userdashboard> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          themeMode: themeProvider.themeMode,
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
-          home: Scaffold(
-            body: Stack(
+    // Show popup dialog when the dashboard is first built (user just logged in)
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   showDialog(
+    //     context: context,
+    //     barrierDismissible: false,
+    //     barrierColor: Colors.black.withOpacity(
+    //       0.9,
+    //     ), // darken and blur background
+    //     builder:
+    //         (context) => Stack(
+    //           children: [
+    //             // Blur the background
+    //             BackdropFilter(
+    //               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+    //               child: Container(color: Colors.transparent),
+    //             ),
+    //             Center(
+    //               child: AlertDialog(
+    //                 backgroundColor: ASColor.getCardColor(context),
+    //                 title: Text(
+    //                   'Access Required',
+    //                   style: TextStyle(
+    //                     color: ASColor.getTextColor(context),
+    //                     fontFamily: 'Montserrat',
+    //                     fontSize: 18,
+    //                     fontWeight: FontWeight.bold,
+    //                   ),
+    //                 ),
+    //                 content: Text(
+    //                   'You need a Super Admin approval to view sensor data. Your request for access has been sent. Please wait for approval, or logout .',
+    //                   style: TextStyle(
+    //                     color: ASColor.getTextColor(context),
+    //                     fontFamily: 'Poppins',
+    //                     fontSize: 14,
+    //                   ),
+    //                 ),
+    //                 actions: [
+    //                   TextButton(
+    //                     onPressed: () {
+    //                       // Send request logic here
+    //                       Navigator.of(context).pop();
+    //                       // Optionally show a confirmation dialog or snackbar
+    //                     },
+    //                     child: Text(
+    //                       'Send Request',
+    //                       style: TextStyle(
+    //                         color: ASColor.getTextColor(context),
+    //                         fontFamily: 'Poppins',
+    //                         fontSize: 14,
+    //                       ),
+    //                     ),
+    //                   ),
+    //                   TextButton(
+    //                     onPressed: () {
+    //                       Navigator.of(context).pop();
+    //                       Navigator.pushReplacement(
+    //                         context,
+    //                         MaterialPageRoute(
+    //                           builder: (context) => LoginScreen(),
+    //                         ),
+    //                       );
+    //                     },
+    //                     child: Text(
+    //                       'Logout',
+    //                       style: TextStyle(
+    //                         color: ASColor.getTextColor(context),
+    //                         fontFamily: 'Poppins',
+    //                         fontSize: 14,
+    //                       ),
+    //                     ),
+    //                   ),
+    //                 ],
+    //               ),
+    //             ),
+    //           ],
+    //         ),
+    //   );
+    // });
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      home: Scaffold(
+        body: Stack(
+          children: [
+            // Add spacing at the top (e.g., status bar height or more)
+            Column(
               children: [
-                // Add spacing at the top (e.g., status bar height or more)
-                Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
-                      height: 70,
-                      decoration: BoxDecoration(
-                        color: isDarkMode? ASColor.BGFifth : ASColor.BGsixth,
+                Container(
+                  padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        _titles[_currentIndex],
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 22,
+                          color: ASColor.getTextColor(
+                            context,
+                          ), // Use theme-adaptive text color
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            _titles[_currentIndex],
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 22,
-                              color: ASColor.txt6Color,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (_currentIndex == 0) ...[],
-                        ],
-                      ),
-                    ),
-                    // Remaining body content
-                    Expanded(child: _screens[_currentIndex]),
-                  ],
+                      if (_currentIndex == 0) ...[],
+                    ],
+                  ),
                 ),
+                // Remaining body content
+                Expanded(child: _screens[_currentIndex]),
               ],
             ),
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 0, 0, 0),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-                child: BottomNavigationBar(
-                  backgroundColor: isDarkMode? ASColor.BGFifth : ASColor.BGsixth,
-                  type: BottomNavigationBarType.fixed,
-                  selectedItemColor: Colors.white,
-                  unselectedItemColor: Colors.white.withOpacity(0.7),
-                  selectedFontSize: 12,
-                  unselectedFontSize: 12,
-                  elevation: 0,
-                  currentIndex: _currentIndex,
-                  onTap: _onItemTapped,
-                  items: const [
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.home),
-                      label: 'Home',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.history),
-                      label: 'History',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.notifications),
-                      label: 'Notifications',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.settings),
-                      label: 'Settings',
-                    ),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 80, // <-- Total height of nav bar
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(Icons.home, 'Home', 0),
+                    _buildNavItem(Icons.history, 'History', 1),
+                    _buildNavItem(Icons.notifications, 'Notifications', 2),
+                    _buildNavItem(Icons.settings, 'Settings', 3),
                   ],
                 ),
               ),
             ),
           ),
-        );
-      }
+        ),
+      ),
+    );
+  }
+
+  // Move _buildNavItem inside _MainScreenState as a method
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final isSelected = _currentIndex == index;
+    final color =
+        isSelected
+            ? ASColor.getTextColor(context)
+            : ASColor.getTextColor(context).withOpacity(0.6);
+
+    return GestureDetector(
+      onTap: () => _onItemTapped(index),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: color)),
+        ],
+      ),
+    );
+  }
 }

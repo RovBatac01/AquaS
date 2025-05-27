@@ -5,35 +5,36 @@ class ASColor {
 
   // BACKGROUND COLOR;
   static const Color BGfirst = Colors.white;
-  static const Color BGsecond = Colors.black;
-  static const Color BGthird = Color(0xFF006400);
-  static const Color BGfourth = Color(0xFF1e1f21);
-  static const Color BGFifth = Color(0xFF2f2f31);
-  static const Color BGsixth = Color(0xFF899499);
+  static const Color BGSecond = Color(0xFF2f2f31); //background color for dark mode
+  static const Color BGthird = Color(0xFF1e1f21); //background color for dark mode for navigation bar and app bar
+  static const Color BGFourth = Color(0xFFDDDDDD); // background color for light mode 
+  static const Color BGFifth = Color(0xFFFFFDF6); // background color for light mode for navigation bar and app bar
 
   static Color getCardColor(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ? BGFifth : BGfirst;
+    return isDarkMode ? BGSecond : BGfirst;
   }
 
   static Color getStatCardColor(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ? BGFifth : BGfirst;
+    return isDarkMode ? BGSecond : BGfirst;
+  }
+
+  static Color Background(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return isDarkMode ? BGSecond : BGFourth;
   }
   
 
 
   static Color getTextColor(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ?  txt6Color: txt7Color;
+    return isDarkMode ?  txt1Color: txt2Color;
   }
 
-  static const Color txt7Color = Color(0xFF2f2f31);
-  static const Color txt6Color = Colors.white;
-  static const Color txt1Color = Color.fromARGB(255, 42, 68, 181);
-  static const Color txt3Color = Colors.black;
-  static const Color txt4Color = Color(0xFF6D95FC);
-  static const Color txt5Color = Color(0xFF89CFF1);
+  static const Color txt2Color = Color(0xFF2f2f31); // text color for light mode
+  static const Color txt1Color = Color(0xFFFFFDF6); // text color for dark mode
+
   
   
 }

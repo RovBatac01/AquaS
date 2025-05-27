@@ -63,7 +63,7 @@ class _NotificationPageState extends State<NotificationPage> {
       body: ListView.separated(
         itemCount: notifications.length,
         separatorBuilder:
-            (context, index) => Divider(height: 1, color: Colors.grey[300]),
+            (context, index) => SizedBox.shrink(), // Remove the divider
         itemBuilder: (context, index) {
           final notification = notifications[index];
 
@@ -83,12 +83,16 @@ class _NotificationPageState extends State<NotificationPage> {
             },
             child: Card(
               color: ASColor.getCardColor(context),
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              margin: EdgeInsets.fromLTRB(
+                16,
+                index == 0 ? 20 : 0,
+                16,
+                20,
+              ), // Top margin only for first card
               elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              
               child: ListTile(
                 contentPadding: EdgeInsets.all(16),
                 leading: _getNotificationIcon(notification['title']!),
@@ -114,48 +118,55 @@ class _NotificationPageState extends State<NotificationPage> {
                     ),
                   ],
                 ),
-                trailing: Icon(
-                  Iconsax.trash,
-                  size: 16,
-                  color: Colors.red,
+                trailing: IconButton(
+                  icon: Icon(Iconsax.trash, size: 16, color: Colors.red),
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: Text('Delete Notification',
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 18.sp,
+                            ),),
+                            content: Text(
+                              'Are you sure you want to delete this notification?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed:
+                                    () => Navigator.of(context).pop(false),
+                                child: Text('Cancel',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16.sp,
+                                  color: ASColor.getTextColor(context),
+                                ),),
+                              ),
+                              TextButton(
+                                onPressed:
+                                    () => Navigator.of(context).pop(true),
+                                child: Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16.sp,
+                                    color: ASColor.getTextColor(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                    );
+                    if (confirm == true) {
+                      setState(() {
+                        notifications.removeAt(index);
+                      });
+                    }
+                  },
+                  tooltip: 'Delete notification',
                 ),
-                // trailing: PopupMenuButton<String>(
-                //   icon: Container(
-                //     padding: EdgeInsets.all(4),
-                //     child: Icon(
-                //       Icons.more_horiz,
-                //       size: 16,
-                //       color: ASColor.getTextColor(context),
-                //     ),
-                //   ),
-                //   color:
-                //       Theme.of(
-                //         context,
-                //       ).cardColor, // Use theme card color for popup background
-                //   itemBuilder:
-                //       (context) => [
-                //         PopupMenuItem<String>(
-                //           value: 'delete',
-                //           child: Center(
-                //             child: Icon(
-                //               Icons.delete,
-                //               color:
-                //                   Theme.of(context)
-                //                       .colorScheme
-                //                       .onSurface, // Use theme text/icon color
-                //               size: 20, // Adjust the size as needed
-                //             ),
-                //           ),
-                //         ),
-                //       ],
-                //   onSelected: (value) {
-                //     if (value == 'delete') {
-                //       setState(() {
-                //         notifications.removeAt(index);
-                //       });
-                //     }
-                //   },
-                // ),
               ),
             ),
           );

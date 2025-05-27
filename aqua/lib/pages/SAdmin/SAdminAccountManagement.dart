@@ -339,12 +339,28 @@ class _UserListPageState extends State<UserListPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          color: Colors.grey.shade300,
+                          color:
+                              Theme.of(
+                                context,
+                              ).cardColor, // Use theme card color
                           margin: const EdgeInsets.symmetric(vertical: 6),
                           child: ListTile(
                             leading: const Icon(Icons.face),
-                            title: Text(user['username']!),
-                            subtitle: Text(user['role']!),
+                            title: Text(
+                              user['username']!,
+                              style: TextStyle(
+                                color:
+                                    Theme.of(context).colorScheme.onBackground,
+                              ),
+                            ),
+                            subtitle: Text(
+                              user['role']!,
+                              style: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onBackground.withOpacity(0.7),
+                              ),
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -386,7 +402,10 @@ class _UserListPageState extends State<UserListPage> {
         onPressed: () {
           setState(() {
             // Add your action here, e.g., navigate to a new page
-            Navigator.push(context, MaterialPageRoute(builder: (context) => AddAccount())); 
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AddAccount()),
+            );
           });
         },
         child: Icon(Icons.add),

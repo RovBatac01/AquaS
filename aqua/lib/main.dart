@@ -1,24 +1,26 @@
+import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
-import 'package:aqua/pages/Admin/AdminDetails.dart';
-import 'package:aqua/pages/ForgotPassword/ConfirmPassword.dart';
-import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
-import 'package:aqua/pages/ForgotPassword/OTP.dart';
+import 'package:aqua/pages/Details.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/pages/Login.dart';
-import 'package:aqua/pages/SAdmin/AddAccount.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
-import 'package:aqua/pages/SAdmin/SAdminHome.dart';
-import 'package:aqua/pages/Signup.dart';
-import 'package:aqua/pages/User/Request.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
-import 'package:aqua/components/colors.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(create: (_) => ThemeProvider(), child: MyApp()),
+    ScreenUtilInit(
+      designSize: Size(375, 812), // Set to your design's width and height
+      minTextAdapt: true,
+      builder:
+          (context, child) => ChangeNotifierProvider(
+            create: (_) => ThemeProvider(),
+            child: MyApp(),
+          ),
+    ),
   );
 }
 
@@ -65,7 +67,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: LandingPage(),
+      home: Sadmindashboard(),
     );
   }
 }

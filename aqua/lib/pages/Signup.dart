@@ -56,42 +56,9 @@ class _SignupState extends State<Signup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: ASColor.Background(context),
       body: Stack(
         children: [
-          // Background blur circles
-          Positioned(
-            top: -100,
-            left: -100,
-            child: ClipOval(
-              child: Container(
-                width: 300,
-                height: 400,
-                decoration: BoxDecoration(color: Colors.purple),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 70, sigmaY: 50),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -60,
-            right: -80,
-            child: ClipOval(
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(color: ASColor.BGfourth),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-            ),
-          ),
-
-          // Form content
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
@@ -150,7 +117,7 @@ class _SignupState extends State<Signup> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt6Color,
+                          color: ASColor.getTextColor(context),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -179,7 +146,7 @@ class _SignupState extends State<Signup> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt6Color,
+                          color: ASColor.getTextColor(context),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -214,7 +181,7 @@ class _SignupState extends State<Signup> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt6Color,
+                          color: ASColor.getTextColor(context),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -248,7 +215,7 @@ class _SignupState extends State<Signup> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt6Color,
+                          color: ASColor.getTextColor(context),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -313,7 +280,7 @@ class _SignupState extends State<Signup> {
                         ),
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.txt6Color,
+                          color: ASColor.getTextColor(context),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -505,7 +472,7 @@ If you have any questions about these Terms, please contact us at [Your Contact 
                                 "I agree to the terms and conditions",
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
-                                  color: ASColor.txt6Color,
+                                  color: ASColor.getTextColor(context),
                                   fontSize: 12,
                                   decoration: TextDecoration.underline,
                                 ),
@@ -519,14 +486,17 @@ If you have any questions about these Terms, please contact us at [Your Contact 
                         child: ElevatedButton(
                           onPressed: isChecked ? registerUser : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple.shade400,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
                           ),
                           child: const Text(
                             'Sign Up',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 16,
-                              color: Colors.white,
+                              // color is handled by foregroundColor above
                             ),
                           ),
                         ),

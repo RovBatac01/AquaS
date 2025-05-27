@@ -136,7 +136,7 @@ class _StatisticsState extends State<Statistics> {
           color:
               Theme.of(context).brightness == Brightness.dark
                   ? color.withOpacity(0.1)
-                  : ASColor.BGsixth,
+                  : ASColor.BGFourth,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color, width: 1.2),
         ),
@@ -183,7 +183,7 @@ class _StatisticsState extends State<Statistics> {
                     Text(
                       'Water quality at a glance',
                       style: TextStyle(
-                        fontFamily: 'Poppins',
+                        fontFamily: 'Montserrat',
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
@@ -197,7 +197,7 @@ class _StatisticsState extends State<Statistics> {
                         fontFamily: 'Poppins',
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color: Colors.grey,
+                        color: ASColor.getTextColor(context),
                         letterSpacing: 0.5,
                         wordSpacing: 1,
                       ),
@@ -370,7 +370,7 @@ class _StatisticsState extends State<Statistics> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Poppins',
+                      fontFamily: 'Montserrat',
                     ),
                   ),
                   Container(

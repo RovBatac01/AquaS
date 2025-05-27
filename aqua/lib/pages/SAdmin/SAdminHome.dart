@@ -59,24 +59,24 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: ASColor.BGsixth,
+                    color: Colors.red,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: TextField(
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
+                      color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
                       fontSize: 14,
                     ),
                     decoration: InputDecoration(
                       icon: Icon(
                         Icons.search,
-                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
                         size: 20,
                       ),
                       hintText: 'Search Establishments...',
                       border: InputBorder.none,
                       hintStyle: TextStyle(
-                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        color: Colors.grey,
                       ),
                       contentPadding: EdgeInsets.only(bottom: 10),
                     ),

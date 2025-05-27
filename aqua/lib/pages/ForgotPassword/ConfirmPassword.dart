@@ -284,10 +284,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).brightness == Brightness.dark
-              ? Colors.black
-              : Colors.white,
+      backgroundColor: ASColor.Background(context),
       body: Stack(
         children: [
           // Always show blurred violet circles in both light and dark mode
@@ -363,11 +360,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? ASColor.txt6Color
-                                      : ASColor.txt3Color,
+                              color: ASColor.getTextColor(context),
                               fontFamily: 'poppins',
                             ),
                           ),
@@ -383,22 +376,14 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                                 fillColor: Colors.white54,
                                 labelText: 'New Password',
                                 labelStyle: TextStyle(
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 prefixIcon: Icon(
                                   Iconsax.lock,
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                 ),
                               ),
                               keyboardType: TextInputType.emailAddress,
@@ -413,22 +398,14 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                                 fillColor: Colors.white10,
                                 labelText: 'Confirm Password',
                                 labelStyle: TextStyle(
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 prefixIcon: Icon(
                                   Iconsax.password_check,
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? ASColor.txt6Color
-                                          : ASColor.txt3Color,
+                                  color: ASColor.getTextColor(context),
                                 ),
                               ),
                               keyboardType: TextInputType.emailAddress,

@@ -2,6 +2,7 @@ import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:flutter/material.dart';
 import 'Details.dart'; // Adjust the import path as needed
+import 'package:aqua/components/colors.dart';
 
 class DetailCard extends StatelessWidget {
   final String title;
@@ -36,7 +37,8 @@ class DetailCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
+                      color: ASColor.getTextColor(context),
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
                     ),
@@ -50,12 +52,12 @@ class DetailCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const Text(
+              Text(
                 "Water Quality",
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: ASColor.getTextColor(context),
                 ),
               ),
               Row(

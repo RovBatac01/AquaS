@@ -86,7 +86,7 @@ class _MainScreenState extends State<Sadmindashboard> {
                 );
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: ASColor.BGsecond,
+                backgroundColor: ASColor.BGSecond,
               ),
               child: Text(
                 "Confirm",
@@ -115,95 +115,99 @@ class _MainScreenState extends State<Sadmindashboard> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          themeMode: themeProvider.themeMode,
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
-          home: Scaffold(
-            body: Stack(
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      themeMode: themeProvider.themeMode,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      home: Scaffold(
+        body: Stack(
+          children: [
+            // Add spacing at the top (e.g., status bar height or more)
+            Column(
               children: [
-                // Add spacing at the top (e.g., status bar height or more)
-                Column(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
-                      height: 70,
-                      decoration: BoxDecoration(
-                        color: isDarkMode? ASColor.BGFifth : ASColor.BGsixth,
+                Container(
+                  padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        _titles[_currentIndex],
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 22,
+                          color: ASColor.getTextColor(
+                            context,
+                          ), // theme-adaptive text color
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Text(
-                            _titles[_currentIndex],
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 22,
-                              color: ASColor.txt6Color,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          if (_currentIndex == 0) ...[],
-                        ],
-                      ),
-                    ),
-                    // Remaining body content
-                    Expanded(child: _screens[_currentIndex]),
-                  ],
+                      if (_currentIndex == 0) ...[],
+                    ],
+                  ),
+                ),
+                // Remaining body content
+                Expanded(child: _screens[_currentIndex]),
+              ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            child: BottomNavigationBar(
+              backgroundColor: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: isDarkMode ? Colors.white : Colors.black,
+              unselectedItemColor: isDarkMode ? Colors.white70 : Colors.black54,
+              selectedIconTheme: IconThemeData(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+              unselectedIconTheme: IconThemeData(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+              selectedFontSize: 12,
+              unselectedFontSize: 12,
+              elevation: 0,
+              currentIndex: _currentIndex,
+              onTap: _onItemTapped,
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_2_outlined),
+                  label: 'Account',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.history),
+                  label: 'History',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.notifications),
+                  label: 'Notifications',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.settings),
+                  label: 'Settings',
                 ),
               ],
             ),
-            bottomNavigationBar: Container(
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 0, 0, 0),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-                child: BottomNavigationBar(
-                  backgroundColor: isDarkMode? ASColor.BGFifth : ASColor.BGsixth,
-                  type: BottomNavigationBarType.fixed,
-                  selectedItemColor: Colors.white,
-                  unselectedItemColor: Colors.white.withOpacity(0.7),
-                  selectedFontSize: 12,
-                  unselectedFontSize: 12,
-                  elevation: 0,
-                  currentIndex: _currentIndex,
-                  onTap: _onItemTapped,
-                  items: const [
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.home),
-                      label: 'Home',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.person_2_outlined),
-                      label: 'Account',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.history),
-                      label: 'History',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.notifications),
-                      label: 'Notifications',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.settings),
-                      label: 'Settings',
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
-        );
-      }
+        ),
+      ),
+    );
   }
-
+}
