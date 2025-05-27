@@ -362,7 +362,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: ElevatedButton(
                               onPressed: () => _sendOTP(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: ASColor.Background(context),
+                                backgroundColor: ASColor.buttonBackground(context),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -424,7 +424,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: ElevatedButton(
                               onPressed: () => _verifyOTP(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple.shade400,
+                                backgroundColor: ASColor.buttonBackground(context),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -507,7 +507,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: ElevatedButton(
                               onPressed: () => _changePassword(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple.shade400,
+                                backgroundColor: ASColor.buttonBackground(context),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),

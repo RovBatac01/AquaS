@@ -148,7 +148,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminDetails()),
+                  MaterialPageRoute(builder: (context) => AdminDetailsScreen()),
                 );
               },
             ),
@@ -159,7 +159,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminDetails()),
+                  MaterialPageRoute(builder: (context) => AdminDetailsScreen()),
                 );
               },
             ),
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminDetails()),
+                  MaterialPageRoute(builder: (context) => AdminDetailsScreen()),
                 );
               },
             ),
@@ -181,7 +181,7 @@ class _HomeScreenState extends State<AdminHomeScreen> {
               onEdit: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AdminDetails()),
+                  MaterialPageRoute(builder: (context) => AdminDetailsScreen()),
                 );
               },
             ),

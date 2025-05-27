@@ -315,7 +315,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: ASColor.getTextColor(context),
-                            fontFamily: 'poppins',
+                            fontFamily: 'Montserrat',
                           ),
                         ),
 
@@ -332,6 +332,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                               hintText: 'New Password',
                               hintStyle: TextStyle(
                                 color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -354,6 +355,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                                   isDarkMode ? Colors.white10 : Colors.black12,
                               hintText: 'Confirm Password',
                               hintStyle: TextStyle(
+                                fontFamily: 'Poppins',
                                 color: ASColor.getTextColor(context),
                               ),
                               border: OutlineInputBorder(
@@ -374,7 +376,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                             child: ElevatedButton(
                               onPressed: () => _sendOTP(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.purple.shade400,
+                                backgroundColor: ASColor.buttonBackground(context),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -387,11 +389,11 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                                       ? const CircularProgressIndicator(
                                         color: Colors.white,
                                       )
-                                      : const Text(
-                                        'Confirm OTP',
+                                      : Text(
+                                        'Confirm Password',
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: Colors.white,
+                                          color: ASColor.txt1Color,
                                           fontFamily: 'poppins',
                                         ),
                                       ),
