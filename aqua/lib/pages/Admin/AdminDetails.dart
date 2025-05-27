@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Water Quality',
-      debugShowCheckedModeBanner: false, // Removed theme: ThemeData(primarySwatch: Colors.blue) for consistency with previous versions
+      debugShowCheckedModeBanner: false,
       home: const AdminDetailsScreen(),
     );
   }
@@ -28,10 +28,10 @@ class AdminDetailsScreen extends StatefulWidget {
   const AdminDetailsScreen({super.key});
 
   @override
-  State<AdminDetailsScreen> createState() => _AdminDetailsScreenState(); // Changed to _AdminDetailsScreenState
+  State<AdminDetailsScreen> createState() => _AdminDetailsScreenState();
 }
 
-class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to _AdminDetailsScreenState
+class _AdminDetailsScreenState extends State<AdminDetailsScreen> {
   String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
 
   // State variables to hold the latest fetched RAW data for each parameter
@@ -43,19 +43,30 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to
   double _latestSalinity = 0.0;
   double _latestECCompensated = 0.0; // Corresponds to 'ec_compensated_mS'
 
+  // Connection status variables
+  DateTime? _lastDataReceivedTimestamp; // Tracks the time of the last successful data reception
+  bool _isConnected = false; // True if data is actively flowing, false otherwise
+
   bool _isLoading = true;
   String? _errorMessage;
-  Timer? _timer; // Timer for auto-refresh
+  Timer? _timer; // Timer for auto-refresh and connection check
 
   final WaterQualityService _waterQualityService = WaterQualityService();
+
+  // Current values for the circular indicator (derived from _latestX values)
+  double progress = 0.0;
+  String label = "Loading...";
+  Color indicatorColor = Colors.grey; // Initial color for indicator
+
 
   @override
   void initState() {
     super.initState();
     _fetchLatestDataForAllStats(); // Initial fetch
-    // Set up a timer to fetch data every 1 second
+    // Set up a timer to fetch data every 1 second and check connection status
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       _fetchLatestDataForAllStats();
+      _checkConnectionStatus(); // Check connection status on each timer tick
     });
   }
 
@@ -73,48 +84,59 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to
       });
     }
 
+    bool anyDataReceivedInThisCycle = false; // Flag to track if any data was successfully fetched
+
     try {
       // Fetch data for each statistic and update the corresponding state variable
       // We fetch 'Daily' (24h) and take the first element, assuming it's the most recent.
       final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
       if (temp.isNotEmpty) {
         _latestTemp = temp.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
       if (tds.isNotEmpty) {
         _latestTDS = tds.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
       if (ph.isNotEmpty) {
         _latestPH = ph.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
       if (turbidity.isNotEmpty) {
         _latestTurbidity = turbidity.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
       if (conductivity.isNotEmpty) {
         _latestConductivity = conductivity.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
       if (salinity.isNotEmpty) {
         _latestSalinity = salinity.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
       if (ecCompensated.isNotEmpty) {
         _latestECCompensated = ecCompensated.first.value;
+        anyDataReceivedInThisCycle = true;
       }
 
       setState(() {
         _isLoading = false;
         _errorMessage = null;
-        // Update the circular indicator based on the currently selected stat
+        if (anyDataReceivedInThisCycle) {
+          _lastDataReceivedTimestamp = DateTime.now(); // Update timestamp only if data came
+        }
         _updateCircularIndicatorValues();
       });
     } catch (e) {
@@ -122,9 +144,32 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to
       setState(() {
         _errorMessage = 'Failed to load latest data: ${e.toString()}';
         _isLoading = false;
+        _isConnected = false; // Explicitly set to false on error
       });
     }
   }
+
+  // Helper to check and update the connection status
+  void _checkConnectionStatus() {
+    // Define a reasonable timeout period, e.g., 5 seconds
+    const Duration timeout = Duration(seconds: 5);
+
+    bool currentlyConnected;
+    if (_lastDataReceivedTimestamp == null) {
+      currentlyConnected = false; // Never received data yet
+    } else {
+      // Check if the last data received was within the timeout period
+      currentlyConnected = DateTime.now().difference(_lastDataReceivedTimestamp!) < timeout;
+    }
+
+    // Only call setState if the connection status has actually changed
+    if (_isConnected != currentlyConnected) {
+      setState(() {
+        _isConnected = currentlyConnected;
+      });
+    }
+  }
+
 
   // Helper to update the circular indicator's progress, label, and color
   // based on the current `selectedStat` and the fetched `_latestX` values.
@@ -200,11 +245,6 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to
     });
   }
 
-  // Current values for the circular indicator
-  double progress = 0.0;
-  String label = "Loading...";
-  Color indicatorColor = Colors.grey;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -226,7 +266,7 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to
           },
         ),
       ),
-      body: SafeArea( // Added SafeArea for better layout on different devices
+      body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
@@ -242,10 +282,22 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // Changed to
                 ),
               ),
               Text(
-                _isLoading ? "Device Status: Connecting..." : "Device Status: Connected",
+                _isLoading
+                    ? "Device Status: Connecting..."
+                    : _errorMessage != null
+                        ? "Device Status: Error / Disconnected"
+                        : _isConnected
+                            ? "Device Status: Connected"
+                            : "Device Status: Disconnected",
                 style: TextStyle(
                   fontSize: 18,
-                  color: _isLoading ? Colors.orange : Colors.green,
+                  color: _isLoading
+                      ? Colors.orange
+                      : _errorMessage != null
+                          ? Colors.red
+                          : _isConnected
+                              ? Colors.green
+                              : Colors.red,
                 ),
               ),
               const SizedBox(height: 20),
@@ -416,7 +468,7 @@ class StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: const [ // Added const for performance
+          boxShadow: const [
             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
           ],
         ),
@@ -435,6 +487,7 @@ class StatCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   color: textColor,
+                  fontFamily: 'Poppins',
                 ),
               ),
               const SizedBox(height: 5),
@@ -444,6 +497,7 @@ class StatCard extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: textColor,
+                  fontFamily: 'Poppins',
                 ),
               ),
             ],
@@ -507,7 +561,7 @@ class CircularIndicator extends CustomPainter {
           fontSize: 26,
           fontWeight: FontWeight.bold,
           color: textColor,
-          shadows: const [ // Added const for performance
+          shadows: const [
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],
         ),

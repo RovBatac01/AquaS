@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:ui'; // Required for ImageFilter
 import 'dart:async'; // Required for Timer
+import 'dart:convert'; // For JSON encoding/decoding
 
 import 'package:aqua/water_quality_model.dart'; // Corrected import path
 import 'package:aqua/water_quality_service.dart'; // Corrected import path
@@ -24,6 +25,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
+enum ConnectionStatus {
+  connecting,
+  connected,
+  disconnectedNoData, // No new data received (same as previous)
+  disconnectedNetworkError, // Failed to fetch data (network issue, server down, etc.)
+}
+
 class DetailsScreen extends StatefulWidget {
   const DetailsScreen({super.key});
 
@@ -39,14 +47,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
   double _latestTDS = 0.0;
   double _latestPH = 0.0;
   double _latestTurbidity = 0.0;
-  double _latestConductivity = 0.0; // Corresponds to 'ec_value_mS'
+  double _latestConductivity = 0.0;
   double _latestSalinity = 0.0;
-  double _latestECCompensated = 0.0; // Corresponds to 'ec_compensated_mS'
+  double _latestECCompensated = 0.0;
 
-  // Removed all _latestXSafetyScore and _overallSafetyScore variables
-
-  bool _isLoading = true;
+  // Connection and Error State
+  ConnectionStatus _connectionStatus = ConnectionStatus.connecting;
   String? _errorMessage;
+
+  // To detect if data is the same as the previous fetch
+  Map<String, dynamic>? _lastSuccessfulDataPayload;
+
   Timer? _timer; // Timer for auto-refresh
 
   final WaterQualityService _waterQualityService = WaterQualityService();
@@ -67,65 +78,99 @@ class _DetailsScreenState extends State<DetailsScreen> {
     super.dispose();
   }
 
+  // Helper to create a comparable payload from current data
+  Map<String, dynamic> _createCurrentDataPayload() {
+    return {
+      "temp": _latestTemp,
+      "tds": _latestTDS,
+      "ph": _latestPH,
+      "turbidity": _latestTurbidity,
+      "conductivity": _latestConductivity,
+      "salinity": _latestSalinity,
+      "ec_compensated": _latestECCompensated,
+    };
+  }
+
   // Fetches the latest data (raw value only) for all water quality parameters
   Future<void> _fetchLatestDataForAllStats() async {
-    if (_isLoading) {
+    // Set status to connecting/fetching while data is being fetched
+    if (_connectionStatus != ConnectionStatus.connecting) {
       setState(() {
+        _connectionStatus = ConnectionStatus.connecting;
         _errorMessage = null;
       });
     }
 
     try {
-      // Fetch data for each statistic and update the corresponding state variable
-      // We fetch 'Daily' (24h) and take the first element, assuming it's the most recent.
+      // Fetch data for each statistic
       final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
-      if (temp.isNotEmpty) {
-        _latestTemp = temp.first.value;
-      }
-
       final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
-      if (tds.isNotEmpty) {
-        _latestTDS = tds.first.value;
-      }
-
       final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
-      if (ph.isNotEmpty) {
-        _latestPH = ph.first.value;
-      }
-
       final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
-      if (turbidity.isNotEmpty) {
-        _latestTurbidity = turbidity.first.value;
-      }
-
       final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
-      if (conductivity.isNotEmpty) {
-        _latestConductivity = conductivity.first.value;
-      }
-
       final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
-      if (salinity.isNotEmpty) {
-        _latestSalinity = salinity.first.value;
-      }
-
       final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
-      if (ecCompensated.isNotEmpty) {
-        _latestECCompensated = ecCompensated.first.value;
+
+      // Check if any data was actually received
+      if (temp.isEmpty || tds.isEmpty || ph.isEmpty || turbidity.isEmpty ||
+          conductivity.isEmpty || salinity.isEmpty || ecCompensated.isEmpty) {
+        setState(() {
+          _connectionStatus = ConnectionStatus.disconnectedNoData;
+          _errorMessage = "No data received from one or more sensors.";
+        });
+        return; // Exit if no data
       }
 
-      // Removed fetching overall safety score
+      // Update latest values
+      final newTemp = temp.first.value;
+      final newTDS = tds.first.value;
+      final newPH = ph.first.value;
+      final newTurbidity = turbidity.first.value;
+      final newConductivity = conductivity.first.value;
+      final newSalinity = salinity.first.value;
+      final newECCompensated = ecCompensated.first.value;
 
-      setState(() {
-        _isLoading = false;
-        _errorMessage = null;
-        // Update the circular indicator based on the currently selected stat
-        _updateCircularIndicatorValues();
-      });
+      // Create a payload from the newly fetched data for comparison
+      final newPayload = {
+        "temp": newTemp,
+        "tds": newTDS,
+        "ph": newPH,
+        "turbidity": newTurbidity,
+        "conductivity": newConductivity,
+        "salinity": newSalinity,
+        "ec_compensated": newECCompensated,
+      };
+
+      // Compare with the last successful payload
+      if (_lastSuccessfulDataPayload != null &&
+          jsonEncode(_lastSuccessfulDataPayload) == jsonEncode(newPayload)) {
+        setState(() {
+          _connectionStatus = ConnectionStatus.disconnectedNoData;
+          _errorMessage = "No new data received from device.";
+        });
+      } else {
+        // Data is new or this is the first successful fetch
+        _latestTemp = newTemp;
+        _latestTDS = newTDS;
+        _latestPH = newPH;
+        _latestTurbidity = newTurbidity;
+        _latestConductivity = newConductivity;
+        _latestSalinity = newSalinity;
+        _latestECCompensated = newECCompensated;
+
+        _lastSuccessfulDataPayload = newPayload; // Store the new payload
+
+        setState(() {
+          _connectionStatus = ConnectionStatus.connected;
+          _errorMessage = null;
+          _updateCircularIndicatorValues(); // Update the UI with new values
+        });
+      }
     } catch (e) {
       print('ERROR fetching latest data: $e'); // Debugging print
       setState(() {
+        _connectionStatus = ConnectionStatus.disconnectedNetworkError;
         _errorMessage = 'Failed to load latest data: ${e.toString()}';
-        _isLoading = false;
       });
     }
   }
@@ -155,7 +200,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         break;
       case "TDS":
         currentProgress = _latestTDS / maxTDS;
-        currentLabel = "${_latestTDS.toStringAsFixed(1)} %";
+        currentLabel = "${_latestTDS.toStringAsFixed(1)} PPM";
         currentColor = Colors.green; // Example color
         break;
       case "pH":
@@ -170,17 +215,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         break;
       case "Conductivity":
         currentProgress = _latestConductivity / maxConductivity;
-        currentLabel = "${_latestConductivity.toStringAsFixed(1)} %";
+        currentLabel = "${_latestConductivity.toStringAsFixed(1)} mS/cm";
         currentColor = Colors.red; // Example color
         break;
       case "Salinity":
         currentProgress = _latestSalinity / maxSalinity;
-        currentLabel = "${_latestSalinity.toStringAsFixed(1)} %";
+        currentLabel = "${_latestSalinity.toStringAsFixed(1)} ppt";
         currentColor = Colors.teal; // Example color
         break;
       case "Electrical Conductivity (Condensed)":
         currentProgress = _latestECCompensated / maxECCompensated;
-        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} %";
+        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} mS/cm";
         currentColor = Colors.indigo; // Example color
         break;
     }
@@ -208,19 +253,37 @@ class _DetailsScreenState extends State<DetailsScreen> {
   String label = "Loading...";
   Color indicatorColor = Colors.grey;
 
-  // Removed _getOverallWaterQualityStatus function
+  // Helper to get connection status message
+  String _getConnectionStatusText() {
+    switch (_connectionStatus) {
+      case ConnectionStatus.connecting:
+        return "Device Status: Connecting...";
+      case ConnectionStatus.connected:
+        return "Device Status: Connected";
+      case ConnectionStatus.disconnectedNoData:
+        return "Device Status: Disconnected (No New Data)";
+      case ConnectionStatus.disconnectedNetworkError:
+        return "Device Status: Disconnected (Network Error)";
+    }
+  }
+
+  // Helper to get connection status color
+  Color _getConnectionStatusColor() {
+    switch (_connectionStatus) {
+      case ConnectionStatus.connecting:
+        return Colors.orange;
+      case ConnectionStatus.connected:
+        return Colors.green;
+      case ConnectionStatus.disconnectedNoData:
+        return Colors.red;
+      case ConnectionStatus.disconnectedNetworkError:
+        return Colors.red;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   leading: IconButton(
-      //     icon: Icon(Icons.arrow_back),
-      //     onPressed: () {
-      //       Navigator.pop(context);
-      //     },
-      //   ),
-      // ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
@@ -236,19 +299,18 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   fontFamily: 'Poppins',
                 ),
               ),
-              
               Text(
-                _isLoading ? "Device Status: Connecting..." : "Device Status: Connected",
+                _getConnectionStatusText(),
                 style: TextStyle(
                   fontSize: 18,
-                  color: _isLoading ? Colors.orange : Colors.green,
+                  color: _getConnectionStatusColor(),
                 ),
               ),
               const SizedBox(height: 20),
 
               // Circular Indicator
               Center(
-                child: _isLoading
+                child: _connectionStatus == ConnectionStatus.connecting
                     ? const CircularProgressIndicator() // Show loading for indicator
                     : CustomPaint(
                         size: const Size(250, 250),
@@ -257,25 +319,40 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           label: label,
                           color: indicatorColor,
                           brightness: Theme.of(context).brightness,
+                          // If disconnected, show a specific message in the indicator
+                          disconnectedMessage: _connectionStatus != ConnectionStatus.connected
+                              ? (_errorMessage ?? "Disconnected")
+                              : null,
                         ),
                       ),
               ),
               const SizedBox(height: 20),
 
-              // Simplified Water Quality Status text
+              // Water Quality Status text
               Text(
-                _isLoading
-                    ? "Water Safety Score: Fetching..."
-                    : _errorMessage != null
-                        ? "Water Safety Score: Error"
-                        : "Water Safety Score: Live Reading", // Simplified status
+                _connectionStatus == ConnectionStatus.connected
+                    ? "Water quality: Live Reading"
+                    : "Water quality: Not Live",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: _isLoading || _errorMessage != null ? Colors.orange : Colors.black,
+                  color: _connectionStatus == ConnectionStatus.connected
+                      ? Colors.black
+                      : Colors.red,
                   fontFamily: 'Poppins',
                 ),
               ),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Error: $_errorMessage',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
               const SizedBox(height: 20),
 
               // Cards
@@ -287,8 +364,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.thermostat,
                           label: "Temp",
-                          value: _isLoading ? "..." : "${_latestTemp.toStringAsFixed(1)}°C",
-                          // Removed safetyScore: _isLoading ? null : _latestTempSafetyScore,
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestTemp.toStringAsFixed(1)}°C"
+                              : "...",
                           isSelected: selectedStat == "Temp",
                           onTap: () => _onStatCardTap("Temp"),
                         ),
@@ -298,8 +376,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.water,
                           label: "TDS",
-                          value: _isLoading ? "..." : "${_latestTDS.toStringAsFixed(1)} PPM",
-                          // Removed safetyScore: _isLoading ? null : _latestTDSSafetyScore,
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestTDS.toStringAsFixed(1)} PPM"
+                              : "...",
                           isSelected: selectedStat == "TDS",
                           onTap: () => _onStatCardTap("TDS"),
                         ),
@@ -309,8 +388,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.opacity,
                           label: "pH",
-                          value: _isLoading ? "..." : "${_latestPH.toStringAsFixed(1)}",
-                          // Removed safetyScore: _isLoading ? null : _latestPHSafetyScore,
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestPH.toStringAsFixed(1)}"
+                              : "...",
                           isSelected: selectedStat == "pH",
                           onTap: () => _onStatCardTap("pH"),
                         ),
@@ -324,8 +404,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.water_damage,
                           label: "Turbidity",
-                          value: _isLoading ? "..." : "${_latestTurbidity.toStringAsFixed(1)}%",
-                          // Removed safetyScore: _isLoading ? null : _latestTurbiditySafetyScore,
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestTurbidity.toStringAsFixed(1)}%"
+                              : "...",
                           isSelected: selectedStat == "Turbidity",
                           onTap: () => _onStatCardTap("Turbidity"),
                         ),
@@ -335,7 +416,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.flash_on,
                           label: "Conductivity",
-                          value: _isLoading ? "..." : "${_latestConductivity.toStringAsFixed(1)} mS/cm",
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestConductivity.toStringAsFixed(1)} mS/cm"
+                              : "...",
                           isSelected: selectedStat == "Conductivity",
                           onTap: () => _onStatCardTap("Conductivity"),
                         ),
@@ -345,7 +428,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.bubble_chart,
                           label: "Salinity",
-                          value: _isLoading ? "..." : "${_latestSalinity.toStringAsFixed(1)} ppt",
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestSalinity.toStringAsFixed(1)} ppt"
+                              : "...",
                           isSelected: selectedStat == "Salinity",
                           onTap: () => _onStatCardTap("Salinity"),
                         ),
@@ -359,7 +444,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.battery_charging_full,
                           label: "Electrical Conductivity (Condensed)",
-                          value: _isLoading ? "..." : "${_latestECCompensated.toStringAsFixed(1)} mS/cm",
+                          value: _connectionStatus == ConnectionStatus.connected
+                              ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm"
+                              : "...",
                           isSelected: selectedStat == "Electrical Conductivity (Condensed)",
                           onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
                         ),
@@ -458,12 +545,15 @@ class CircularIndicator extends CustomPainter {
   final String label;
   final Color color;
   final Brightness brightness;
+  final String? disconnectedMessage; // New: Message to show when disconnected
 
   CircularIndicator({
+    super.repaint, // Add super.repaint
     required this.progress,
     required this.label,
     required this.color,
     required this.brightness,
+    this.disconnectedMessage,
   });
 
   @override
@@ -481,7 +571,7 @@ class CircularIndicator extends CustomPainter {
     final gradientPaint =
         Paint()
           ..shader = LinearGradient(
-            colors: [color, Colors.greenAccent], // Gradient from indicatorColor to greenAccent
+            colors: [color, Colors.greenAccent],
           ).createShader(Rect.fromCircle(center: center, radius: radius))
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round
@@ -489,23 +579,34 @@ class CircularIndicator extends CustomPainter {
 
     const startAngle = -pi / 2;
     final sweepAngle = 2 * pi * progress;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      false,
-      gradientPaint,
-    );
+
+    // Only draw the arc if connected, otherwise show a flat circle or nothing
+    if (disconnectedMessage == null) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        gradientPaint,
+      );
+    }
 
     final textColor =
         brightness == Brightness.light ? Colors.black : Colors.white;
+
+    // Display disconnected message if applicable, otherwise display label
+    final displayLabel = disconnectedMessage ?? label;
+    final displayFontSize = disconnectedMessage != null ? 18.0 : 26.0;
+    final displayFontWeight = disconnectedMessage != null ? FontWeight.normal : FontWeight.bold;
+    final displayColor = disconnectedMessage != null ? Colors.red : textColor;
+
     final textPainter = TextPainter(
       text: TextSpan(
-        text: label,
+        text: displayLabel,
         style: TextStyle(
-          fontSize: 26,
-          fontWeight: FontWeight.bold,
-          color: textColor,
+          fontSize: displayFontSize,
+          fontWeight: displayFontWeight,
+          color: displayColor,
           shadows: const [
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],
@@ -521,5 +622,11 @@ class CircularIndicator extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CircularIndicator oldDelegate) => true;
+  bool shouldRepaint(CircularIndicator oldDelegate) {
+    return oldDelegate.progress != progress ||
+           oldDelegate.label != label ||
+           oldDelegate.color != color ||
+           oldDelegate.brightness != brightness ||
+           oldDelegate.disconnectedMessage != disconnectedMessage;
+  }
 }
