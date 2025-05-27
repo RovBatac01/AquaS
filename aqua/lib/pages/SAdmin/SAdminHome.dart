@@ -59,7 +59,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                   width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: TextField(

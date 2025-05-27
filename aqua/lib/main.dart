@@ -1,9 +1,11 @@
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
 import 'package:aqua/pages/Details.dart';
+import 'package:aqua/pages/ForgotPassword/OTP.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
+import 'package:aqua/pages/Signup.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -67,7 +69,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: Sadmindashboard(),
+      home: OTPScreen(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -55,6 +56,7 @@ class _SignupState extends State<Signup> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: ASColor.Background(context),
       body: Stack(
@@ -62,295 +64,243 @@ class _SignupState extends State<Signup> {
           Center(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                padding: EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Form(
-                  key: _formKey, // Attach the form key
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Title
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: Container(
+                    padding: EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: (isDarkMode ? ASColor.BGthird : ASColor.BGFifth)
+                          .withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDarkMode ? Colors.white54 : Colors.black54,
+                        width: 0.8,
                       ),
-                      SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "Just some details to get you in!",
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Username field
-                      TextFormField(
-                        controller: username,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          labelText: 'Username',
-                          labelStyle: TextStyle(
-                            color: Colors.white54,
-                            fontFamily: 'Poppins',
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Username';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 12),
-
-                      // Email field
-                      TextFormField(
-                        controller: email,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          labelText: 'Email',
-                          labelStyle: TextStyle(
-                            color: Colors.white54,
-                            fontFamily: 'Poppins',
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Email';
-                          }
-                          bool isEmail = RegExp(
-                            r'^\S+@\S+\.\S+$',
-                          ).hasMatch(value);
-                          if (!isEmail) {
-                            return 'Please enter a valid Email';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 12),
-
-                      // Phone Number field
-                      TextFormField(
-                        controller: phoneNumber,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          labelText: 'Phone Number',
-                          labelStyle: TextStyle(
-                            color: Colors.white54,
-                            fontFamily: 'Poppins',
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Phone Number';
-                          }
-                          // Regular expression for phone number validation (11 digits)
-                          bool isPhone = RegExp(r'^\d{11}$').hasMatch(value);
-                          if (!isPhone) {
-                            return 'Please enter a valid Phone number (11 digits)';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 12),
-
-                      // Password field
-                      TextFormField(
-                        controller: password,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          labelText: 'Password',
-                          labelStyle: TextStyle(
-                            color: Colors.white54,
-                            fontFamily: 'Poppins',
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your Password';
-                          }
-
-                          bool hasMinLength = value.length >= 8;
-                          bool hasUpperCase = RegExp(r'[A-Z]').hasMatch(value);
-                          bool hasNumber = RegExp(r'[0-9]').hasMatch(value);
-                          bool hasSpecialChar = RegExp(r'[@_]').hasMatch(value);
-
-                          // Check if ALL conditions are met
-                          if (hasMinLength &&
-                              hasUpperCase &&
-                              hasNumber &&
-                              hasSpecialChar) {
-                            return null; // Password is valid
-                          }
-
-                          List<String> errors = [];
-
-                          if (value.length < 8) {
-                            errors.add('• At least 8 characters');
-                          }
-                          if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                            errors.add('• At least one uppercase letter');
-                          }
-                          if (!RegExp(r'[0-9]').hasMatch(value)) {
-                            errors.add('• At least one number');
-                          }
-                          if (!RegExp(r'[@_]').hasMatch(value)) {
-                            errors.add(
-                              '• At least one special character (@ or _)',
-                            );
-                          }
-
-                          // If there are errors, join them into a single string
-                          if (errors.isNotEmpty) {
-                            return errors.join('\n');
-                          }
-
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 12),
-
-                      // Confirm Password field
-                      TextFormField(
-                        controller: confirm_password,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white10,
-                          labelText: 'Confirm Password',
-                          labelStyle: TextStyle(
-                            color: Colors.white54,
-                            fontFamily: 'Poppins',
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm the passowrd';
-                          } else if (value != password.text) {
-                            return 'It is not match to the password';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      Row(
+                    ),
+                    child: Form(
+                      key: _formKey, // Attach the form key
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Checkbox(
-                            value: isChecked,
-                            onChanged: (bool? newValue) {
-                              setState(() {
-                                isChecked = newValue ?? false;
-                              });
-                            },
+                          // Title
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Sign Up',
+                              style: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Monsterat',
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                          Flexible(
-                            child: TextButton(
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible:
-                                      false, // Prevent closing by tapping outside
-                                  builder: (BuildContext context) {
-                                    bool localAccepted = false;
+                          SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              "Just some details to get you in!",
+                              style: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20),
 
-                                    return StatefulBuilder(
-                                      builder: (context, setState) {
-                                        return Dialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: SizedBox(
-                                            height:
-                                                MediaQuery.of(
-                                                  context,
-                                                ).size.height *
-                                                0.75,
-                                            child: Column(
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets.all(
-                                                    16.0,
-                                                  ),
-                                                  child: Text(
-                                                    'Terms and Conditions',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 18,
-                                                      fontFamily: 'Poppins',
-                                                    ),
-                                                  ),
-                                                ),
-                                                const Divider(height: 1),
-                                                Expanded(
-                                                  child: SingleChildScrollView(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 16.0,
+                          // Username field
+                          TextField(
+                            controller: username,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor:
+                                  isDarkMode ? Colors.white10 : Colors.black12,
+                              hintText: 'Username',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14.sp,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+
+                          // Email field
+                          TextField(
+                            controller: email,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor:
+                                  isDarkMode ? Colors.white10 : Colors.black12,
+                              hintText: 'Email',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14.sp,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+
+                          // Phone Number field
+                          TextField(
+                            controller: phoneNumber,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor:
+                                  isDarkMode ? Colors.white10 : Colors.black12,
+                              hintText: 'Phone Number',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14.sp,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+
+                          // Password field
+                          TextField(
+                            controller: password,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor:
+                                  isDarkMode ? Colors.white10 : Colors.black12,
+                              hintText: 'Password',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14.sp,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+
+                          // Confirm Password field
+                          TextField(
+                            controller: confirm_password,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor:
+                                  isDarkMode ? Colors.white10 : Colors.black12,
+                              hintText: 'Confirm Password',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14.sp,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                              fontSize: 14.sp,
+                            ),
+                          ),
+
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: isChecked,
+                                onChanged: (bool? newValue) {
+                                  setState(() {
+                                    isChecked = newValue ?? false;
+                                  });
+                                },
+                              ),
+                              Flexible(
+                                child: TextButton(
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible:
+                                          false, // Prevent closing by tapping outside
+                                      builder: (BuildContext context) {
+                                        bool localAccepted = false;
+
+                                        return StatefulBuilder(
+                                          builder: (context, setState) {
+                                            return Dialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: SizedBox(
+                                                height:
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).size.height *
+                                                    0.75,
+                                                child: Column(
+                                                  children: [
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            16.0,
+                                                          ),
+                                                      child: Text(
+                                                        'Terms and Conditions',
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 18,
+                                                          fontFamily: 'Poppins',
                                                         ),
-                                                    child: Text(
-                                                      '''1. Acceptance of Terms
+                                                      ),
+                                                    ),
+                                                    const Divider(height: 1),
+                                                    Expanded(
+                                                      child: SingleChildScrollView(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 16.0,
+                                                            ),
+                                                        child: Text(
+                                                          '''1. Acceptance of Terms
 
 By creating an account or using our services, you acknowledge that you have read, understood, and agree to be bound by these Terms.
 
@@ -390,144 +340,159 @@ We reserve the right to modify or revise these Terms at any time. Your continued
 
 If you have any questions about these Terms, please contact us at [Your Contact Information].
 ''',
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        fontFamily: 'Poppins',
-                                                        color: Colors.black87,
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            fontFamily:
+                                                                'Poppins',
+                                                            color:
+                                                                Colors.black87,
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 16.0,
-                                                      ),
-                                                  child: CheckboxListTile(
-                                                    contentPadding:
-                                                        EdgeInsets.zero,
-                                                    controlAffinity:
-                                                        ListTileControlAffinity
-                                                            .leading,
-                                                    title: Text(
-                                                      "I have read and agree to the terms and conditions",
-                                                      style: TextStyle(
-                                                        fontSize: 13,
-                                                        fontFamily: 'Poppins',
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 16.0,
+                                                          ),
+                                                      child: CheckboxListTile(
+                                                        contentPadding:
+                                                            EdgeInsets.zero,
+                                                        controlAffinity:
+                                                            ListTileControlAffinity
+                                                                .leading,
+                                                        title: Text(
+                                                          "I have read and agree to the terms and conditions",
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                            fontFamily:
+                                                                'Poppins',
+                                                          ),
+                                                        ),
+                                                        value: localAccepted,
+                                                        onChanged: (
+                                                          bool? value,
+                                                        ) {
+                                                          setState(() {
+                                                            localAccepted =
+                                                                value ?? false;
+                                                          });
+                                                        },
                                                       ),
                                                     ),
-                                                    value: localAccepted,
-                                                    onChanged: (bool? value) {
-                                                      setState(() {
-                                                        localAccepted =
-                                                            value ?? false;
-                                                      });
-                                                    },
-                                                  ),
-                                                ),
-                                                TextButton(
-                                                  onPressed:
-                                                      localAccepted
-                                                          ? () {
-                                                            Navigator.of(
-                                                              context,
-                                                            ).pop();
-                                                          }
-                                                          : null, // Disable if not accepted
-                                                  child: Text(
-                                                    "Close",
-                                                    style: TextStyle(
-                                                      color:
+                                                    TextButton(
+                                                      onPressed:
                                                           localAccepted
-                                                              ? Colors.blue
-                                                              : Colors.grey,
-                                                      fontSize: 14,
-                                                      fontFamily: 'Poppins',
+                                                              ? () {
+                                                                Navigator.of(
+                                                                  context,
+                                                                ).pop();
+                                                              }
+                                                              : null, // Disable if not accepted
+                                                      child: Text(
+                                                        "Close",
+                                                        style: TextStyle(
+                                                          color:
+                                                              localAccepted
+                                                                  ? Colors.blue
+                                                                  : Colors.grey,
+                                                          fontSize: 14,
+                                                          fontFamily: 'Poppins',
+                                                        ),
+                                                      ),
                                                     ),
-                                                  ),
+                                                    const SizedBox(height: 8),
+                                                  ],
                                                 ),
-                                                const SizedBox(height: 8),
-                                              ],
-                                            ),
-                                          ),
+                                              ),
+                                            );
+                                          },
                                         );
                                       },
                                     );
                                   },
-                                );
-                              },
 
-                              style: ButtonStyle(
-                                overlayColor: MaterialStateProperty.all(
-                                  Colors.transparent,
-                                ), // No ripple
-                                splashFactory:
-                                    NoSplash
-                                        .splashFactory, // Optional: remove all splash behavior
-                                padding: MaterialStateProperty.all(
-                                  EdgeInsets.zero,
-                                ), // Optional: remove default padding
+                                  style: ButtonStyle(
+                                    overlayColor: MaterialStateProperty.all(
+                                      Colors.transparent,
+                                    ), // No ripple
+                                    splashFactory:
+                                        NoSplash
+                                            .splashFactory, // Optional: remove all splash behavior
+                                    padding: MaterialStateProperty.all(
+                                      EdgeInsets.zero,
+                                    ), // Optional: remove default padding
+                                  ),
+                                  child: Text(
+                                    "I agree to the terms and conditions",
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      color: ASColor.getTextColor(context),
+                                      fontSize: 12,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              child: Text(
-                                "I agree to the terms and conditions",
+                            ],
+                          ),
+                          // Sign Up button
+                          Center(
+                            child: ElevatedButton(
+                              onPressed: isChecked ? registerUser : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onPrimary,
+                              ),
+                              child: const Text(
+                                'Sign Up',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
-                                  color: ASColor.getTextColor(context),
-                                  fontSize: 12,
-                                  decoration: TextDecoration.underline,
+                                  fontSize: 16,
+                                  // color is handled by foregroundColor above
                                 ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      // Sign Up button
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: isChecked ? registerUser : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                          ),
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 16,
-                              // color is handled by foregroundColor above
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
+                          SizedBox(height: 20),
 
-                      // Login link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Already have an account? ",
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LoginScreen(),
+                          // Login link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Already have an account? ",
+                                style: TextStyle(
+                                  color: ASColor.getTextColor(context),
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14.sp,
+                              ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LoginScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  "Login",
+                                  style: TextStyle(
+                                    color: ASColor.getTextColor(context),
+                                    fontFamily: 'Poppins',
+                                    fontSize: 14.sp
                                 ),
-                              );
-                            },
-                            child: Text(
-                              "Login",
-                              style: TextStyle(color: Colors.purple),
-                            ),
+                              ),
+                              )
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

@@ -376,7 +376,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               "Login",
                               style: TextStyle(
-                                color: Colors.white,
+                                fontFamily: 'Poppins',
+                                color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
                                 fontSize: 16,
                               ),
                             ),
@@ -388,7 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Icon(
                               FontAwesomeIcons.google,
-                              color: isDarkMode ? Colors.white : Colors.black,
+                              color: ASColor.getTextColor(context),
                             ),
                             SizedBox(width: 16),
                           ],
@@ -400,10 +401,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               "Don’t have an account ?",
                               style: TextStyle(
-                                color:
-                                    isDarkMode
-                                        ? Colors.white70
-                                        : Colors.black87,
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                color: isDarkMode ? ASColor.BGFourth : ASColor.txt2Color,
                               ),
                             ),
                             TextButton(
@@ -417,7 +417,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               child: Text(
                                 "Signup",
-                                style: TextStyle(color: Colors.purple),
+                                style: TextStyle(color: ASColor.getTextColor(context)
+                                    , fontSize: 14, fontFamily: 'Poppins', ),
                               ),
                             ),
                           ],
