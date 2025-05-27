@@ -1,6 +1,6 @@
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
-import 'package:aqua/pages/Details.dart';
+import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/ForgotPassword/OTP.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/pages/Login.dart';
@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:aqua/components/colors.dart';
 
 void main() {
   runApp(
@@ -36,10 +37,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: ASColor.BGFourth,
         primaryColor: Colors.purple,
         colorScheme: ColorScheme.light(
-          background: Colors.white,
+          background: ASColor.BGFourth,
           primary: Colors.purple,
           secondary: Colors.purpleAccent,
           onBackground: Colors.black,
