@@ -82,21 +82,21 @@ class _StatisticsState extends State<Statistics> {
   Color getStatColor() {
     switch (selectedStat) {
       case "Temp":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       case "TDS":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       case "pH Level":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       case "Turbidity":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       case "Conductivity":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       case "Salinity":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       case "EC":
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
       default:
-        return ASColor.getCardColor(context);
+        return ASColor.getTextColor(context);
     }
   }
 
