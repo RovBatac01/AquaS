@@ -317,13 +317,13 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Home Water Tank',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                  fontFamily: 'Poppins',
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Montserrat',
                 ),
               ),
               Text(

@@ -1,4 +1,5 @@
 import 'package:aqua/NavBar/Settings.dart';
+import 'package:aqua/pages/CalibrationRequest.dart';
 import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
@@ -43,16 +44,18 @@ class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    Center(child: DetailsScreen()),
-    Center(child: Statistics()),
-    Center(child: NotificationPage()),
-    Center(child: SettingsPage()),
+    Center(child: DetailsScreen(key: ValueKey('Home'))),
+  Center(child: Statistics(key: ValueKey('Stats'))),
+  Center(child: NotificationPage(key: ValueKey('Notif'))),
+  Center(child: CalibrationRequest(key: ValueKey('Request'))),
+  Center(child: SettingsPage(key: ValueKey('Settings'))),
   ];
 
   final List<String> _titles = [
     'Home',
     'Statistics',
     'Notification',
+    'Request',
     'Settings',
   ];
 
@@ -230,7 +233,18 @@ class _MainScreenState extends State<Userdashboard> {
                   ),
                 ),
                 // Remaining body content
-                Expanded(child: _screens[_currentIndex]),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    transitionBuilder: (
+                      Widget child,
+                      Animation<double> animation,
+                    ) {
+                      return ScaleTransition(scale: animation, child: child);
+                    },
+                    child: _screens[_currentIndex],
+                  ),
+                ),
               ],
             ),
           ],
@@ -251,7 +265,8 @@ class _MainScreenState extends State<Userdashboard> {
                     _buildNavItem(Icons.home, 'Home', 0),
                     _buildNavItem(Icons.history, 'History', 1),
                     _buildNavItem(Icons.notifications, 'Notifications', 2),
-                    _buildNavItem(Icons.settings, 'Settings', 3),
+                    _buildNavItem(Icons.request_page_outlined, 'Request', 3),
+                    _buildNavItem(Icons.settings, 'Settings', 4),
                   ],
                 ),
               ),

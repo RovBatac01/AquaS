@@ -366,9 +366,9 @@ class _UserListPageState extends State<UserListPage> {
                               children: [
                                 // --- Call edit function on press ---
                                 IconButton(
-                                  icon: const Icon(
+                                  icon:  Icon(
                                     Icons.edit,
-                                    color: Colors.purple,
+                                    color: ASColor.getTextColor(context),
                                   ),
                                   onPressed: () {
                                     _showEditDialog(user); // Open edit dialog
@@ -376,9 +376,9 @@ class _UserListPageState extends State<UserListPage> {
                                 ),
                                 // --- Call delete function on press ---
                                 IconButton(
-                                  icon: const Icon(
+                                  icon:  Icon(
                                     Icons.delete,
-                                    color: Colors.indigo,
+                                    color: ASColor.getTextColor(context),
                                   ),
                                   onPressed: () {
                                     _deleteUser(

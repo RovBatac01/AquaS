@@ -1,6 +1,7 @@
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/NavBar/Settings.dart';
+import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/Statistics.dart';
@@ -46,6 +47,7 @@ class _MainScreenState extends State<Sadmindashboard> {
     Center(child: Sadminaccountmanagement()),
     Center(child: Statistics()),
     Center(child: SAdminNotification()),
+    Center(child: CalendarPage()),
     Center(child: SettingsPage()),
   ];
 
@@ -54,6 +56,7 @@ class _MainScreenState extends State<Sadmindashboard> {
     'Account Management',
     'Statistics',
     'Notification',
+    'Calendar',
     'Settings',
   ];
 
@@ -128,26 +131,39 @@ class _MainScreenState extends State<Sadmindashboard> {
             Column(
               children: [
                 Container(
-                  padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                  padding: EdgeInsets.only(
+                    top: 25,
+                    left: 15,
+                    right: 15,
+                  ),
                   height: 70,
                   decoration: BoxDecoration(
                     color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         _titles[_currentIndex],
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 22,
-                          color: ASColor.getTextColor(
-                            context,
-                          ), // theme-adaptive text color
+                          color: ASColor.getTextColor(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (_currentIndex == 0) ...[],
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings,
+                          color: ASColor.getTextColor(context),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _currentIndex = _titles.indexOf('Settings');
+                          });
+                        },
+                        tooltip: 'Settings',
+                      ),
                     ],
                   ),
                 ),
@@ -160,11 +176,17 @@ class _MainScreenState extends State<Sadmindashboard> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+            border: Border(
+              top: BorderSide(
+                color: ASColor.getTextColor(context), // Customize as needed
+                width: 1.0,
+              ),
+            ),
           ),
           child: SafeArea(
             top: false,
             child: SizedBox(
-              height: 80, // <-- Total height of nav bar
+              height: 80, // Total height of nav bar
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: Row(
@@ -174,7 +196,8 @@ class _MainScreenState extends State<Sadmindashboard> {
                     _buildNavItem(Icons.person, 'Account', 1),
                     _buildNavItem(Icons.history, 'History', 2),
                     _buildNavItem(Icons.notifications, 'Notifications', 3),
-                    _buildNavItem(Icons.settings, 'Settings', 4),
+                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 4),
+                    // Removed settings from bottom navigation bar
                   ],
                 ),
               ),

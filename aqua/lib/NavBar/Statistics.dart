@@ -208,53 +208,89 @@ class _StatisticsState extends State<Statistics> {
               const SizedBox(height: 20),
 
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    width: 100,
+                  // Button styled to match dropdown height
+                  SizedBox(
                     height: 30,
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: ASColor.getTextColor(context),
-                        width: 1.5,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        // Your logic
+                      },
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size(100, 36), // Match height
+                        side: BorderSide(color: Colors.black87),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Export',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Center(
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedPeriod,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedPeriod = newValue!;
-                              _fetchData(); // Trigger data fetch with new period
-                            });
-                          },
-                          items:
-                              <String>[
-                                "Daily", // Maps to 24h
-                                "Weekly", // Maps to 7d
-                                "Monthly", // Maps to 30d
-                              ].map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Center(
-                                    child: Text(
-                                      value,
-                                      style: const TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
+                  ),
+
+                  // Dropdown styled to match button height
+                  SizedBox(
+                    height: 30,
+                    width: 100,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: ASColor.getTextColor(context),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            value: selectedPeriod,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedPeriod = newValue!;
+                                _fetchData();
+                              });
+                            },
+                            items:
+                                <String>[
+                                  "Daily",
+                                  "Weekly",
+                                  "Monthly",
+                                ].map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Center(
+                                      child: Text(
+                                        value,
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'Poppins',
-                            color: ASColor.getTextColor(context),
+                                  );
+                                }).toList(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontFamily: 'Poppins',
+                              color: ASColor.getTextColor(context),
+                            ),
+                            iconSize: 18,
                           ),
                         ),
                       ),
@@ -262,7 +298,7 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               // Line Graph
               SizedBox(
