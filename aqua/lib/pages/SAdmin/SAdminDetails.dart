@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:ui'; // Required for ImageFilter
-import 'package:aqua/components/colors.dart';
+import 'dart:async'; // Required for Timer
+
+import 'package:aqua/water_quality_model.dart'; // Corrected import path
+import 'package:aqua/water_quality_service.dart'; // Corrected import path
+import 'package:aqua/components/colors.dart'; // Assuming you have this file for ASColor
 
 void main() {
   runApp(const MyApp());
@@ -15,13 +19,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Water Quality',
       debugShowCheckedModeBanner: false,
-      // theme: ThemeData.light().copyWith(
-      //   primaryColor: Colors.blue,
-      //   scaffoldBackgroundColor: Colors.white,
-      // ),
-      // themeMode:
-      //     ThemeMode
-      //         .light, // Uses system theme. Use ThemeMode.dark to force dark mode.
       home: const SAdminDetails(),
     );
   }
@@ -31,119 +28,218 @@ class SAdminDetails extends StatefulWidget {
   const SAdminDetails({super.key});
 
   @override
-  State<SAdminDetails> createState() => _DetailsScreenState();
+  State<SAdminDetails> createState() => _SAdminDetailsState();
 }
 
-class _DetailsScreenState extends State<SAdminDetails> {
-  String selectedStat = "Temp";
-  double progress = 28 / 100;
-  String label = "28°C";
-  Color indicatorColor = Colors.green; // Default to green for good quality
-  String quality = "good"; // Track quality: 'good', 'bad', 'warning'
+class _SAdminDetailsState extends State<SAdminDetails> {
+  String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
 
-  void updateIndicator(String stat) {
+  // State variables to hold the latest fetched RAW data for each parameter
+  double _latestTemp = 0.0;
+  double _latestTDS = 0.0;
+  double _latestPH = 0.0;
+  double _latestTurbidity = 0.0;
+  double _latestConductivity = 0.0; // Corresponds to 'ec_value_mS'
+  double _latestSalinity = 0.0;
+  double _latestECCompensated = 0.0; // Corresponds to 'ec_compensated_mS'
+
+  // Connection status variables
+  DateTime? _lastDataReceivedTimestamp; // Tracks the time of the last successful data reception
+  bool _isConnected = false; // True if data is actively flowing, false otherwise
+
+  bool _isLoading = true;
+  String? _errorMessage;
+  Timer? _timer; // Timer for auto-refresh and connection check
+
+  final WaterQualityService _waterQualityService = WaterQualityService();
+
+  // Current values for the circular indicator (derived from _latestX values)
+  double progress = 0.0;
+  String label = "Loading...";
+  Color indicatorColor = Colors.grey; // Initial color for indicator
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLatestDataForAllStats(); // Initial fetch
+    // Set up a timer to fetch data every 1 second and check connection status
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      _fetchLatestDataForAllStats();
+      _checkConnectionStatus(); // Check connection status on each timer tick
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancel the timer to prevent memory leaks
+    super.dispose();
+  }
+
+  // Fetches the latest data (raw value only) for all water quality parameters
+  Future<void> _fetchLatestDataForAllStats() async {
+    if (_isLoading) {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
+
+    bool anyDataReceivedInThisCycle = false; // Flag to track if any data was successfully fetched
+
+    try {
+      // Fetch data for each statistic and update the corresponding state variable
+      // We fetch 'Daily' (24h) and take the first element, assuming it's the most recent.
+      final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
+      if (temp.isNotEmpty) {
+        _latestTemp = temp.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
+      if (tds.isNotEmpty) {
+        _latestTDS = tds.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
+      if (ph.isNotEmpty) {
+        _latestPH = ph.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
+      if (turbidity.isNotEmpty) {
+        _latestTurbidity = turbidity.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
+      if (conductivity.isNotEmpty) {
+        _latestConductivity = conductivity.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
+      if (salinity.isNotEmpty) {
+        _latestSalinity = salinity.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
+      if (ecCompensated.isNotEmpty) {
+        _latestECCompensated = ecCompensated.first.value;
+        anyDataReceivedInThisCycle = true;
+      }
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = null;
+        if (anyDataReceivedInThisCycle) {
+          _lastDataReceivedTimestamp = DateTime.now(); // Update timestamp only if data came
+        }
+        _updateCircularIndicatorValues();
+      });
+    } catch (e) {
+      print('ERROR fetching latest data: $e'); // Debugging print
+      setState(() {
+        _errorMessage = 'Failed to load latest data: ${e.toString()}';
+        _isLoading = false;
+        _isConnected = false; // Explicitly set to false on error
+      });
+    }
+  }
+
+  // Helper to check and update the connection status
+  void _checkConnectionStatus() {
+    // Define a reasonable timeout period, e.g., 5 seconds
+    const Duration timeout = Duration(seconds: 5);
+
+    bool currentlyConnected;
+    if (_lastDataReceivedTimestamp == null) {
+      currentlyConnected = false; // Never received data yet
+    } else {
+      // Check if the last data received was within the timeout period
+      currentlyConnected = DateTime.now().difference(_lastDataReceivedTimestamp!) < timeout;
+    }
+
+    // Only call setState if the connection status has actually changed
+    if (_isConnected != currentlyConnected) {
+      setState(() {
+        _isConnected = currentlyConnected;
+      });
+    }
+  }
+
+  // Helper to update the circular indicator's progress, label, and color
+  // based on the current `selectedStat` and the fetched `_latestX` values.
+  void _updateCircularIndicatorValues() {
+    double currentProgress = 0.0;
+    String currentLabel = "N/A";
+    Color currentColor = Colors.blue; // Default color for indicator
+
+    // Define max values for progress calculation (adjust as needed for your sensors)
+    // These values determine what 100% on the circular indicator represents.
+    const double maxTemp = 100.0; // Example: Max expected temperature in Celsius
+    const double maxTDS = 100.0; // Example: Max expected TDS in PPM
+    const double maxPH = 14.0; // Max pH scale
+    const double maxTurbidity = 100.0; // Max turbidity percentage (0-100%)
+    const double maxConductivity = 100.0; // Example: Max expected conductivity in mS/cm
+    const double maxSalinity = 100.0; // Example: Max expected salinity in ppt
+    const double maxECCompensated = 100.0; // Example: Max expected compensated EC in mS/cm
+
+
+    switch (selectedStat) {
+      case "Temp":
+        currentProgress = _latestTemp / maxTemp;
+        currentLabel = "${_latestTemp.toStringAsFixed(1)}°C";
+        currentColor = Colors.blue;
+        break;
+      case "TDS":
+        currentProgress = _latestTDS / maxTDS;
+        currentLabel = "${_latestTDS.toStringAsFixed(1)} PPM";
+        currentColor = Colors.green;
+        break;
+      case "pH":
+        currentProgress = _latestPH / maxPH;
+        currentLabel = "pH ${_latestPH.toStringAsFixed(1)}";
+        currentColor = Colors.purple;
+        break;
+      case "Turbidity":
+        currentProgress = _latestTurbidity / maxTurbidity;
+        currentLabel = "${_latestTurbidity.toStringAsFixed(1)}%";
+        currentColor = Colors.orange;
+        break;
+      case "Conductivity":
+        currentProgress = _latestConductivity / maxConductivity;
+        currentLabel = "${_latestConductivity.toStringAsFixed(1)} mS/cm";
+        currentColor = Colors.red;
+        break;
+      case "Salinity":
+        currentProgress = _latestSalinity / maxSalinity;
+        currentLabel = "${_latestSalinity.toStringAsFixed(1)} ppt";
+        currentColor = Colors.teal;
+        break;
+      case "Electrical Conductivity (Condensed)":
+        currentProgress = _latestECCompensated / maxECCompensated;
+        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} mS/cm";
+        currentColor = Colors.indigo;
+        break;
+    }
+
+    // Ensure progress is between 0 and 1
+    currentProgress = currentProgress.clamp(0.0, 1.0);
+
+    setState(() {
+      progress = currentProgress;
+      label = currentLabel;
+      indicatorColor = currentColor;
+    });
+  }
+
+  // Update the circular indicator when a stat card is tapped
+  void _onStatCardTap(String stat) {
     setState(() {
       selectedStat = stat;
-      switch (stat) {
-        case "Temp":
-          progress = 28 / 100;
-          label = "28°C";
-          if (28 >= 10 && 28 <= 35) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (28 < 10 || 28 > 40) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-        case "TDS":
-          progress = 35 / 100;
-          label = "35 PPM";
-          if (35 >= 0 && 35 <= 300) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (35 > 500) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-        case "pH":
-          progress = 7.2 / 14;
-          label = "pH 7.2";
-          if (7.2 >= 6.5 && 7.2 <= 8.5) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (7.2 < 5.5 || 7.2 > 9.5) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-        case "Turbidity":
-          progress = 0.5 / 10;
-          label = "0.5 NTU";
-          if (0.5 <= 1) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (0.5 > 5) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-        case "Conductivity":
-          progress = 35 / 100;
-          label = "35 PPM";
-          if (35 >= 0 && 35 <= 100) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (35 > 200) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-        case "Salinity":
-          progress = 0.7;
-          label = "0.7 ppt";
-          if (0.7 < 1) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (0.7 > 2) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-        case "Electrical Conductivity (Condensed)":
-          progress = 400 / 1000;
-          label = "400 mV";
-          if (400 < 500) {
-            indicatorColor = Colors.green;
-            quality = "good";
-          } else if (400 > 800) {
-            indicatorColor = Colors.red;
-            quality = "bad";
-          } else {
-            indicatorColor = Colors.orange;
-            quality = "warning";
-          }
-          break;
-      }
+      _updateCircularIndicatorValues(); // Recalculate indicator values for the new selection
     });
   }
 
@@ -151,8 +247,18 @@ class _DetailsScreenState extends State<SAdminDetails> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text(
+          'DETAILS',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Poppins',
+            letterSpacing: 1,
+          ),
+        ),
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 15),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -164,47 +270,64 @@ class _DetailsScreenState extends State<SAdminDetails> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Home Water Tank',
                 style: TextStyle(
-                  color: ASColor.getTextColor(context),
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  fontFamily: 'Montserrat',
+                  color: Colors.black,
+                  fontFamily: 'Poppins',
                 ),
               ),
-
               Text(
-                "Device Status: Connected",
+                _isLoading
+                    ? "Device Status: Connecting..."
+                    : _errorMessage != null
+                        ? "Device Status: Error / Disconnected"
+                        : _isConnected
+                            ? "Device Status: Connected"
+                            : "Device Status: Disconnected",
                 style: TextStyle(
                   fontSize: 18,
-                  color: Colors.green,
-                  fontFamily: 'Poppins',
+                  color: _isLoading
+                      ? Colors.orange
+                      : _errorMessage != null
+                          ? Colors.red
+                          : _isConnected
+                              ? Colors.green
+                              : Colors.red,
                 ),
               ),
               const SizedBox(height: 20),
 
               // Circular Indicator
               Center(
-                child: CustomPaint(
-                  size: const Size(250, 250),
-                  painter: CircularIndicator(
-                    progress: progress,
-                    label: label,
-                    color: indicatorColor,
-                    brightness: Theme.of(context).brightness,
-                  ),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator() // Show loading for indicator
+                    : CustomPaint(
+                        size: const Size(250, 250),
+                        painter: CircularIndicator(
+                          progress: progress,
+                          label: label,
+                          color: indicatorColor,
+                          brightness: Theme.of(context).brightness,
+                        ),
+                      ),
               ),
               const SizedBox(height: 20),
 
+              // Simplified Water Quality Status text
               Text(
-                "Water quality: Great",
+                _isLoading
+                    ? "Water quality: Fetching..."
+                    : _errorMessage != null
+                        ? "Water quality: Error"
+                        : "Water quality: Live Reading", // Simplified status
                 style: TextStyle(
-                  color: ASColor.getTextColor(context),
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  fontFamily: 'Montserrat',
+                  color: _isLoading || _errorMessage != null ? Colors.orange : Colors.black,
+                  fontFamily: 'Poppins',
                 ),
               ),
               const SizedBox(height: 20),
@@ -218,9 +341,9 @@ class _DetailsScreenState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.thermostat,
                           label: "Temp",
-                          value: "28°C",
+                          value: _isLoading ? "..." : "${_latestTemp.toStringAsFixed(1)}°C",
                           isSelected: selectedStat == "Temp",
-                          onTap: () => updateIndicator("Temp"),
+                          onTap: () => _onStatCardTap("Temp"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -228,9 +351,9 @@ class _DetailsScreenState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.water,
                           label: "TDS",
-                          value: "35 PPM",
+                          value: _isLoading ? "..." : "${_latestTDS.toStringAsFixed(1)} PPM",
                           isSelected: selectedStat == "TDS",
-                          onTap: () => updateIndicator("TDS"),
+                          onTap: () => _onStatCardTap("TDS"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -238,9 +361,9 @@ class _DetailsScreenState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.opacity,
                           label: "pH",
-                          value: "7.2",
+                          value: _isLoading ? "..." : "${_latestPH.toStringAsFixed(1)}",
                           isSelected: selectedStat == "pH",
-                          onTap: () => updateIndicator("pH"),
+                          onTap: () => _onStatCardTap("pH"),
                         ),
                       ),
                     ],
@@ -252,9 +375,9 @@ class _DetailsScreenState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.water_damage,
                           label: "Turbidity",
-                          value: "0.5 NTU",
+                          value: _isLoading ? "..." : "${_latestTurbidity.toStringAsFixed(1)}%",
                           isSelected: selectedStat == "Turbidity",
-                          onTap: () => updateIndicator("Turbidity"),
+                          onTap: () => _onStatCardTap("Turbidity"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -262,9 +385,9 @@ class _DetailsScreenState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.flash_on,
                           label: "Conductivity",
-                          value: "35 PPM",
+                          value: _isLoading ? "..." : "${_latestConductivity.toStringAsFixed(1)} mS/cm",
                           isSelected: selectedStat == "Conductivity",
-                          onTap: () => updateIndicator("Conductivity"),
+                          onTap: () => _onStatCardTap("Conductivity"),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -272,32 +395,27 @@ class _DetailsScreenState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.bubble_chart,
                           label: "Salinity",
-                          value: "0.7 ppt",
+                          value: _isLoading ? "..." : "${_latestSalinity.toStringAsFixed(1)} ppt",
                           isSelected: selectedStat == "Salinity",
-                          onTap: () => updateIndicator("Salinity"),
+                          onTap: () => _onStatCardTap("Salinity"),
                         ),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const SizedBox(width: 12),
                       Expanded(
                         child: StatCard(
                           icon: Icons.battery_charging_full,
                           label: "Electrical Conductivity (Condensed)",
-                          value: "400 mV",
-                          isSelected:
-                              selectedStat ==
-                              "Electrical Conductivity (Condensed)",
-                          onTap:
-                              () => updateIndicator(
-                                "Electrical Conductivity (Condensed)",
-                              ),
+                          value: _isLoading ? "..." : "${_latestECCompensated.toStringAsFixed(1)} mS/cm",
+                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
                         ),
                       ),
+                      const Expanded(child: SizedBox.shrink()),
+                      const Expanded(child: SizedBox.shrink()),
                     ],
                   ),
                 ],
@@ -328,19 +446,16 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the current theme brightness (light or dark)
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    // Set the background color depending on the theme
     Color bgColor =
         isSelected
             ? Colors.greenAccent.withOpacity(0.8)
             : isDarkMode
-            ? Colors.grey[800]! // Dark mode background color
-            : Colors.white; // Light mode background color
+                ? Colors.grey[800]!
+                : Colors.white;
 
-    // Set text color based on the theme
-    Color textColor = isDarkMode ? ASColor.txt1Color : ASColor.txt2Color;
+    Color textColor = isDarkMode ? Colors.white : Colors.black;
 
     return GestureDetector(
       onTap: onTap,
@@ -350,7 +465,7 @@ class StatCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
           ],
         ),
@@ -361,14 +476,14 @@ class StatCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 30,
-                color: textColor, // Apply the textColor here
+                color: textColor,
               ),
               const SizedBox(height: 10),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 14,
-                  color: textColor, // Apply the textColor here
+                  color: textColor,
                   fontFamily: 'Poppins',
                 ),
               ),
@@ -378,7 +493,7 @@ class StatCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: textColor, // Apply the textColor here
+                  color: textColor,
                   fontFamily: 'Poppins',
                 ),
               ),
@@ -444,7 +559,7 @@ class CircularIndicator extends CustomPainter {
           fontSize: 26,
           fontWeight: FontWeight.bold,
           color: textColor,
-          shadows: [
+          shadows: const [
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],
         ),
