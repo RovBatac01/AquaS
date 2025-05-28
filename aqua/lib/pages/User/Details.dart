@@ -40,7 +40,8 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
-  String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
+  String selectedStat =
+      "Temp"; // Currently selected statistic for the circular indicator
 
   // State variables to hold the latest fetched RAW data for each parameter
   double _latestTemp = 0.0;
@@ -103,17 +104,43 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
     try {
       // Fetch data for each statistic
-      final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
-      final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
-      final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
-      final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
-      final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
-      final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
-      final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
+      final temp = await _waterQualityService.fetchHistoricalData(
+        "Temp",
+        "Daily",
+      );
+      final tds = await _waterQualityService.fetchHistoricalData(
+        "TDS",
+        "Daily",
+      );
+      final ph = await _waterQualityService.fetchHistoricalData(
+        "pH Level",
+        "Daily",
+      );
+      final turbidity = await _waterQualityService.fetchHistoricalData(
+        "Turbidity",
+        "Daily",
+      );
+      final conductivity = await _waterQualityService.fetchHistoricalData(
+        "Conductivity",
+        "Daily",
+      );
+      final salinity = await _waterQualityService.fetchHistoricalData(
+        "Salinity",
+        "Daily",
+      );
+      final ecCompensated = await _waterQualityService.fetchHistoricalData(
+        "EC",
+        "Daily",
+      );
 
       // Check if any data was actually received
-      if (temp.isEmpty || tds.isEmpty || ph.isEmpty || turbidity.isEmpty ||
-          conductivity.isEmpty || salinity.isEmpty || ecCompensated.isEmpty) {
+      if (temp.isEmpty ||
+          tds.isEmpty ||
+          ph.isEmpty ||
+          turbidity.isEmpty ||
+          conductivity.isEmpty ||
+          salinity.isEmpty ||
+          ecCompensated.isEmpty) {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
           _errorMessage = "No data received from one or more sensors.";
@@ -189,8 +216,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
     const double maxTurbidity = 100.0; // Max turbidity percentage (0-100%)
     const double maxConductivity = 100.0; // Max expected conductivity in mS/cm
     const double maxSalinity = 100.0; // Max expected salinity in ppt
-    const double maxECCompensated = 100.0; // Max expected compensated EC in mS/cm
-
+    const double maxECCompensated =
+        100.0; // Max expected compensated EC in mS/cm
 
     switch (selectedStat) {
       case "Temp":
@@ -310,21 +337,23 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
               // Circular Indicator
               Center(
-                child: _connectionStatus == ConnectionStatus.connecting
-                    ? const CircularProgressIndicator() // Show loading for indicator
-                    : CustomPaint(
-                        size: const Size(250, 250),
-                        painter: CircularIndicator(
-                          progress: progress,
-                          label: label,
-                          color: indicatorColor,
-                          brightness: Theme.of(context).brightness,
-                          // If disconnected, show a specific message in the indicator
-                          disconnectedMessage: _connectionStatus != ConnectionStatus.connected
-                              ? (_errorMessage ?? "Disconnected")
-                              : null,
+                child:
+                    _connectionStatus == ConnectionStatus.connecting
+                        ? const CircularProgressIndicator() // Show loading for indicator
+                        : CustomPaint(
+                          size: const Size(250, 250),
+                          painter: CircularIndicator(
+                            progress: progress,
+                            label: label,
+                            color: indicatorColor,
+                            brightness: Theme.of(context).brightness,
+                            // If disconnected, show a specific message in the indicator
+                            disconnectedMessage:
+                                _connectionStatus != ConnectionStatus.connected
+                                    ? (_errorMessage ?? "Disconnected")
+                                    : null,
+                          ),
                         ),
-                      ),
               ),
               const SizedBox(height: 20),
 
@@ -336,9 +365,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: _connectionStatus == ConnectionStatus.connected
-                      ? Colors.black
-                      : Colors.red,
+                  color:
+                      _connectionStatus == ConnectionStatus.connected
+                          ? Colors.black
+                          : Colors.red,
                   fontFamily: 'Poppins',
                 ),
               ),
@@ -347,10 +377,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
                     'Error: $_errorMessage',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.red,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.red),
                   ),
                 ),
               const SizedBox(height: 20),
@@ -364,9 +391,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.thermostat,
                           label: "Temp",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestTemp.toStringAsFixed(1)}°C"
-                              : "...",
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestTemp.toStringAsFixed(1)}°C"
+                                  : "...",
                           isSelected: selectedStat == "Temp",
                           onTap: () => _onStatCardTap("Temp"),
                         ),
@@ -376,9 +404,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.water,
                           label: "TDS",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestTDS.toStringAsFixed(1)} PPM"
-                              : "...",
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestTDS.toStringAsFixed(1)} PPM"
+                                  : "...",
                           isSelected: selectedStat == "TDS",
                           onTap: () => _onStatCardTap("TDS"),
                         ),
@@ -388,9 +417,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.opacity,
                           label: "pH",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestPH.toStringAsFixed(1)}"
-                              : "...",
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestPH.toStringAsFixed(1)}"
+                                  : "...",
                           isSelected: selectedStat == "pH",
                           onTap: () => _onStatCardTap("pH"),
                         ),
@@ -404,9 +434,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.water_damage,
                           label: "Turbidity",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestTurbidity.toStringAsFixed(1)}%"
-                              : "...",
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestTurbidity.toStringAsFixed(1)}%"
+                                  : "...",
                           isSelected: selectedStat == "Turbidity",
                           onTap: () => _onStatCardTap("Turbidity"),
                         ),
@@ -416,9 +447,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.flash_on,
                           label: "Conductivity",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestConductivity.toStringAsFixed(1)} mS/cm"
-                              : "...",
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestConductivity.toStringAsFixed(1)} mS/cm"
+                                  : "...",
                           isSelected: selectedStat == "Conductivity",
                           onTap: () => _onStatCardTap("Conductivity"),
                         ),
@@ -428,9 +460,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         child: StatCard(
                           icon: Icons.bubble_chart,
                           label: "Salinity",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestSalinity.toStringAsFixed(1)} ppt"
-                              : "...",
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestSalinity.toStringAsFixed(1)} ppt"
+                                  : "...",
                           isSelected: selectedStat == "Salinity",
                           onTap: () => _onStatCardTap("Salinity"),
                         ),
@@ -438,22 +471,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.battery_charging_full,
-                          label: "Electrical Conductivity (Condensed)",
-                          value: _connectionStatus == ConnectionStatus.connected
-                              ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm"
-                              : "...",
-                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
+
+                  StatCard(
+                    icon: Icons.battery_charging_full,
+                    label: "Electrical Conductivity (Condensed)",
+                    value:
+                        _connectionStatus == ConnectionStatus.connected
+                            ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm"
+                            : "...",
+                    isSelected:
+                        selectedStat == "Electrical Conductivity (Condensed)",
+                    onTap:
+                        () => _onStatCardTap(
+                          "Electrical Conductivity (Condensed)",
                         ),
-                      ),
-                      const Expanded(child: SizedBox.shrink()),
-                      const Expanded(child: SizedBox.shrink()),
-                    ],
+                    width: double.infinity,
                   ),
                 ],
               ),
@@ -471,6 +503,7 @@ class StatCard extends StatelessWidget {
   final String value;
   final VoidCallback onTap;
   final bool isSelected;
+  final double? width;
 
   const StatCard({
     super.key,
@@ -479,60 +512,58 @@ class StatCard extends StatelessWidget {
     required this.value,
     required this.onTap,
     required this.isSelected,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
+    // Determine container width
+    double cardWidth = width ?? 0.0; // If no width provided, let parent decide
+
     Color bgColor =
         isSelected
             ? Colors.greenAccent.withOpacity(0.8)
             : isDarkMode
-                ? Colors.grey[800]!
-                : Colors.white;
+            ? Colors.grey[800]!
+            : Colors.white;
 
     Color textColor = isDarkMode ? Colors.white : Colors.black;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 30,
-                color: textColor,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                value, // Display the raw value
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
-                ),
-              ),
+    return SizedBox(
+      width: cardWidth,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          width: cardWidth,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Icon(icon, size: 30, color: textColor),
+                const SizedBox(height: 10),
+                Text(label, style: TextStyle(fontSize: 14, color: textColor)),
+                const SizedBox(height: 5),
+                Text(
+                  value, // Display the raw value
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -597,7 +628,8 @@ class CircularIndicator extends CustomPainter {
     // Display disconnected message if applicable, otherwise display label
     final displayLabel = disconnectedMessage ?? label;
     final displayFontSize = disconnectedMessage != null ? 18.0 : 26.0;
-    final displayFontWeight = disconnectedMessage != null ? FontWeight.normal : FontWeight.bold;
+    final displayFontWeight =
+        disconnectedMessage != null ? FontWeight.normal : FontWeight.bold;
     final displayColor = disconnectedMessage != null ? Colors.red : textColor;
 
     final textPainter = TextPainter(
@@ -624,9 +656,9 @@ class CircularIndicator extends CustomPainter {
   @override
   bool shouldRepaint(CircularIndicator oldDelegate) {
     return oldDelegate.progress != progress ||
-           oldDelegate.label != label ||
-           oldDelegate.color != color ||
-           oldDelegate.brightness != brightness ||
-           oldDelegate.disconnectedMessage != disconnectedMessage;
+        oldDelegate.label != label ||
+        oldDelegate.color != color ||
+        oldDelegate.brightness != brightness ||
+        oldDelegate.disconnectedMessage != disconnectedMessage;
   }
 }
