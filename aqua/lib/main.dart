@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: LandingPage(),
+      home: Sadmindashboard(),
     );
   }
 }

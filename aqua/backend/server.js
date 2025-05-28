@@ -11,6 +11,9 @@ const saltRounds = 10;
 const https = require("https");
 const { v4: uuidv4 } = require("uuid"); // For generating unique IDs
 const nodemailer = require("nodemailer"); // For sending emails
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!';
 
 const app = express();
 const port = 5000;
@@ -31,6 +34,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors()); // Allow frontend requests
+
+// Middleware to verify JWT and get user ID
+// This function needs to be accessible when used in app.get('/api/user/profile', ...)
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        console.log("No token provided.");
+        return res.sendStatus(401); // No token, unauthorized
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error("JWT verification error:", err);
+            return res.sendStatus(403); // Token invalid or expired
+        }
+        req.user = user; // Attach user payload from token to request
+        next(); // Proceed to the next middleware/route handler
+    });
+};
 
 // Create HTTP server for Socket.IO
 const server = http.createServer(app);
@@ -110,38 +134,51 @@ app.post("/register", async (req, res) => {
   }
 });
 
-
-// Login route
+// Login route (public, does not use authenticateToken)
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+    const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
+    if (!username || !password) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
 
-  const sql = "SELECT *, role FROM users WHERE username = ?";
-  try {
-    const [results] = await db.query(sql, [username]); // Use await
-    if (results.length === 0) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    const sql = "SELECT id, username, password_hash, role FROM users WHERE username = ?";
+    try {
+        const [results] = await db.query(sql, [username]);
 
-    const user = results[0];
+        if (results.length === 0) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
 
-    const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    console.log("DEBUG: User role being sent from backend:", user.role);
-    if (!passwordMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+        const user = results[0];
 
-    res.json({
-      message: "Login successful!",
-      role: user.role, // token: "your_jwt_token_here"
-    });
-  } catch (err) {
-    console.error("Database error:", err);
-    return res.status(500).json({ error: "Database error occurred" });
-  }
+        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        console.log("DEBUG: User role being sent from backend:", user.role);
+
+        if (!passwordMatch) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        const userPayload = {
+            id: user.id,
+            username: user.username,
+            role: user.role
+        };
+
+        const accessToken = jwt.sign(userPayload, JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({
+            message: "Login successful!",
+            role: user.role,
+            username: user.username,
+            token: accessToken,
+            userId: user.id
+        });
+
+    } catch (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Database error occurred" });
+    }
 });
 
 // NEW: Endpoint to fetch all users
@@ -437,6 +474,25 @@ app.post("/api/change-password", async (req, res) => {
       });
     }
 });
+
+app.get('/api/user/profile', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    const username = req.user.username; // Can often get from token payload
+
+    const query = 'SELECT username FROM users WHERE id = ?';
+    try {
+        const [rows] = await db.query(query, [userId]);
+        if (rows.length > 0) {
+            res.json({ username: rows[0].username });
+        } else {
+            res.status(404).json({ message: 'User not found in DB despite valid token' });
+        }
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 
 
 // 4. (Optional) Register User Endpoint for Testing
