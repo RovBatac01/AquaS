@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
-import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
+import 'package:aqua/pages/SAdmin/SAdminDashboard.dart'; // Ensure this points to SuperAdminHomeScreen
 import 'package:aqua/pages/Signup.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -73,9 +73,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login(
     BuildContext context,
     TextEditingController
-    usernameController, // Changed parameter name for clarity
+        usernameController, // Changed parameter name for clarity
     TextEditingController
-    passwordController, // Changed parameter name for clarity
+        passwordController, // Changed parameter name for clarity
   ) async {
     String enteredUsername =
         usernameController.text; // Use the controller's text
@@ -104,8 +104,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         var jsonResponse = jsonDecode(response.body);
         String? userRole = jsonResponse['role'];
+        String? token = jsonResponse['token']; // Get the token
+        int? userId = jsonResponse['userId']; // Get the userId (assuming it's an int)
 
         print('DEBUG: User role received from backend: "$userRole"');
+        print('DEBUG: Token received from backend: "$token"'); // Debug print
+        print('DEBUG: UserId received from backend: "$userId"'); // Debug print
+
 
         if (userRole != null) {
           final normalizedRole = userRole.trim();
@@ -117,7 +122,13 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          // --- NEW: Save the logged-in username to SharedPreferences ---
+          // --- IMPORTANT: Save the token and userId to SharedPreferences ---
+          if (token != null) {
+            await _prefs.setString('userToken', token);
+          }
+          if (userId != null) {
+            await _prefs.setInt('userId', userId);
+          }
           await _prefs.setString('loggedInUsername', enteredUsername);
           // You might also save the role if you need it persistently on the dashboard
           // await _prefs.setString('loggedInUserRole', normalizedRole);
