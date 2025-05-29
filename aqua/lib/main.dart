@@ -77,7 +77,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: CalendarPage(),
+      home: LandingPage(),
     );
   }
 }

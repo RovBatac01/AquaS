@@ -173,7 +173,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           jsonEncode(_lastSuccessfulDataPayload) == jsonEncode(newPayload)) {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
-          _errorMessage = "No new data received from device.";
+          _errorMessage = "No New Data";
         });
       } else {
         // Data is new or this is the first successful fetch

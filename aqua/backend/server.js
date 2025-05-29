@@ -669,6 +669,109 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
 //   }
 // });
 
+// API endpoint to get total users
+app.get('/api/total-users', async (req, res) => { // Added 'async'
+  const querySql = 'SELECT COUNT(*) AS totalUsers FROM users'; // Assuming your user table is named 'users'
+
+  console.log('Attempting to fetch total users from the database...');
+
+  try {
+    // Corrected: Use db.query directly (assuming 'db' is your mysql2/promise pool)
+    const [results] = await db.query(querySql);
+
+    // Check if results are valid and contain the expected data
+    if (results && results.length > 0 && results[0].hasOwnProperty('totalUsers')) {
+      const totalUsers = results[0].totalUsers;
+      console.log(`Successfully fetched total users: ${totalUsers}`);
+      res.json({ totalUsers: totalUsers });
+    } else {
+      // This case handles unexpected query results (e.g., empty results, or missing 'totalUsers' column)
+      console.warn('Query for total users returned an unexpected or empty result set:', results);
+      return res.status(500).json({
+        error: 'Failed to retrieve total users count; unexpected database response format.',
+        details: 'The database query returned an invalid or empty result for total users.'
+      });
+    }
+  } catch (error) { // Changed 'err' to 'error' for consistency and clarity
+    console.error('Database query error when fetching total users:', error.message);
+
+    // Log more specific details from the MySQL error object
+    if (error.code) {
+      console.error(`MySQL Error Code: ${error.code}`);
+    }
+    if (error.sqlMessage) {
+      console.error(`MySQL Error Message: ${error.sqlMessage}`);
+    }
+    if (error.sql) {
+      console.error(`Faulty SQL Query: ${error.sql}`);
+    }
+
+    // Send a 500 Internal Server Error response to the client
+    return res.status(500).json({
+      error: 'Failed to fetch total users due to a server-side database error.',
+      details: error.message // Include error message for debugging purposes (consider removing in production)
+    });
+  }
+});
+
+// fetch estab 
+app.get('/api/total-establishments', async (req, res) => { // Added 'async'
+  const querySql = 'SELECT COUNT(*) AS totalEstablishments FROM estab'; // Changed 'query' to 'querySql' for clarity
+
+  try {
+    const [results] = await db.query(querySql); // Use await db.query and destructure
+
+    const total = results[0].totalEstablishments;
+    res.json({ totalEstablishments: total });
+  } catch (err) {
+    console.error('Error fetching total establishments:', err);
+    return res.status(500).json({ error: 'Failed to fetch total establishments' });
+  }
+});
+
+// ✅ Direct endpoint for fetching total sensors
+app.get('/api/total-sensors', async (req, res) => { // Added 'async'
+  const querySql = 'SELECT COUNT(*) AS totalSensors FROM sensors'; // Changed 'query' to 'querySql' for clarity
+
+  try {
+    const [results] = await db.query(querySql); // Use await db.query and destructure
+
+    const total = results[0].totalSensors;
+    res.json({ totalSensors: total });
+  } catch (err) {
+    console.error('Error fetching total sensors:', err);
+    return res.status(500).json({ error: 'Failed to fetch total sensors' });
+  }
+});
+
+// fetch for the modal
+app.get('/api/total-sensors', (req, res) => {
+  const query = 'SELECT COUNT(*) AS totalSensors FROM sensors'; // Replace 'sensors' with your actual table name
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error fetching total sensors:', err);
+      return res.status(500).json({ error: 'Failed to fetch total sensors' });
+    }
+
+    const total = results[0].totalSensors;
+    res.json({ totalSensors: total });
+  });
+});
+
+// GET route to fetch establishments
+app.get('/api/establishments', async (req, res) => {
+  const sql = 'SELECT estab_name FROM estab';
+  try {
+    const [results] = await db.query(sql);
+    const estabNames = results.map(row => row.estab_name);
+    res.json(estabNames); // This will send back an array like ["Home Water Tank", "School Water Tank", ...]
+  } catch (err) {
+    console.error('Error querying database for establishments:', err);
+    res.status(500).json({ error: 'Failed to fetch establishments' });
+  }
+});
+
 /**
  * @route GET /data/turbidity
  * @description Get last 10 Turbidity readings from the database.
