@@ -219,7 +219,7 @@ class _StatisticsState extends State<Statistics> {
                       },
                       style: OutlinedButton.styleFrom(
                         minimumSize: Size(100, 36), // Match height
-                        side: BorderSide(color: Colors.black87),
+                        side: BorderSide(color: ASColor.getTextColor(context), width: 1.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -233,7 +233,7 @@ class _StatisticsState extends State<Statistics> {
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 12,
-                              color: Colors.black87,
+                              color: ASColor.getTextColor(context),
                             ),
                           ),
                         ],

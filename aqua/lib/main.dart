@@ -1,4 +1,5 @@
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
 import 'package:aqua/pages/Admin/AdminNotification.dart';
 import 'package:aqua/pages/Calendar.dart';
@@ -12,6 +13,7 @@ import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/Signup.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
+import 'package:aqua/pages/sample.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
@@ -43,11 +45,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: ASColor.BGFourth,
-        primaryColor: Colors.purple,
+        primaryColor: ASColor.getTextColor(context),
         colorScheme: ColorScheme.light(
           background: ASColor.BGFourth,
-          primary: Colors.purple,
-          secondary: Colors.purpleAccent,
+          primary: ASColor.getTextColor(context),
+          secondary: ASColor.getTextColor(context),
           onBackground: Colors.black,
           onPrimary: Colors.white,
         ),
@@ -60,11 +62,11 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
-        primaryColor: Colors.purple,
+        primaryColor: ASColor.getTextColor(context),
         colorScheme: ColorScheme.dark(
           background: Colors.black,
-          primary: Colors.purple,
-          secondary: Colors.purpleAccent,
+          primary: Colors.white,
+          secondary: Colors.white,
           onBackground: Colors.white,
           onPrimary: Colors.white,
         ),
@@ -75,7 +77,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: Userdashboard(),
+      home: CalendarPage(),
     );
   }
 }
