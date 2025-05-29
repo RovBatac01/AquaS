@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Water Quality',
       debugShowCheckedModeBanner: false,
-      home: const SAdminDetails(), // Changed back to SAdminDetails
+      home: const SAdminDetails(),
     );
   }
 }
@@ -33,17 +33,16 @@ enum ConnectionStatus {
 }
 
 class SAdminDetails extends StatefulWidget {
-  // Class name is SAdminDetails
   const SAdminDetails({super.key});
 
   @override
-  State<SAdminDetails> createState() => _SAdminDetailsState(); // State class name is _SAdminDetailsState
+  State<SAdminDetails> createState() => _SAdminDetailsState();
 }
 
-class _SAdminDetailsState extends State<SAdminDetails> {
-  // State class name is _SAdminDetailsState
-  String selectedStat =
-      "Temp"; // Currently selected statistic for the circular indicator
+class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProviderStateMixin {
+  // Add SingleTickerProviderStateMixin for AnimationController
+
+  String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
 
   // State variables to hold the latest fetched RAW data for each parameter
   double _latestTemp = 0.0;
@@ -66,16 +65,40 @@ class _SAdminDetailsState extends State<SAdminDetails> {
   final WaterQualityService _waterQualityService = WaterQualityService();
 
   // Current values for the circular indicator (derived from _latestX values)
-  double progress = 0.0;
-  String label = "Loading...";
+  // Initialize with sensible defaults or placeholders if no data yet.
+  double _currentProgress = 0.0; // Renamed to differentiate from animated value
+  String label = "---"; // Changed initial label to a placeholder
   Color indicatorColor = Colors.grey; // Initial color for indicator
+
+  // Flag to track if initial data has been loaded
+  bool _hasInitialDataLoaded = false;
+
+  // Animation variables
+  late AnimationController _animationController;
+  late Animation<double> _progressAnimation;
 
   @override
   void initState() {
     super.initState();
-    _fetchLatestDataForAllStats(); // Initial fetch
-    // Set up a timer to fetch data every 1 second
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+
+    // Initialize AnimationController
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500), // Duration for smooth animation
+    );
+
+    // Initialize progress animation
+    _progressAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(_animationController)
+      ..addListener(() {
+        setState(() {
+          // Update the UI as the animation progresses
+          _currentProgress = _progressAnimation.value;
+        });
+      });
+
+    _fetchLatestDataForAllStats(isInitialFetch: true); // Initial fetch
+    // Set up a timer to fetch data every 1.5 seconds
+    _timer = Timer.periodic(const Duration(milliseconds: 1500), (Timer t) {
       _fetchLatestDataForAllStats();
     });
   }
@@ -83,6 +106,7 @@ class _SAdminDetailsState extends State<SAdminDetails> {
   @override
   void dispose() {
     _timer?.cancel(); // Cancel the timer to prevent memory leaks
+    _animationController.dispose(); // Dispose of the animation controller
     super.dispose();
   }
 
@@ -100,9 +124,10 @@ class _SAdminDetailsState extends State<SAdminDetails> {
   }
 
   // Fetches the latest data (raw value only) for all water quality parameters
-  Future<void> _fetchLatestDataForAllStats() async {
-    // Set status to connecting/fetching while data is being fetched
-    if (_connectionStatus != ConnectionStatus.connecting) {
+  Future<void> _fetchLatestDataForAllStats({bool isInitialFetch = false}) async {
+    // Only set to connecting if we don't have any initial data displayed yet.
+    // This prevents the UI from clearing during subsequent fetches.
+    if (!_hasInitialDataLoaded) {
       setState(() {
         _connectionStatus = ConnectionStatus.connecting;
         _errorMessage = null;
@@ -110,35 +135,13 @@ class _SAdminDetailsState extends State<SAdminDetails> {
     }
 
     try {
-      // Fetch data for each statistic
-      final temp = await _waterQualityService.fetchHistoricalData(
-        "Temp",
-        "Daily",
-      );
-      final tds = await _waterQualityService.fetchHistoricalData(
-        "TDS",
-        "Daily",
-      );
-      final ph = await _waterQualityService.fetchHistoricalData(
-        "pH Level",
-        "Daily",
-      );
-      final turbidity = await _waterQualityService.fetchHistoricalData(
-        "Turbidity",
-        "Daily",
-      );
-      final conductivity = await _waterQualityService.fetchHistoricalData(
-        "Conductivity",
-        "Daily",
-      );
-      final salinity = await _waterQualityService.fetchHistoricalData(
-        "Salinity",
-        "Daily",
-      );
-      final ecCompensated = await _waterQualityService.fetchHistoricalData(
-        "EC",
-        "Daily",
-      );
+      final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
+      final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
+      final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
+      final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
+      final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
+      final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
+      final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
 
       // Check if any data was actually received (all lists should be non-empty)
       if (temp.isEmpty ||
@@ -151,6 +154,7 @@ class _SAdminDetailsState extends State<SAdminDetails> {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
           _errorMessage = "No data received from one or more sensors.";
+          _hasInitialDataLoaded = true; // Mark as loaded even if no data
         });
         return; // Exit if no data
       }
@@ -181,6 +185,7 @@ class _SAdminDetailsState extends State<SAdminDetails> {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
           _errorMessage = "No new data received from device.";
+          _hasInitialDataLoaded = true; // Mark as loaded
         });
       } else {
         // Data is new or this is the first successful fetch
@@ -197,6 +202,7 @@ class _SAdminDetailsState extends State<SAdminDetails> {
         setState(() {
           _connectionStatus = ConnectionStatus.connected;
           _errorMessage = null;
+          _hasInitialDataLoaded = true; // Mark as loaded
           _updateCircularIndicatorValues(); // Update the UI with new values
         });
       }
@@ -205,6 +211,7 @@ class _SAdminDetailsState extends State<SAdminDetails> {
       setState(() {
         _connectionStatus = ConnectionStatus.disconnectedNetworkError;
         _errorMessage = 'Failed to load latest data: ${e.toString()}';
+        _hasInitialDataLoaded = true; // Mark as loaded even on error
       });
     }
   }
@@ -212,63 +219,73 @@ class _SAdminDetailsState extends State<SAdminDetails> {
   // Helper to update the circular indicator's progress, label, and color
   // based on the current `selectedStat` and the fetched `_latestX` values.
   void _updateCircularIndicatorValues() {
-    double currentProgress = 0.0;
+    double targetProgress = 0.0; // This will be the target for the animation
     String currentLabel = "N/A";
     Color currentColor = Colors.blue; // Default color for indicator
 
     // Define max values for progress calculation (adjust as needed for your sensors)
     const double maxTemp = 100.0; // Max expected temperature for 100% progress
-    const double maxTDS = 100.0; // Max expected TDS for 100% progress
+    const double maxTDS = 1000.0; // Adjusted max TDS to a more realistic value (e.g., 1000 PPM)
     const double maxPH = 14.0; // Max pH scale
     const double maxTurbidity = 100.0; // Max turbidity percentage (0-100%)
-    const double maxConductivity = 100.0; // Max expected conductivity in mS/cm
-    const double maxSalinity = 100.0; // Max expected salinity in ppt
-    const double maxECCompensated =
-        100.0; // Max expected compensated EC in mS/cm
+    const double maxConductivity = 10.0; // Adjusted max conductivity (e.g., 10 mS/cm)
+    const double maxSalinity = 40.0; // Adjusted max salinity (e.g., 40 ppt for seawater)
+    const double maxECCompensated = 10.0; // Adjusted max compensated EC (e.g., 10 mS/cm)
 
     switch (selectedStat) {
       case "Temp":
-        currentProgress = _latestTemp / maxTemp;
+        targetProgress = _latestTemp / maxTemp;
         currentLabel = "${_latestTemp.toStringAsFixed(1)}°C";
-        currentColor = Colors.blue; // Example color
+        currentColor = Colors.blue;
         break;
       case "TDS":
-        currentProgress = _latestTDS / maxTDS;
+        targetProgress = _latestTDS / maxTDS;
         currentLabel = "${_latestTDS.toStringAsFixed(1)} PPM";
-        currentColor = Colors.green; // Example color
+        currentColor = Colors.green;
         break;
       case "pH":
-        currentProgress = _latestPH / maxPH;
+        targetProgress = _latestPH / maxPH;
         currentLabel = "pH ${_latestPH.toStringAsFixed(1)}";
-        currentColor = Colors.purple; // Example color
+        currentColor = Colors.purple;
         break;
       case "Turbidity":
-        currentProgress = _latestTurbidity / maxTurbidity;
+        targetProgress = _latestTurbidity / maxTurbidity;
         currentLabel = "${_latestTurbidity.toStringAsFixed(1)}%";
-        currentColor = Colors.orange; // Example color
+        currentColor = Colors.orange;
         break;
       case "Conductivity":
-        currentProgress = _latestConductivity / maxConductivity;
+        targetProgress = _latestConductivity / maxConductivity;
         currentLabel = "${_latestConductivity.toStringAsFixed(1)} mS/cm";
-        currentColor = Colors.red; // Example color
+        currentColor = Colors.red;
         break;
       case "Salinity":
-        currentProgress = _latestSalinity / maxSalinity;
+        targetProgress = _latestSalinity / maxSalinity;
         currentLabel = "${_latestSalinity.toStringAsFixed(1)} ppt";
-        currentColor = Colors.teal; // Example color
+        currentColor = Colors.teal;
         break;
       case "Electrical Conductivity (Condensed)":
-        currentProgress = _latestECCompensated / maxECCompensated;
+        targetProgress = _latestECCompensated / maxECCompensated;
         currentLabel = "${_latestECCompensated.toStringAsFixed(1)} mS/cm";
-        currentColor = Colors.indigo; // Example color
+        currentColor = Colors.indigo;
         break;
     }
 
-    // Ensure progress is between 0 and 1
-    currentProgress = currentProgress.clamp(0.0, 1.0);
+    // Ensure targetProgress is between 0 and 1
+    targetProgress = targetProgress.clamp(0.0, 1.0);
+
+    // Animate the progress
+    _animationController.reset();
+    _progressAnimation = Tween<double>(
+      begin: _currentProgress, // Start from the current animated value
+      end: targetProgress,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut, // Smooth curve for animation
+    ));
+    _animationController.forward();
 
     setState(() {
-      progress = currentProgress;
+      // We don't set _currentProgress directly here, it's updated by the listener
       label = currentLabel;
       indicatorColor = currentColor;
     });
@@ -321,7 +338,8 @@ class _SAdminDetailsState extends State<SAdminDetails> {
     }
 
     // Determine if data values should be displayed or "..."
-    bool displayLiveValues = _connectionStatus == ConnectionStatus.connected;
+    bool displayLiveValues = _connectionStatus == ConnectionStatus.connected ||
+        _connectionStatus == ConnectionStatus.disconnectedNoData;
 
     return Scaffold(
       appBar: AppBar(
@@ -353,8 +371,8 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: Colors.black, // Using Colors.black directly
-                  fontFamily: 'Montserrat', // Changed font family
+                  color: Colors.black,
+                  fontFamily: 'Montserrat',
                 ),
               ),
               Text(
@@ -368,20 +386,18 @@ class _SAdminDetailsState extends State<SAdminDetails> {
 
               // Circular Indicator
               Center(
-                child:
-                    _connectionStatus == ConnectionStatus.connecting
-                        ? const CircularProgressIndicator() // Show loading for indicator
-                        : CustomPaint(
-                          size: const Size(250, 250),
-                          painter: CircularIndicator(
-                            progress: progress,
-                            label: label,
-                            color: indicatorColor,
-                            brightness: Theme.of(context).brightness,
-                            disconnectedMessage:
-                                disconnectedMessageForIndicator,
-                          ),
+                child: !_hasInitialDataLoaded && _connectionStatus == ConnectionStatus.connecting
+                    ? const CircularProgressIndicator() // Show loading only if no data yet
+                    : CustomPaint(
+                        size: const Size(250, 250),
+                        painter: CircularIndicator(
+                          progress: _currentProgress, // Use the animated progress value
+                          label: label,
+                          color: indicatorColor,
+                          brightness: Theme.of(context).brightness,
+                          disconnectedMessage: disconnectedMessageForIndicator,
                         ),
+                      ),
               ),
               const SizedBox(height: 20),
 
@@ -393,10 +409,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color:
-                      _connectionStatus == ConnectionStatus.connected
-                          ? Colors.black
-                          : Colors.red,
+                  color: _connectionStatus == ConnectionStatus.connected
+                      ? Colors.black
+                      : Colors.red,
                   fontFamily: 'Poppins',
                 ),
               ),
@@ -419,10 +434,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.thermostat,
                           label: "Temp",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestTemp.toStringAsFixed(1)}°C"
-                                  : "...",
+                          value: displayLiveValues
+                              ? "${_latestTemp.toStringAsFixed(1)}°C"
+                              : "...",
                           isSelected: selectedStat == "Temp",
                           onTap: () => _onStatCardTap("Temp"),
                         ),
@@ -432,10 +446,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.water,
                           label: "TDS",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestTDS.toStringAsFixed(1)} PPM"
-                                  : "...",
+                          value: displayLiveValues
+                              ? "${_latestTDS.toStringAsFixed(1)} PPM"
+                              : "...",
                           isSelected: selectedStat == "TDS",
                           onTap: () => _onStatCardTap("TDS"),
                         ),
@@ -445,10 +458,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.opacity,
                           label: "pH",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestPH.toStringAsFixed(1)}"
-                                  : "...",
+                          value: displayLiveValues
+                              ? "${_latestPH.toStringAsFixed(1)}"
+                              : "...",
                           isSelected: selectedStat == "pH",
                           onTap: () => _onStatCardTap("pH"),
                         ),
@@ -462,10 +474,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.water_damage,
                           label: "Turbidity",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestTurbidity.toStringAsFixed(1)}%"
-                                  : "...",
+                          value: displayLiveValues
+                              ? "${_latestTurbidity.toStringAsFixed(1)}%"
+                              : "...",
                           isSelected: selectedStat == "Turbidity",
                           onTap: () => _onStatCardTap("Turbidity"),
                         ),
@@ -475,10 +486,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.flash_on,
                           label: "Conductivity",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestConductivity.toStringAsFixed(1)} mS/cm"
-                                  : "...",
+                          value: displayLiveValues
+                              ? "${_latestConductivity.toStringAsFixed(1)} mS/cm"
+                              : "...",
                           isSelected: selectedStat == "Conductivity",
                           onTap: () => _onStatCardTap("Conductivity"),
                         ),
@@ -488,10 +498,9 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.bubble_chart,
                           label: "Salinity",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestSalinity.toStringAsFixed(1)} ppt"
-                                  : "...",
+                          value: displayLiveValues
+                              ? "${_latestSalinity.toStringAsFixed(1)} ppt"
+                              : "...",
                           isSelected: selectedStat == "Salinity",
                           onTap: () => _onStatCardTap("Salinity"),
                         ),
@@ -506,17 +515,11 @@ class _SAdminDetailsState extends State<SAdminDetails> {
                         child: StatCard(
                           icon: Icons.battery_charging_full,
                           label: "Electrical Conductivity (Condensed)",
-                          value:
-                              _connectionStatus == ConnectionStatus.connected
-                                  ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm"
-                                  : "...",
-                          isSelected:
-                              selectedStat ==
-                              "Electrical Conductivity (Condensed)",
-                          onTap:
-                              () => _onStatCardTap(
-                                "Electrical Conductivity (Condensed)",
-                              ),
+                          value: displayLiveValues
+                              ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm"
+                              : "...",
+                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
                         ),
                       ),
                     ],
@@ -537,7 +540,6 @@ class StatCard extends StatelessWidget {
   final String value;
   final VoidCallback onTap;
   final bool isSelected;
-  final double? width; // Removed as Expanded is used in the parent Row
 
   const StatCard({
     super.key,
@@ -546,7 +548,6 @@ class StatCard extends StatelessWidget {
     required this.value,
     required this.onTap,
     required this.isSelected,
-    this.width, // Removed
   });
 
   @override
@@ -557,15 +558,14 @@ class StatCard extends StatelessWidget {
         isSelected
             ? Colors.greenAccent.withOpacity(0.8)
             : isDarkMode
-            ? Colors.grey[800]!
-            : Colors.white;
+                ? Colors.grey[800]!
+                : Colors.white;
 
     Color textColor = isDarkMode ? Colors.white : Colors.black;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        // Removed width as it's now handled by Expanded in the parent Row
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
         decoration: BoxDecoration(
@@ -583,21 +583,21 @@ class StatCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 label,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   color: textColor,
-                  fontFamily:
-                      'Poppins', // Kept Poppins for consistency with other texts
+                  fontFamily: 'Poppins',
                 ),
               ),
               const SizedBox(height: 5),
               Text(
-                value, // Display the raw value
+                value,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: textColor,
-                  fontFamily: 'Poppins', // Kept Poppins
+                  fontFamily: 'Poppins',
                 ),
               ),
             ],
@@ -609,14 +609,13 @@ class StatCard extends StatelessWidget {
 }
 
 class CircularIndicator extends CustomPainter {
-  final double progress;
+  final double progress; // This will now be the animated value
   final String label;
   final Color color;
   final Brightness brightness;
-  final String? disconnectedMessage; // New: Message to show when disconnected
+  final String? disconnectedMessage;
 
   CircularIndicator({
-    // super.repaint, // Removed, not needed for CustomPainter constructor
     required this.progress,
     required this.label,
     required this.color,
@@ -644,15 +643,13 @@ class CircularIndicator extends CustomPainter {
           ..strokeCap = StrokeCap.round
           ..strokeWidth = 12.0;
 
-    // Only draw the arc if connected, otherwise it's a solid circle or nothing
     if (disconnectedMessage == null) {
-      // Apply gradient only when connected and displaying live data
       progressPaint.shader = LinearGradient(
         colors: [color, Colors.greenAccent],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
 
       const startAngle = -pi / 2;
-      final sweepAngle = 2 * pi * progress;
+      final sweepAngle = 2 * pi * progress; // Use the animated progress
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
         startAngle,
@@ -660,18 +657,11 @@ class CircularIndicator extends CustomPainter {
         false,
         progressPaint,
       );
-    } else {
-      // When disconnected, draw a solid red circle or a different indicator
-      // For simplicity, we'll just not draw the progress arc, letting the background circle show.
-      // Or you could draw a full red circle to indicate error:
-      // progressPaint.color = Colors.red;
-      // canvas.drawCircle(center, radius, progressPaint);
     }
 
     final textColor =
         brightness == Brightness.light ? Colors.black : Colors.white;
 
-    // Display disconnected message if applicable, otherwise display label
     final displayLabel = disconnectedMessage ?? label;
     final displayFontSize = disconnectedMessage != null ? 18.0 : 26.0;
     final displayFontWeight =
@@ -688,7 +678,7 @@ class CircularIndicator extends CustomPainter {
           shadows: const [
             Shadow(blurRadius: 5.0, color: Colors.grey, offset: Offset(2, 2)),
           ],
-          fontFamily: 'Poppins', // Kept Poppins for consistency
+          fontFamily: 'Poppins',
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -702,6 +692,7 @@ class CircularIndicator extends CustomPainter {
 
   @override
   bool shouldRepaint(CircularIndicator oldDelegate) {
+    // Only repaint if the progress or other properties have changed
     return oldDelegate.progress != progress ||
         oldDelegate.label != label ||
         oldDelegate.color != color ||

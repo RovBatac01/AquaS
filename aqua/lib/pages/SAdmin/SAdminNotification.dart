@@ -2,8 +2,9 @@ import 'package:aqua/NavBar/NotificationDetailPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
-
-import 'package:aqua/components/colors.dart';
+import 'package:aqua/components/colors.dart'; // Assuming this file defines ASColor
+import 'package:http/http.dart' as http; // Import for making HTTP requests
+import 'dart:convert'; // Import for JSON encoding/decoding
 
 void main() {
   runApp(
@@ -15,163 +16,311 @@ class SAdminNotification extends StatefulWidget {
   const SAdminNotification({super.key});
 
   @override
-  _NotificationPageState createState() => _NotificationPageState();
+  _SAdminNotificationState createState() => _SAdminNotificationState();
 }
 
-class _NotificationPageState extends State<SAdminNotification> {
-  List<Map<String, String>> notifications = [
-    {
-      'title': 'Warning!!',
-      'subtitle': 'There is abnormality to the system.',
-      'time': 'Just now',
-    },
-    {
-      'title': 'System Update',
-      'subtitle': 'Version 2.0.1 is available now.',
-      'time': '1 hour ago',
-    },
-    {
-      'title': 'Reminder',
-      'subtitle': 'Meeting with team at 3 PM.',
-      'time': 'Today',
-    },
-    {
-      'title': 'Payment Received',
-      'subtitle': 'You received \$100 from Alice.',
-      'time': 'Yesterday',
-    },
-  ];
+class _SAdminNotificationState extends State<SAdminNotification> {
+  // Use a List of Map<String, dynamic> to accommodate various data types from backend
+  List<Map<String, dynamic>> notifications = [];
+  bool _isLoading = true; // To show a loading indicator
+  String? _errorMessage; // To display any fetch errors
 
-  Icon _getNotificationIcon(String title) {
-    switch (title.toLowerCase()) {
-      case 'warning!!':
-        return Icon(Icons.warning, color: Colors.red);
-      case 'system update':
-        return Icon(Icons.system_update, color: Colors.blue);
-      case 'reminder':
-        return Icon(Icons.alarm, color: Colors.orange);
-      case 'payment received':
-        return Icon(Icons.attach_money, color: Colors.green);
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotifications(); // Call the fetch function when the widget initializes
+  }
+
+  /// Fetches notifications from the backend API.
+  Future<void> _fetchNotifications() async {
+    setState(() {
+      _isLoading = true; // Set loading state to true
+      _errorMessage = null; // Clear any previous error messages
+    });
+
+    try {
+      // The endpoint for Super Admin notifications (unauthenticated)
+      final response = await http.get(
+        Uri.parse('http://localhost:5000/api/notifications/superadmin'), // <-- Adjust your backend URL if different
+        headers: {
+          'Content-Type': 'application/json',
+          // No 'Authorization' header needed for this unauthenticated endpoint
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Decode the JSON response. The backend is expected to return a list directly.
+        final List<dynamic> fetchedNotifications = json.decode(response.body);
+
+        setState(() {
+          notifications = fetchedNotifications.map((notif) {
+            // Map backend fields to your local notification structure.
+            // Ensure the keys match what your backend returns (e.g., 'id', 'type', 'title', 'message', 'createdAt', 'read').
+            return {
+              'id': notif['id'].toString(), // Convert ID to string for consistency
+              'title': notif['title'] ?? 'No Title', // Use 'title' from backend
+              'subtitle': notif['message'] ?? 'No Message', // Use 'message' from backend as 'subtitle'
+              'time': _formatTimestamp(notif['createdAt']), // Format 'createdAt' from backend
+              'type': notif['type'] ?? 'default', // Use 'type' for icon mapping
+              'is_read': notif['read'] == 1 || notif['read'] == true, // Handle boolean from DB (int 1/0 or actual boolean)
+            };
+          }).toList();
+        });
+      } else {
+        // Handle non-200 responses (e.g., 404, 500)
+        setState(() {
+          _errorMessage = 'Failed to load notifications: ${response.statusCode} ${response.reasonPhrase}';
+        });
+        print('Failed to load notifications: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      // Handle network errors or other exceptions during the HTTP request
+      setState(() {
+        _errorMessage = 'Error connecting to the server: $e';
+      });
+      print('Error fetching notifications: $e');
+    } finally {
+      setState(() {
+        _isLoading = false; // Always set loading to false when done
+      });
+    }
+  }
+
+  /// Deletes a notification from the backend and updates the UI.
+  Future<void> _deleteNotification(String notificationId, int index) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://localhost:5000/api/notifications/superadmin/$notificationId'), // <-- Adjust your backend URL if different
+        headers: {
+          'Content-Type': 'application/json',
+          // No 'Authorization' header needed for this unauthenticated endpoint
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // If deletion is successful, remove the item from the local list
+        setState(() {
+          notifications.removeAt(index);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Notification deleted successfully!')),
+        );
+      } else {
+        // Parse error message from backend if available
+        final errorData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete notification: ${errorData['message'] ?? response.reasonPhrase}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting notification: $e')),
+      );
+    }
+  }
+
+  /// Helper function to format a timestamp string into a human-readable relative time.
+  String _formatTimestamp(String? timestamp) {
+    if (timestamp == null) return 'N/A';
+    try {
+      // Parse the timestamp string received from the backend
+      final dateTime = DateTime.parse(timestamp).toLocal(); // Convert to local time zone
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+
+      if (difference.inSeconds < 60) {
+        return 'Just now';
+      } else if (difference.inMinutes < 60) {
+        return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      } else if (difference.inHours < 24) {
+        return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else {
+        // For older notifications, display the date
+        return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      }
+    } catch (e) {
+      // If parsing fails, return the original timestamp string
+      print('Error formatting timestamp: $e');
+      return timestamp;
+    }
+  }
+
+  /// Returns an appropriate icon based on the notification type from the backend.
+  Icon _getNotificationIcon(String type) {
+    switch (type.toLowerCase()) {
+      case 'sensor':
+        return Icon(Icons.sensors, color: Colors.red); // For sensor alerts
+      case 'schedule':
+        return Icon(Icons.calendar_month, color: Colors.blue); // For scheduled events
+      case 'request':
+        return Icon(Icons.pending_actions, color: Colors.orange); // For access requests
+      case 'new_user':
+        return Icon(Icons.person_add, color: Colors.green); // For new user registrations
       default:
-        return Icon(Icons.notifications, color: Colors.grey);
+        return Icon(Icons.notifications, color: Colors.grey); // Default icon
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.separated(
-        itemCount: notifications.length,
-        separatorBuilder:
-            (context, index) => SizedBox.shrink(), // Remove the divider
-        itemBuilder: (context, index) {
-          final notification = notifications[index];
-
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => NotificationDetailPage(
-                        title: notification['title']!,
-                        subtitle: notification['subtitle']!,
-                        time: notification['time']!,
-                      ),
-                ),
-              );
-            },
-            child: Card(
-              color: ASColor.getCardColor(context),
-              margin: EdgeInsets.fromLTRB(
-                16,
-                index == 0 ? 20 : 0,
-                16,
-                20,
-              ), // Top margin only for first card
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                contentPadding: EdgeInsets.all(16),
-                leading: _getNotificationIcon(notification['title']!),
-                title: Text(
-                  notification['title']!,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: ASColor.getTextColor(context),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        backgroundColor: ASColor.getCardColor(context), // Dynamic background color
+        foregroundColor: ASColor.getTextColor(context), // Dynamic text color for app bar
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator()) // Show loading indicator
+          : _errorMessage != null
+              ? Center(
+                  // Show error message if fetch failed
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const SizedBox(height: 16),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchNotifications, // Retry button
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      notification['subtitle']!,
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      notification['time']!,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    ),
-                  ],
-                ),
-                trailing: IconButton(
-                  icon: Icon(Iconsax.trash, size: 16, color: Colors.red),
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: Text('Delete Notification',
-                            style: TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 18.sp,
-                            ),),
-                            content: Text(
-                              'Are you sure you want to delete this notification?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed:
-                                    () => Navigator.of(context).pop(false),
-                                child: Text('Cancel',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 16.sp,
-                                  color: ASColor.getTextColor(context),
-                                ),),
-                              ),
-                              TextButton(
-                                onPressed:
-                                    () => Navigator.of(context).pop(true),
-                                child: Text(
-                                  'Delete',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 16.sp,
-                                    color: ASColor.getTextColor(context),
-                                  ),
+                )
+              : notifications.isEmpty
+                  ? Center(
+                      // Show message if no notifications are found
+                      child: Text(
+                        'No notifications to display.',
+                        style: TextStyle(fontSize: 16.sp, color: ASColor.getTextColor(context)),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: notifications.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox.shrink(), // Remove the default divider between list items
+                      itemBuilder: (context, index) {
+                        final notification = notifications[index];
+                        // `is_read` from backend isn't used for visual indicator here, but can be for future features
+                        final isRead = notification['is_read'] ?? false;
+
+                        return GestureDetector(
+                          onTap: () {
+                            // Navigate to detail page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => NotificationDetailPage(
+                                  title: notification['title']!,
+                                  subtitle: notification['subtitle']!,
+                                  time: notification['time']!,
+                                  // You might pass other details to the detail page if needed
                                 ),
                               ),
-                            ],
+                            );
+                          },
+                          child: Card(
+                            color: ASColor.getCardColor(context), // Dynamic card background
+                            margin: EdgeInsets.fromLTRB(
+                              16.w,
+                              index == 0 ? 20.h : 0, // Top margin for the first card
+                              16.w,
+                              20.h,
+                            ),
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.all(16.w),
+                              leading: _getNotificationIcon(notification['type']!), // Use 'type' for icon
+                              title: Text(
+                                notification['title']!,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.sp,
+                                  color: ASColor.getTextColor(context),
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    notification['subtitle']!,
+                                    style: TextStyle(fontSize: 14.sp),
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  Text(
+                                    notification['time']!,
+                                    style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
+                                  ),
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Iconsax.trash, size: 16, color: Colors.red),
+                                onPressed: () async {
+                                  // Show confirmation dialog before deleting
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text(
+                                        'Delete Notification',
+                                        style: TextStyle(
+                                          fontFamily: 'Montserrat',
+                                          fontSize: 18.sp,
+                                        ),
+                                      ),
+                                      content: const Text(
+                                        'Are you sure you want to delete this notification?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: Text(
+                                            'Cancel',
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              fontSize: 16.sp,
+                                              color: ASColor.getTextColor(context),
+                                            ),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: Text(
+                                            'Delete',
+                                            style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              fontSize: 16.sp,
+                                              color: ASColor.getTextColor(context),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true && notification['id'] != null) {
+                                    // Call delete function if confirmed
+                                    _deleteNotification(notification['id'], index);
+                                  }
+                                },
+                                tooltip: 'Delete notification',
+                              ),
+                            ),
                           ),
-                    );
-                    if (confirm == true) {
-                      setState(() {
-                        notifications.removeAt(index);
-                      });
-                    }
-                  },
-                  tooltip: 'Delete notification',
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+                        );
+                      },
+                    ),
     );
   }
 }

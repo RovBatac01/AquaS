@@ -68,6 +68,7 @@ const db = mysql.createPool({
   user: "admin",
   password: "aquasense123",
   database: "aquasense",
+  port: 3306, // Default MySQL port
   waitForConnections: true, 
   connectionLimit: 10, 
   queueLimit: 0, 
@@ -99,7 +100,7 @@ app.post("/register", async (req, res) => {
   const {
     username,
     email,
-    phone = null,
+    phone,
     password,
     confirm_password,
   } = req.body;
@@ -493,6 +494,155 @@ app.get('/api/user/profile', authenticateToken, async (req, res) => {
     }
 });
 
+app.get('/api/events-all', async (req, res) => {
+    try {
+        // Select all events, ordered by event_date and time
+        const [rows] = await db.execute('SELECT * FROM events ORDER BY event_date, time'); // Changed pool to db
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching all events:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Endpoint to fetch events for a specific date (if needed for specific date view)
+
+// Example: GET /api/events?date=2024-03-15
+app.get('/api/events', async (req, res) => {
+    const { date } = req.query; // date should be in 'YYYY-MM-DD' format
+
+    if (!date) {
+        return res.status(400).json({ error: 'Date parameter is required.' });
+    }
+
+    try {
+        const [rows] = await db.execute('SELECT * FROM events WHERE event_date = ? ORDER BY time, id', [date]); // Changed pool to db
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching events for date:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/events', async (req, res) => {
+    const { title, time, description, event_date } = req.body;
+
+    if (!title || !event_date) {
+        return res.status(400).json({ error: 'Title and event_date are required.' });
+    }
+
+    try {
+        // Using parameterized queries (?) for security against SQL injection
+        const [result] = await db.execute( // Changed pool to db
+            'INSERT INTO events (title, time, description, event_date) VALUES (?, ?, ?, ?)',
+            [title, time || null, description || null, event_date]
+        );
+
+        // After insertion, fetch the newly created event to return it (including its ID)
+        const [newEventRows] = await db.execute('SELECT * FROM events WHERE id = ?', [result.insertId]); // Changed pool to db
+        res.status(201).json(newEventRows[0]); // Return the newly created event
+    } catch (err) {
+        console.error('Error adding event:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Delete an event
+// Example: DELETE /api/events/123
+app.delete('/api/events/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.execute('DELETE FROM events WHERE id = ?', [id]); // Changed pool to db
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Event not found.' });
+        }
+        res.status(200).json({ message: `Event with ID ${id} deleted successfully.` });
+    } catch (err) {
+        console.error('Error deleting event:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /api/notifications/superadmin - Fetch all notifications
+app.get('/api/notifications/superadmin', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id, type, title, message, timestamp AS createdAt, is_read AS `read` FROM notif ORDER BY timestamp DESC');
+
+        // Map the results to match the Flutter frontend's expected keys
+        const formattedNotifications = rows.map(notif => ({
+            id: notif.id.toString(),
+            type: notif.type,
+            title: notif.title,
+            message: notif.message,
+            createdAt: notif.createdAt,
+            read: notif.read
+        }));
+
+        res.json(formattedNotifications);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ message: 'Error fetching notifications', error: error.message });
+    }
+});
+
+// DELETE /api/notifications/superadmin/:id - Delete a notification
+app.delete('/api/notifications/superadmin/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.query('DELETE FROM notif WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        res.status(200).json({ message: 'Notification deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ message: 'Error deleting notification', error: error.message });
+    }
+});
+
+// GET /api/notifications/superadmin - Fetch all notifications
+app.get('/api/notifications/admin', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id, type, title, message, timestamp AS createdAt, is_read AS `read` FROM notif ORDER BY timestamp DESC');
+
+        // Map the results to match the Flutter frontend's expected keys
+        const formattedNotifications = rows.map(notif => ({
+            id: notif.id.toString(),
+            type: notif.type,
+            title: notif.title,
+            message: notif.message,
+            createdAt: notif.createdAt,
+            read: notif.read
+        }));
+
+        res.json(formattedNotifications);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ message: 'Error fetching notifications', error: error.message });
+    }
+});
+
+// DELETE /api/notifications/superadmin/:id - Delete a notification
+app.delete('/api/notifications/admin/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const [result] = await db.query('DELETE FROM notif WHERE id = ?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        res.status(200).json({ message: 'Notification deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ message: 'Error deleting notification', error: error.message });
+    }
+});
 
 
 // 4. (Optional) Register User Endpoint for Testing
