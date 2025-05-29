@@ -32,15 +32,18 @@ enum ConnectionStatus {
   disconnectedNetworkError, // Failed to fetch data (network issue, server down, etc.)
 }
 
-class AdminDetailsScreen extends StatefulWidget { // Class name is AdminDetailsScreen
+class AdminDetailsScreen extends StatefulWidget {
+  // Class name is AdminDetailsScreen
   const AdminDetailsScreen({super.key});
 
   @override
   State<AdminDetailsScreen> createState() => _AdminDetailsScreenState(); // State class name is _AdminDetailsScreenState
 }
 
-class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State class name is _AdminDetailsScreenState
-  String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
+class _AdminDetailsScreenState extends State<AdminDetailsScreen> {
+  // State class name is _AdminDetailsScreenState
+  String selectedStat =
+      "Temp"; // Currently selected statistic for the circular indicator
 
   // State variables to hold the latest fetched RAW data for each parameter
   double _latestTemp = 0.0;
@@ -108,13 +111,34 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
 
     try {
       // Fetch data for each statistic
-      final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
-      final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
-      final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
-      final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
-      final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
-      final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
-      final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
+      final temp = await _waterQualityService.fetchHistoricalData(
+        "Temp",
+        "Daily",
+      );
+      final tds = await _waterQualityService.fetchHistoricalData(
+        "TDS",
+        "Daily",
+      );
+      final ph = await _waterQualityService.fetchHistoricalData(
+        "pH Level",
+        "Daily",
+      );
+      final turbidity = await _waterQualityService.fetchHistoricalData(
+        "Turbidity",
+        "Daily",
+      );
+      final conductivity = await _waterQualityService.fetchHistoricalData(
+        "Conductivity",
+        "Daily",
+      );
+      final salinity = await _waterQualityService.fetchHistoricalData(
+        "Salinity",
+        "Daily",
+      );
+      final ecCompensated = await _waterQualityService.fetchHistoricalData(
+        "EC",
+        "Daily",
+      );
 
       // Check if any data was actually received (all lists should be non-empty)
       if (temp.isEmpty ||
@@ -328,7 +352,9 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: ASColor.getTextColor(context), // Using ASColor.getTextColor
+                  color: ASColor.getTextColor(
+                    context,
+                  ), // Using ASColor.getTextColor
                   fontFamily: 'Poppins', // Changed back to Poppins
                 ),
               ),
@@ -343,18 +369,20 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
 
               // Circular Indicator
               Center(
-                child: _connectionStatus == ConnectionStatus.connecting
-                    ? const CircularProgressIndicator() // Show loading for indicator
-                    : CustomPaint(
-                        size: const Size(250, 250),
-                        painter: CircularIndicator(
-                          progress: progress,
-                          label: label,
-                          color: indicatorColor,
-                          brightness: Theme.of(context).brightness,
-                          disconnectedMessage: disconnectedMessageForIndicator,
+                child:
+                    _connectionStatus == ConnectionStatus.connecting
+                        ? const CircularProgressIndicator() // Show loading for indicator
+                        : CustomPaint(
+                          size: const Size(250, 250),
+                          painter: CircularIndicator(
+                            progress: progress,
+                            label: label,
+                            color: indicatorColor,
+                            brightness: Theme.of(context).brightness,
+                            disconnectedMessage:
+                                disconnectedMessageForIndicator,
+                          ),
                         ),
-                      ),
               ),
               const SizedBox(height: 20),
 
@@ -366,9 +394,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: _connectionStatus == ConnectionStatus.connected
-                      ? Colors.black
-                      : Colors.red,
+                  color:
+                      _connectionStatus == ConnectionStatus.connected
+                          ? Colors.black
+                          : Colors.red,
                   fontFamily: 'Poppins',
                 ),
               ),
@@ -391,7 +420,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.thermostat,
                           label: "Temp",
-                          value: displayLiveValues ? "${_latestTemp.toStringAsFixed(1)}°C" : "...",
+                          value:
+                              displayLiveValues
+                                  ? "${_latestTemp.toStringAsFixed(1)}°C"
+                                  : "...",
                           isSelected: selectedStat == "Temp",
                           onTap: () => _onStatCardTap("Temp"),
                         ),
@@ -401,7 +433,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.water,
                           label: "TDS",
-                          value: displayLiveValues ? "${_latestTDS.toStringAsFixed(1)} PPM" : "...",
+                          value:
+                              displayLiveValues
+                                  ? "${_latestTDS.toStringAsFixed(1)} PPM"
+                                  : "...",
                           isSelected: selectedStat == "TDS",
                           onTap: () => _onStatCardTap("TDS"),
                         ),
@@ -411,7 +446,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.opacity,
                           label: "pH",
-                          value: displayLiveValues ? "${_latestPH.toStringAsFixed(1)}" : "...",
+                          value:
+                              displayLiveValues
+                                  ? "${_latestPH.toStringAsFixed(1)}"
+                                  : "...",
                           isSelected: selectedStat == "pH",
                           onTap: () => _onStatCardTap("pH"),
                         ),
@@ -425,7 +463,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.water_damage,
                           label: "Turbidity",
-                          value: displayLiveValues ? "${_latestTurbidity.toStringAsFixed(1)}%" : "...",
+                          value:
+                              displayLiveValues
+                                  ? "${_latestTurbidity.toStringAsFixed(1)}%"
+                                  : "...",
                           isSelected: selectedStat == "Turbidity",
                           onTap: () => _onStatCardTap("Turbidity"),
                         ),
@@ -435,7 +476,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.flash_on,
                           label: "Conductivity",
-                          value: displayLiveValues ? "${_latestConductivity.toStringAsFixed(1)} mS/cm" : "...",
+                          value:
+                              displayLiveValues
+                                  ? "${_latestConductivity.toStringAsFixed(1)} mS/cm"
+                                  : "...",
                           isSelected: selectedStat == "Conductivity",
                           onTap: () => _onStatCardTap("Conductivity"),
                         ),
@@ -445,7 +489,10 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.bubble_chart,
                           label: "Salinity",
-                          value: displayLiveValues ? "${_latestSalinity.toStringAsFixed(1)} ppt" : "...",
+                          value:
+                              displayLiveValues
+                                  ? "${_latestSalinity.toStringAsFixed(1)} ppt"
+                                  : "...",
                           isSelected: selectedStat == "Salinity",
                           onTap: () => _onStatCardTap("Salinity"),
                         ),
@@ -459,13 +506,19 @@ class _AdminDetailsScreenState extends State<AdminDetailsScreen> { // State clas
                         child: StatCard(
                           icon: Icons.battery_charging_full,
                           label: "Electrical Conductivity (Condensed)",
-                          value: displayLiveValues ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm" : "...",
-                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
+                          value:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? "${_latestECCompensated.toStringAsFixed(1)} mS/cm"
+                                  : "...",
+                          isSelected:
+                              selectedStat ==
+                              "Electrical Conductivity (Condensed)",
+                          onTap:
+                              () => _onStatCardTap(
+                                "Electrical Conductivity (Condensed)",
+                              ),
                         ),
                       ),
-                      const Expanded(child: SizedBox.shrink()),
-                      const Expanded(child: SizedBox.shrink()),
                     ],
                   ),
                 ],
@@ -502,8 +555,8 @@ class StatCard extends StatelessWidget {
         isSelected
             ? Colors.greenAccent.withOpacity(0.8)
             : isDarkMode
-                ? Colors.grey[800]!
-                : Colors.white;
+            ? Colors.grey[800]!
+            : Colors.white;
 
     Color textColor = isDarkMode ? Colors.white : Colors.black;
 
@@ -523,11 +576,7 @@ class StatCard extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Icon(
-                icon,
-                size: 30,
-                color: textColor,
-              ),
+              Icon(icon, size: 30, color: textColor),
               const SizedBox(height: 10),
               Text(
                 label,
@@ -584,10 +633,11 @@ class CircularIndicator extends CustomPainter {
     canvas.drawCircle(center, radius, backgroundPaint);
 
     // Progress circle (with gradient if connected)
-    final progressPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 12.0;
+    final progressPaint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 12.0;
 
     // Only draw the arc if connected, otherwise it's a solid circle or nothing
     if (disconnectedMessage == null) {

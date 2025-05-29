@@ -45,9 +45,9 @@ class DetailCard extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.edit_outlined,
-                      color: Colors.blueAccent,
+                      color: ASColor.getTextColor(context),
                     ),
                     onPressed: onEdit ?? () {},
                   ),

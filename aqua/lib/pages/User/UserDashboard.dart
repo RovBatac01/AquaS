@@ -1,4 +1,5 @@
 import 'package:aqua/NavBar/Settings.dart';
+import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
 import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/Login.dart';
@@ -47,7 +48,7 @@ class _MainScreenState extends State<Userdashboard> {
     Center(child: DetailsScreen(key: ValueKey('Home'))),
   Center(child: Statistics(key: ValueKey('Stats'))),
   Center(child: NotificationPage(key: ValueKey('Notif'))),
-  Center(child: CalibrationRequest(key: ValueKey('Request'))),
+  Center(child: CalendarPage()),
   Center(child: SettingsPage(key: ValueKey('Settings'))),
   ];
 
@@ -55,7 +56,7 @@ class _MainScreenState extends State<Userdashboard> {
     'Home',
     'Statistics',
     'Notification',
-    'Request',
+    'Calendar',
     'Settings',
   ];
 
@@ -265,7 +266,7 @@ class _MainScreenState extends State<Userdashboard> {
                     _buildNavItem(Icons.home, 'Home', 0),
                     _buildNavItem(Icons.history, 'History', 1),
                     _buildNavItem(Icons.notifications, 'Notifications', 2),
-                    _buildNavItem(Icons.request_page_outlined, 'Request', 3),
+                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 3),
                     _buildNavItem(Icons.settings, 'Settings', 4),
                   ],
                 ),

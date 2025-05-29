@@ -14,7 +14,8 @@ class ApiService {
   // If running on Android emulator, 10.0.2.2 usually maps to your host machine's localhost.
   // If running on a physical device, use your host machine's actual local IP address (e.g., 192.168.1.X).
   // Make sure this matches the port your server.js is listening on (e.g., 5000 if your server.js uses app.listen(5000))
-  final String _baseUrl = 'http://localhost:5000/api'; // Changed to 10.0.2.2 for emulator compatibility
+  final String _baseUrl =
+      'http://localhost:5000/api'; // Changed to 10.0.2.2 for emulator compatibility
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -23,7 +24,9 @@ class ApiService {
         final data = json.decode(response.body);
         return data['totalUsers'];
       } else {
-        print('Failed to fetch total users: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to fetch total users: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -34,12 +37,16 @@ class ApiService {
 
   Future<int?> fetchTotalEstablishments() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/total-establishments'));
+      final response = await http.get(
+        Uri.parse('$_baseUrl/total-establishments'),
+      );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['totalEstablishments'];
       } else {
-        print('Failed to fetch total establishments: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to fetch total establishments: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -55,7 +62,9 @@ class ApiService {
         final data = json.decode(response.body);
         return data['totalSensors'];
       } else {
-        print('Failed to fetch total sensors: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to fetch total sensors: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -72,7 +81,9 @@ class ApiService {
         final List<dynamic> data = json.decode(response.body);
         return data.map((name) => name.toString()).toList();
       } else {
-        print('Failed to fetch establishment names: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to fetch establishment names: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -109,7 +120,8 @@ class SuperAdminHomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<SuperAdminHomeScreen> {
-  String _username = 'Loading...'; // State variable to hold the fetched username
+  String _username =
+      'Loading...'; // State variable to hold the fetched username
 
   // State variables for fetched counts
   int? _totalUsers;
@@ -119,7 +131,8 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   // --- UPDATED/NEW: State variables for fetched and filtered establishment names ---
   List<String> _allEstablishmentNames = []; // Store all fetched names
   List<String> _filteredEstablishmentNames = []; // Store names for display
-  TextEditingController _searchController = TextEditingController(); // Controller for the search bar
+  TextEditingController _searchController =
+      TextEditingController(); // Controller for the search bar
   // --- END UPDATED/NEW ---
 
   final ApiService _apiService = ApiService(); // Instance of your ApiService
@@ -134,7 +147,8 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose(); // Dispose the controller when the widget is removed
+    _searchController
+        .dispose(); // Dispose the controller when the widget is removed
     super.dispose();
   }
 
@@ -144,7 +158,9 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   Future<void> _loadUsername() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? userToken = prefs.getString('userToken'); // Assuming you store a token
+      final String? userToken = prefs.getString(
+        'userToken',
+      ); // Assuming you store a token
 
       final String? locallySavedUsername = prefs.getString('loggedInUsername');
       if (locallySavedUsername != null && locallySavedUsername.isNotEmpty) {
@@ -157,15 +173,22 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
         setState(() {
           _username = 'Guest'; // User not logged in or token expired/missing
         });
-        print('User token not found. Cannot fetch username. Navigating to Login.');
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+        print(
+          'User token not found. Cannot fetch username. Navigating to Login.',
+        );
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
         return; // Exit if no token
       }
 
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/user/profile'), // Changed to 10.0.2.2 for emulator compatibility
+        Uri.parse(
+          'http://localhost:5000/api/user/profile',
+        ), // Changed to 10.0.2.2 for emulator compatibility
         headers: {
-          'Authorization': 'Bearer $userToken', // Send JWT for backend to identify user
+          'Authorization':
+              'Bearer $userToken', // Send JWT for backend to identify user
           'Content-Type': 'application/json',
         },
       );
@@ -173,7 +196,9 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _username = data['username'] ?? 'User'; // Use 'User' as fallback if username is null
+          _username =
+              data['username'] ??
+              'User'; // Use 'User' as fallback if username is null
         });
         print('Username fetched successfully: $_username');
       } else if (response.statusCode == 401) {
@@ -184,9 +209,13 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
         await prefs.remove('userToken');
         await prefs.remove('userId');
         await prefs.remove('loggedInUsername');
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       } else {
-        print('Failed to load username: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to load username: ${response.statusCode} - ${response.body}',
+        );
         setState(() {
           _username = 'Error'; // Indicate an error
         });
@@ -211,7 +240,11 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
     final establishmentsFuture = _apiService.fetchTotalEstablishments();
     final sensorsFuture = _apiService.fetchTotalSensors();
 
-    final results = await Future.wait([usersFuture, establishmentsFuture, sensorsFuture]);
+    final results = await Future.wait([
+      usersFuture,
+      establishmentsFuture,
+      sensorsFuture,
+    ]);
 
     setState(() {
       _totalUsers = results[0];
@@ -230,7 +263,8 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
     if (names != null) {
       setState(() {
         _allEstablishmentNames = names;
-        _filteredEstablishmentNames = names; // Initially, filtered list is the same as all
+        _filteredEstablishmentNames =
+            names; // Initially, filtered list is the same as all
       });
     }
   }
@@ -242,9 +276,10 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
     if (query.isEmpty) {
       tempFilteredList = _allEstablishmentNames; // Show all if query is empty
     } else {
-      tempFilteredList = _allEstablishmentNames.where((name) {
-        return name.toLowerCase().contains(query.toLowerCase());
-      }).toList();
+      tempFilteredList =
+          _allEstablishmentNames.where((name) {
+            return name.toLowerCase().contains(query.toLowerCase());
+          }).toList();
     }
     setState(() {
       _filteredEstablishmentNames = tempFilteredList;
@@ -256,17 +291,6 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              _fetchDashboardCounts();
-              _fetchEstablishments(); // Refresh both counts and establishments
-            },
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -277,13 +301,27 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Hi, $_username', // Display the fetched username
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Hi, $_username', // Display the fetched username
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontSize: 27,
                           fontWeight: FontWeight.bold,
                           color: ASColor.getTextColor(context),
+                          fontFamily: 'Poppins'
                         ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () {
+                          _fetchDashboardCounts();
+                          _fetchEstablishments(); // Refresh both counts and establishments
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -310,17 +348,17 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                     decoration: InputDecoration(
                       icon: Icon(
                         Icons.search,
-                        color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
+                        color:
+                            isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
                         size: 20,
                       ),
                       hintText: 'Search Establishments...',
                       border: InputBorder.none,
-                      hintStyle: const TextStyle(
-                        color: Colors.grey,
-                      ),
+                      hintStyle: const TextStyle(color: Colors.grey),
                       contentPadding: const EdgeInsets.only(bottom: 10),
                     ),
-                    onChanged: _filterEstablishments, // Call the new filter method
+                    onChanged:
+                        _filterEstablishments, // Call the new filter method
                   ),
                 ),
 
@@ -367,31 +405,45 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
             const SizedBox(height: 20),
 
             // --- UPDATED: Dynamically generate DetailCards based on _filteredEstablishmentNames ---
-            if (_allEstablishmentNames.isEmpty && _searchController.text.isEmpty)
-              const Center(child: CircularProgressIndicator()) // Still loading if all names are empty and no search
-            else if (_filteredEstablishmentNames.isEmpty && _searchController.text.isNotEmpty)
-              const Center(child: Text('No matching establishments found.')) // No results for search
+            if (_allEstablishmentNames.isEmpty &&
+                _searchController.text.isEmpty)
+              const Center(
+                child: CircularProgressIndicator(),
+              ) // Still loading if all names are empty and no search
+            else if (_filteredEstablishmentNames.isEmpty &&
+                _searchController.text.isNotEmpty)
+              const Center(
+                child: Text('No matching establishments found.'),
+              ) // No results for search
             else if (_filteredEstablishmentNames.isEmpty)
-              const Center(child: Text('No establishments found.')) // No establishments after initial load
+              const Center(
+                child: Text('No establishments found.'),
+              ) // No establishments after initial load
             else
               Column(
-                children: _filteredEstablishmentNames.map((name) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0), // Add some spacing between cards
-                    child: DetailCard(
-                      title: name, // Use the filtered establishment name
-                      quality: 'Good', // Assuming 'Good' is a default or placeholder
-                      onEdit: () {
-                        // You might want to pass the establishment name or ID to SAdminDetails
-                        // For example: MaterialPageRoute(builder: (context) => SAdminDetails(establishmentName: name)),
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SAdminDetails()),
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
+                children:
+                    _filteredEstablishmentNames.map((name) {
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: 10.0,
+                        ), // Add some spacing between cards
+                        child: DetailCard(
+                          title: name, // Use the filtered establishment name
+                          quality:
+                              'Good', // Assuming 'Good' is a default or placeholder
+                          onEdit: () {
+                            // You might want to pass the establishment name or ID to SAdminDetails
+                            // For example: MaterialPageRoute(builder: (context) => SAdminDetails(establishmentName: name)),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SAdminDetails(),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }).toList(),
               ),
             // --- END UPDATED ---
           ],
@@ -435,29 +487,25 @@ Widget buildInfoCard({
             Text(
               title,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                    color: Colors.white,
-                  ),
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Poppins',
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Poppins',
-                    color: Colors.white,
-                  ),
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+                color: Colors.white,
+              ),
             ),
           ],
         ),
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 40,
-        ),
+        Icon(icon, color: Colors.white, size: 40),
       ],
     ),
   );

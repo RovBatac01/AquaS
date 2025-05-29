@@ -1,5 +1,6 @@
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Admin/AdminHome.dart';
+import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Notification.dart';
@@ -40,10 +41,12 @@ class Admindashboard extends StatefulWidget {
 
 class _MainScreenState extends State<Admindashboard> {
   int _currentIndex = 0;
+
   final List<Widget> _screens = [
     Center(child: AdminHomeScreen()),
     Center(child: Statistics()),
     Center(child: NotificationPage()),
+    Center(child: CalendarPage()),
     Center(child: SettingsPage()),
   ];
 
@@ -51,7 +54,8 @@ class _MainScreenState extends State<Admindashboard> {
     'Home',
     'Statistics',
     'Notification',
-    'Settings',
+    'Calendar',
+    'Settings'
   ];
 
   //Code for the bottom navigation bar
@@ -78,26 +82,39 @@ class _MainScreenState extends State<Admindashboard> {
             Column(
               children: [
                 Container(
-                  padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                  padding: EdgeInsets.only(
+                    top: 25,
+                    left: 15,
+                    right: 15,
+                  ),
                   height: 70,
                   decoration: BoxDecoration(
                     color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         _titles[_currentIndex],
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 22,
-                          color: ASColor.getTextColor(
-                            context,
-                          ), // Use theme-adaptive text color
+                          color: ASColor.getTextColor(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (_currentIndex == 0) ...[],
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings,
+                          color: ASColor.getTextColor(context),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _currentIndex = _titles.indexOf('Settings');
+                          });
+                        },
+                        tooltip: 'Settings',
+                      ),
                     ],
                   ),
                 ),
@@ -123,7 +140,7 @@ class _MainScreenState extends State<Admindashboard> {
                     _buildNavItem(Icons.home, 'Home', 0),
                     _buildNavItem(Icons.history, 'History', 1),
                     _buildNavItem(Icons.notifications, 'Notifications', 2),
-                    _buildNavItem(Icons.settings, 'Settings', 3),
+                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 3),
                   ],
                 ),
               ),

@@ -238,18 +238,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(
-        // Add a refresh button to the app bar
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              _fetchDashboardCounts(); // Refresh sensor and user counts
-              _fetchEstablishments(); // Refresh establishment list
-            },
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -260,14 +248,28 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Hi, $_loggedInUsername', // Display the fetched username
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 27,
-                          fontWeight: FontWeight.bold,
-                          color: ASColor.getTextColor(context),
-                        ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Hi, $_loggedInUsername', // Display the fetched username
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontSize: 27,
+                              fontWeight: FontWeight.bold,
+                              color: ASColor.getTextColor(context),
+                            ),
+                      ),
+
+                       IconButton(
+                        icon: const Icon(Icons.refresh),
+                        onPressed: () {
+                          _fetchDashboardCounts();
+                          _fetchEstablishments(); // Refresh both counts and establishments
+                        },
+                      ),
+                    ],
                   ),
+
                 ],
               ),
             ),
