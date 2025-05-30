@@ -1063,10 +1063,6 @@ server.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Backend running on http://localhost:${port}`);
 });
 
-io.listen(3001, () => {
-  console.log("🔌 WebSocket server running on port 3001");
-});
-
 // Helper function to get the WHERE clause for time filtering
 function getTimeFilterClause(period) {
   let timeClause = '';

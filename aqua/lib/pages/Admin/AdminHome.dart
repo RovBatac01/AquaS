@@ -10,7 +10,7 @@ import 'package:aqua/pages/Login.dart'; // Import LoginScreen for redirection
 // --- NEW: Create a separate API service class (similar to SAdmin) ---
 class ApiService {
   // IMPORTANT: Replace with your server's actual IP address or domain and port
-  final String _baseUrl = 'http://localhost:5000/api'; // Use 10.0.2.2 for emulator, or your PC's IP for physical device
+  final String _baseUrl = 'https://aquasense-p36u.onrender.com/api'; // Use 10.0.2.2 for emulator, or your PC's IP for physical device
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -142,7 +142,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/user/profile'), // Adjust URL for physical device
+        Uri.parse('https://aquasense-p36u.onrender.com/api/user/profile'), // Adjust URL for physical device
         headers: {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',

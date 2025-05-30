@@ -51,7 +51,7 @@ class _UserListPageState extends State<UserListPage> {
     });
 
     try {
-      final response = await http.get(Uri.parse('http://localhost:5000/users'));
+      final response = await http.get(Uri.parse('https://aquasense-p36u.onrender.com/users'));
 
       if (response.statusCode == 200) {
         final List<dynamic> fetchedData = jsonDecode(response.body);
@@ -83,7 +83,7 @@ class _UserListPageState extends State<UserListPage> {
   ) async {
     try {
       final response = await http.put(
-        Uri.parse('http://localhost:5000/users/$userId'),
+        Uri.parse('https://aquasense-p36u.onrender.com/users/$userId'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': newUsername, 'role': newRole}),
       );
@@ -142,7 +142,7 @@ class _UserListPageState extends State<UserListPage> {
     if (confirm) {
       try {
         final response = await http.delete(
-          Uri.parse('http://localhost:5000/users/$userId'),
+          Uri.parse('https://aquasense-p36u.onrender.com/users/$userId'),
         );
 
         if (response.statusCode == 200) {

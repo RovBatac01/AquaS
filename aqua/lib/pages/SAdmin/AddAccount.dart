@@ -32,7 +32,7 @@ class _SignupState extends State<AddAccount> {
   Future<void> registerUser() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final url = Uri.parse('http://localhost:5000/register'); // Backend URL
+    final url = Uri.parse('https://aquasense-p36u.onrender.com/register'); // Backend URL
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

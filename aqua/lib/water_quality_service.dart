@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:aqua/water_quality_model.dart'; // Import your data model
 
 class WaterQualityService {
-  final String baseUrl = "http://localhost:5000/data"; // Replace with your backend URL and port
+  final String baseUrl = "https://aquasense-p36u.onrender.com/data"; // Replace with your backend URL and port
 
   // Modified to accept a 'period' parameter
   Future<List<WaterQualityData>> fetchHistoricalData(String statType, String period) async {

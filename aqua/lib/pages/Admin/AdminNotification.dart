@@ -41,7 +41,7 @@ class _AdminNotification extends State<AdminNotification> {
     try {
       // The endpoint for Super Admin notifications (unauthenticated)
       final response = await http.get(
-        Uri.parse('http://localhost:5000/api/notifications/admin'), // <-- Adjust your backend URL if different
+        Uri.parse('https://aquasense-p36u.onrender.com/api/notifications/admin'), // <-- Adjust your backend URL if different
         headers: {
           'Content-Type': 'application/json',
           // No 'Authorization' header needed for this unauthenticated endpoint
@@ -90,7 +90,7 @@ class _AdminNotification extends State<AdminNotification> {
   Future<void> _deleteNotification(String notificationId, int index) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://localhost:5000/api/notifications/superadmin/$notificationId'), // <-- Adjust your backend URL if different
+        Uri.parse('https://aquasense-p36u.onrender.com/api/notifications/superadmin/$notificationId'), // <-- Adjust your backend URL if different
         headers: {
           'Content-Type': 'application/json',
           // No 'Authorization' header needed for this unauthenticated endpoint

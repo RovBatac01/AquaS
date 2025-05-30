@@ -15,7 +15,7 @@ class ApiService {
   // If running on a physical device, use your host machine's actual local IP address (e.g., 192.168.1.X).
   // Make sure this matches the port your server.js is listening on (e.g., 5000 if your server.js uses app.listen(5000))
   final String _baseUrl =
-      'http://localhost:5000/api'; // Changed to 10.0.2.2 for emulator compatibility
+      'https://aquasense-p36u.onrender.com/api'; // Changed to 10.0.2.2 for emulator compatibility
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -184,7 +184,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
 
       final response = await http.get(
         Uri.parse(
-          'http://localhost:5000/api/user/profile',
+          'https://aquasense-p36u.onrender.com/api/user/profile',
         ), // Changed to 10.0.2.2 for emulator compatibility
         headers: {
           'Authorization':

@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse("http://localhost:5000/login"),
+        Uri.parse("https://aquasense-p36u.onrender.com/login"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": enteredUsername,
