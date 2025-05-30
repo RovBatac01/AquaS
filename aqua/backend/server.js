@@ -1059,7 +1059,7 @@ app.get("/data/temperature", async (req, res) => {
 });
 
 // Start servers
-server.listen(port, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Backend running on http://localhost:${port}`);
 });
 
