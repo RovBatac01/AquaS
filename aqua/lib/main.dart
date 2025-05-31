@@ -1,13 +1,18 @@
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
 import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:aqua/pages/Admin/AdminNotification.dart';
+import 'package:aqua/pages/Admin/AdminSettings.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
+import 'package:aqua/pages/User/UserSettings.dart';
 import 'package:aqua/pages/ForgotPassword/ConfirmPassword.dart';
+import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDetails.dart';
 import 'package:aqua/pages/SAdmin/SAdminNotification.dart';
+import 'package:aqua/pages/SAdmin/SAdminSettings.dart';
 import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/ForgotPassword/OTP.dart';
 import 'package:aqua/pages/LandingPage.dart';
@@ -79,7 +84,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: LandingPage(),
+      home: SettingsScreen(),
     );
   }
 }

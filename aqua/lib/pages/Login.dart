@@ -320,12 +320,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Text(
                                       "Remember me",
                                       style: TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         fontFamily: 'Poppins',
-                                        color:
-                                            isDarkMode
-                                                ? Colors.white70
-                                                : Colors.black87,
+                                        color: ASColor.getTextColor(context),
                                       ),
                                     ),
                                   ],
@@ -352,12 +349,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 "Forgot password?",
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontFamily: 'Poppins',
-                                  color:
-                                      isDarkMode
-                                          ? Colors.white70
-                                          : Colors.black54,
+                                  color: ASColor.getTextColor(context),
                                 ),
                               ),
                             ),

@@ -37,6 +37,7 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            
             // Dark Mode switch with left alignment
             Padding(
               padding: const EdgeInsets.only(
@@ -67,41 +68,40 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20), // spacing between widgets
             // same left padding as above
-            Padding(
-              padding: const EdgeInsets.only(right: 9.0),
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  foregroundColor:
-                      Theme.of(context).colorScheme.onBackground, // text/icon color
-                  backgroundColor:
-                      Colors.transparent, // Remove rounded background
-                  shape: null, // Remove any shape
-                ),
-                onPressed: () {
-                  _logout(context); // Call the logout function here
-                },
-                child: Row(
-                  children: [
-                    Text(
-                      'Log Out',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.onBackground, // Use theme color
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      Icons.logout,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(right: 9.0),
+            //   child: TextButton(
+            //     style: TextButton.styleFrom(
+            //       foregroundColor:
+            //           Theme.of(context).colorScheme.onBackground, // text/icon color
+            //       backgroundColor:
+            //           Colors.transparent, // Remove rounded background
+            //       shape: null, // Remove any shape
+            //     ),
+            //     onPressed: () {
+            //       _logout(context); // Call the logout function here
+            //     },
+            //     child: Row(
+            //       children: [
+            //         Text(
+            //           'Log Out',
+            //           style: TextStyle(
+            //             fontSize: 16,
+            //             color: Theme.of(context).colorScheme.onBackground, // Use theme color
+            //             fontFamily: 'Poppins',
+            //           ),
+            //         ),
+            //         const Spacer(),
+            //         Icon(
+            //           Icons.logout,
+            //           size: 20,
+            //           color: Theme.of(context).colorScheme.onBackground,
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

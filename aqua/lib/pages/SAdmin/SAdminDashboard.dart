@@ -2,11 +2,13 @@ import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Calendar.dart';
+import 'package:aqua/pages/User/UserSettings.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
 import 'package:aqua/pages/SAdmin/SAdminNotification.dart';
+import 'package:aqua/pages/SAdmin/SAdminSettings.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -48,7 +50,7 @@ class _MainScreenState extends State<Sadmindashboard> {
     Center(child: Statistics()),
     Center(child: SAdminNotification()),
     Center(child: CalendarPage()),
-    Center(child: SettingsPage()),
+    Center(child: SAdminSettingsScreen()),
   ];
 
   final List<String> _titles = [

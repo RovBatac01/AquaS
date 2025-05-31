@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:aqua/pages/Login.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http; // For making HTTP requests
 import 'dart:convert'; // For JSON encoding/decoding
 import 'package:aqua/pages/Login.dart';
@@ -37,6 +38,8 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  bool _obscurenewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   // State variables to track the current stage
   bool _isOTPSent = false;
@@ -325,18 +328,35 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                           // Show email input
                           TextField(
                             controller: _newPasswordController,
+                            obscureText: _obscurenewPassword,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
                                   isDarkMode ? Colors.white10 : Colors.black12,
                               hintText: 'New Password',
                               hintStyle: TextStyle(
-                                color: ASColor.getTextColor(context),
+                                fontSize: 13,
+                                color: ASColor.getTextColor(context).withOpacity(0.5),
                                 fontFamily: 'Poppins',
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: BorderSide.none,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurenewPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: ASColor.getTextColor(
+                                    context,
+                                  ).withOpacity(0.5),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurenewPassword = !_obscurenewPassword;
+                                  });
+                                },
                               ),
                             ),
                             style: TextStyle(
@@ -349,6 +369,7 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
 
                           TextField(
                             controller: _confirmPasswordController,
+                            obscureText: _obscureConfirmPassword,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
@@ -356,11 +377,30 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                               hintText: 'Confirm Password',
                               hintStyle: TextStyle(
                                 fontFamily: 'Poppins',
-                                color: ASColor.getTextColor(context),
+                                fontSize: 13,
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.5),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: BorderSide.none,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: ASColor.getTextColor(
+                                    context,
+                                  ).withOpacity(0.5),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
+                                  });
+                                },
                               ),
                             ),
                             style: TextStyle(
@@ -376,7 +416,9 @@ class _ForgotPasswordScreenState extends State<ConfirmPassword> {
                             child: ElevatedButton(
                               onPressed: () => _sendOTP(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: ASColor.buttonBackground(context),
+                                backgroundColor: ASColor.buttonBackground(
+                                  context,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),

@@ -1,6 +1,7 @@
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
+import 'package:aqua/pages/User/UserSettings.dart';
 import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
@@ -49,7 +50,7 @@ class _MainScreenState extends State<Userdashboard> {
   Center(child: Statistics(key: ValueKey('Stats'))),
   Center(child: NotificationPage(key: ValueKey('Notif'))),
   Center(child: CalendarPage()),
-  Center(child: SettingsPage(key: ValueKey('Settings'))),
+  Center(child: SettingsScreen()),
   ];
 
   final List<String> _titles = [
