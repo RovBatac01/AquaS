@@ -28,6 +28,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
   bool ProfileExpanded = false;
   bool AppearanceExpanded = false;
   bool SessionExpanded = false;
+  bool FAQExpanded = false;
   final TextEditingController username = TextEditingController();
   final TextEditingController email = TextEditingController();
   final TextEditingController phoneNumber = TextEditingController();
@@ -90,7 +91,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
             SizedBox(height: 20),
 
-            //List Tile for Help and Support Dropdown
+            //List Tile for Session History
             ListTile(
               leading: Icon(Icons.history_rounded),
               title: Text(
@@ -125,7 +126,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode', 
+                themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode',
                 style: TextStyle(
                   fontSize: 16,
                   fontFamily: 'Poppins',
@@ -137,10 +138,14 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           Switch(
             value: themeProvider.isDarkMode,
             onChanged: themeProvider.toggleTheme,
-            activeColor: ASColor.buttonBackground(context), // Thumb color when ON
+            activeColor: ASColor.buttonBackground(
+              context,
+            ), // Thumb color when ON
             activeTrackColor: ASColor.BGFourth, // Track color when ON
             inactiveThumbColor: ASColor.BGFourth, // Thumb color when OFF
-            inactiveTrackColor: ASColor.buttonBackground(context), // Track color when OFF
+            inactiveTrackColor: ASColor.buttonBackground(
+              context,
+            ), // Track color when OFF
           ),
         ],
       ),
@@ -148,141 +153,140 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
   }
 
   Widget AccountActivityLog() {
-  // Mock data – replace this with your actual login/logout history
-  final List<Map<String, String>> activityLog = [
-    {
-      'action': 'Login',
-      'timestamp': '2025-05-30 10:42 AM',
-    },
-    {
-      'action': 'Logout',
-      'timestamp': '2025-05-30 11:15 AM',
-    },
-    {
-      'action': 'Login',
-      'timestamp': '2025-05-29 09:08 PM',
-    },
-  ];
+    // Mock data – replace this with your actual login/logout history
+    final List<Map<String, String>> activityLog = [
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+      {'action': 'Logout', 'timestamp': '2025-05-30 11:15 AM'},
+      {'action': 'Login', 'timestamp': '2025-05-29 09:08 PM'},
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+    ];
 
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-    padding: const EdgeInsets.all(12.0),
-    decoration: BoxDecoration(
-      color: Theme.of(context).cardColor,
-      borderRadius: BorderRadius.circular(12),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ],
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Account Activity',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
-            color: Theme.of(context).colorScheme.onSurface,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: ASColor.Background(context),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 8),
-        ...activityLog.map((entry) {
-          final isLogin = entry['action'] == 'Login';
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-            dense: true,
-            leading: Icon(
-              isLogin ? Icons.login : Icons.logout,
-              size: 20,
-              color: isLogin ? Colors.green : Colors.red,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Account Activity',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Theme.of(context).colorScheme.onSurface,
             ),
-            title: Text(
-              entry['action']!,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'Poppins',
-                color: Theme.of(context).colorScheme.onSurface,
+          ),
+          const SizedBox(height: 8),
+          ...activityLog.map((entry) {
+            final isLogin = entry['action'] == 'Login';
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+              dense: true,
+              leading: Icon(
+                isLogin ? Icons.login : Icons.logout,
+                size: 20,
+                color: isLogin ? Colors.green : Colors.red,
               ),
-            ),
-            subtitle: Text(
-              entry['timestamp']!,
-              style: TextStyle(
-                fontSize: 12,
-                fontFamily: 'Poppins',
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              title: Text(
+                entry['action']!,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Poppins',
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
-            ),
-          );
-        }).toList(),
-      ],
-    ),
-  );
-}
+              subtitle: Text(
+                entry['timestamp']!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'Poppins',
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
 
   // Help and Support design
-//   Widget AccountActivityLog() {
-//   // Mock data: Replace this with real data from your backend
-//   final List<Map<String, String>> activityLog = [
-//     {
-//       'action': 'Login',
-//       'timestamp': '2025-05-30 10:42 AM',
-//     },
-//     {
-//       'action': 'Logout',
-//       'timestamp': '2025-05-30 11:15 AM',
-//     },
-//     {
-//       'action': 'Login',
-//       'timestamp': '2025-05-29 09:08 PM',
-//     },
-//   ];
+  //   Widget AccountActivityLog() {
+  //   // Mock data: Replace this with real data from your backend
+  //   final List<Map<String, String>> activityLog = [
+  //     {
+  //       'action': 'Login',
+  //       'timestamp': '2025-05-30 10:42 AM',
+  //     },
+  //     {
+  //       'action': 'Logout',
+  //       'timestamp': '2025-05-30 11:15 AM',
+  //     },
+  //     {
+  //       'action': 'Login',
+  //       'timestamp': '2025-05-29 09:08 PM',
+  //     },
+  //   ];
 
-//   return Column(
-//     children: activityLog.map((entry) {
-//       bool isLogin = entry['action'] == 'Login';
-//       return ListTile(
-//         contentPadding: const EdgeInsets.only(
-//           left: 50.0,
-//           right: 16.0,
-//           top: 4.0,
-//           bottom: 4.0,
-//         ),
-//         dense: true,
-//         leading: Icon(
-//           isLogin ? Icons.login : Icons.logout,
-//           size: 20,
-//           color: isLogin
-//               ? Colors.green
-//               : Colors.red,
-//         ),
-//         title: Text(
-//           '${entry['action']}',
-//           style: TextStyle(
-//             fontSize: 14,
-//             fontWeight: FontWeight.w500,
-//             fontFamily: 'Poppins',
-//             color: ASColor.getTextColor(context),
-//           ),
-//         ),
-//         subtitle: Text(
-//           '${entry['timestamp']}',
-//           style: TextStyle(
-//             fontSize: 12,
-//             fontFamily: 'Poppins',
-//             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-//             height: 1.3,
-//           ),
-//         ),
-//       );
-//     }).toList(),
-//   );
-// }
+  //   return Column(
+  //     children: activityLog.map((entry) {
+  //       bool isLogin = entry['action'] == 'Login';
+  //       return ListTile(
+  //         contentPadding: const EdgeInsets.only(
+  //           left: 50.0,
+  //           right: 16.0,
+  //           top: 4.0,
+  //           bottom: 4.0,
+  //         ),
+  //         dense: true,
+  //         leading: Icon(
+  //           isLogin ? Icons.login : Icons.logout,
+  //           size: 20,
+  //           color: isLogin
+  //               ? Colors.green
+  //               : Colors.red,
+  //         ),
+  //         title: Text(
+  //           '${entry['action']}',
+  //           style: TextStyle(
+  //             fontSize: 14,
+  //             fontWeight: FontWeight.w500,
+  //             fontFamily: 'Poppins',
+  //             color: ASColor.getTextColor(context),
+  //           ),
+  //         ),
+  //         subtitle: Text(
+  //           '${entry['timestamp']}',
+  //           style: TextStyle(
+  //             fontSize: 12,
+  //             fontFamily: 'Poppins',
+  //             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+  //             height: 1.3,
+  //           ),
+  //         ),
+  //       );
+  //     }).toList(),
+  //   );
+  // }
+
+
+  
 
   //Profile Management Design
   Widget buildProfileForm() {

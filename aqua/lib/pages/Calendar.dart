@@ -75,15 +75,15 @@ class _CalendarPageState extends State<CalendarPage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  @override  Widget build(BuildContext context) {
     final selectedEvents = _events[DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day)] ?? [];
-
+    
     return Scaffold(
       backgroundColor: ASColor.Background(context),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
           children: [
             TableCalendar(
               firstDay: DateTime.utc(2000, 1, 1),
@@ -452,9 +452,8 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
 
-            const SizedBox(height: 20),
-
-            Expanded( // Use Expanded to allow the ListView to take available space
+            const SizedBox(height: 20),            SizedBox(
+              height: 300, // Fixed height for the events container
               child: Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(16),
@@ -558,6 +557,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ],
         ),
       ),
+    )
     );
   }
 }

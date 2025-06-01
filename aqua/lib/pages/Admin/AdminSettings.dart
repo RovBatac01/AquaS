@@ -28,6 +28,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
   bool ProfileExpanded = false;
   bool AppearanceExpanded = false;
   bool SessionExpanded = false;
+  bool FAQExpanded = false;
   final TextEditingController username = TextEditingController();
   final TextEditingController email = TextEditingController();
   final TextEditingController phoneNumber = TextEditingController();
@@ -46,6 +47,8 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+
             //List Tile for Profile Management Drop Down
             ListTile(
               leading: Icon(Icons.person),
@@ -70,6 +73,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
             SizedBox(height: 20),
 
             //List Tile for Dark Mode and Light Mode Drop Down
+
             ListTile(
               leading: Icon(Icons.dark_mode),
               title: Text(
@@ -87,6 +91,26 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               },
             ),
             if (AppearanceExpanded) Appearance(),
+
+            SizedBox(height: 20),
+
+            ListTile(
+              leading: Icon(Icons.question_answer_outlined),
+              title: Text(
+                'Help and Support',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text('Any Questions or Concerns?'),
+              trailing: Icon(
+                FAQExpanded ? Icons.expand_less : Icons.expand_more,
+              ),
+              onTap: () {
+                setState(() {
+                  FAQExpanded = !FAQExpanded;
+                });
+              },
+            ),
+            if (FAQExpanded) Question(),
 
             SizedBox(height: 20),
 
@@ -224,6 +248,85 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     ),
   );
 }
+
+// Help and Support design
+  Widget Question() {
+    return Column(
+      children: [
+        ListTile(
+          contentPadding: const EdgeInsets.only(
+            left: 50.0,
+            right: 16.0,
+            top: 4.0,
+            bottom: 4.0,
+          ),
+          dense: true, // Makes the tile more compact
+          leading: Icon(
+            Icons.shield_outlined,
+            size: 20,
+            color: ASColor.getTextColor(context),
+          ),
+          title: Text(
+            'Safety Score Info',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Poppins',
+              color: ASColor.getTextColor(context),
+            ),
+          ),
+          subtitle: Text(
+            'The safety score is based on sensor data like pH, turbidity, and temperature.',
+            style: TextStyle(
+              fontSize: 12.sp.clamp(12, 16),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              fontFamily: 'Poppins',
+              height: 1.3,
+            ),
+          ),
+          onTap: () {
+            // Optional: Add behavior here
+          },
+        ),
+
+        ListTile(
+          contentPadding: const EdgeInsets.only(
+            left: 50.0,
+            right: 16.0,
+            top: 4.0,
+            bottom: 4.0,
+          ),
+          dense: true, // Makes the tile more compact
+          leading: Icon(
+            Icons.support_agent_outlined,
+            size: 20,
+            color: ASColor.getTextColor(context),
+          ),
+          title: Text(
+            'Contact Support',
+            style: TextStyle(
+              fontSize: 14.sp.clamp(12, 16),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Poppins',
+              color: ASColor.getTextColor(context),
+            ),
+          ),
+          subtitle: Text(
+            'If you have any questions, reach us',
+            style: TextStyle(
+              fontSize: 12.sp.clamp(12, 16),
+              color: ASColor.getTextColor(context).withOpacity(0.7),
+              fontFamily: 'Poppins',
+              height: 1.3,
+            ),
+          ),
+          onTap: () {
+            // Optional: Add behavior here
+          },
+        ),
+      ],
+    );
+  }
 
   // Help and Support design
 //   Widget AccountActivityLog() {

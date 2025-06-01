@@ -211,13 +211,13 @@ class _MainScreenState extends State<Userdashboard> {
             Column(
               children: [
                 Container(
-                  padding: EdgeInsets.only(top: 25, left: 15, bottom: 15),
+                  padding: EdgeInsets.only(top: 25, left: 15,),
                   height: 70,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+                    color: ASColor.Background(context),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         _titles[_currentIndex],
@@ -231,6 +231,19 @@ class _MainScreenState extends State<Userdashboard> {
                         ),
                       ),
                       if (_currentIndex == 0) ...[],
+
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings,
+                          color: ASColor.getTextColor(context),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _currentIndex = _titles.indexOf('Settings');
+                          });
+                        },
+                        tooltip: 'Settings',
+                      ),
                     ],
                   ),
                 ),
@@ -253,7 +266,7 @@ class _MainScreenState extends State<Userdashboard> {
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+            color: ASColor.Background(context),
           ),
           child: SafeArea(
             top: false,
@@ -267,8 +280,7 @@ class _MainScreenState extends State<Userdashboard> {
                     _buildNavItem(Icons.home, 'Home', 0),
                     _buildNavItem(Icons.history, 'History', 1),
                     _buildNavItem(Icons.notifications, 'Notifications', 2),
-                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 3),
-                    _buildNavItem(Icons.settings, 'Settings', 4),
+                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 3),  
                   ],
                 ),
               ),

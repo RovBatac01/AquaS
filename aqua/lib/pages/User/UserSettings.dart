@@ -28,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool ProfileExpanded = false;
   bool AppearanceExpanded = false;
   bool FAQExpanded = false;
+  bool SessionExpanded = false;
   final TextEditingController username = TextEditingController();
   final TextEditingController email = TextEditingController();
   final TextEditingController phoneNumber = TextEditingController();
@@ -108,6 +109,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             if (FAQExpanded) Question(),
+
+            SizedBox(height: 20),
+
+            ListTile(
+              leading: Icon(Icons.history_rounded),
+              title: Text(
+                'Session History',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text('You can monitor your account activity'),
+              trailing: Icon(
+                SessionExpanded ? Icons.expand_less : Icons.expand_more,
+              ),
+              onTap: () {
+                setState(() {
+                  SessionExpanded = !SessionExpanded;
+                });
+              },
+            ),
+            if (SessionExpanded) AccountActivityLog(),
           ],
         ),
       ),
@@ -223,6 +244,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget AccountActivityLog() {
+    // Mock data – replace this with your actual login/logout history
+    final List<Map<String, String>> activityLog = [
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+      {'action': 'Logout', 'timestamp': '2025-05-30 11:15 AM'},
+      {'action': 'Login', 'timestamp': '2025-05-29 09:08 PM'},
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+      {'action': 'Login', 'timestamp': '2025-05-30 10:42 AM'},
+    ];
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: ASColor.Background(context),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Account Activity',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...activityLog.map((entry) {
+            final isLogin = entry['action'] == 'Login';
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+              dense: true,
+              leading: Icon(
+                isLogin ? Icons.login : Icons.logout,
+                size: 20,
+                color: isLogin ? Colors.green : Colors.red,
+              ),
+              title: Text(
+                entry['action']!,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Poppins',
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              subtitle: Text(
+                entry['timestamp']!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'Poppins',
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.7),
+                ),
+              ),
+            );
+          }).toList(),
+        ],
+      ),
     );
   }
 
