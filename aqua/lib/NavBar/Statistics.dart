@@ -174,6 +174,7 @@ class _StatisticsState extends State<Statistics> {
     }
 
     return Scaffold(
+      backgroundColor: ASColor.Background(context),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
