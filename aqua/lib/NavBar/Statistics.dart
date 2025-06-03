@@ -136,9 +136,15 @@ class _StatisticsState extends State<Statistics> {
           color:
               Theme.of(context).brightness == Brightness.dark
                   ? color.withOpacity(0.1)
-                  : ASColor.BGFourth,
+                  : ASColor.Background(context),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2), // subtle shadow
+              blurRadius: 6,
+              offset: Offset(0, 2), // horizontal and vertical offset
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -211,32 +217,44 @@ class _StatisticsState extends State<Statistics> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Button styled to match dropdown height
-                  SizedBox(
+                  Container(
                     height: 30,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Your logic
-                      },
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: Size(100, 36), // Match height
-                        side: BorderSide(color: ASColor.getTextColor(context), width: 1.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
+                    child: Material(
+                      color: ASColor.Background(context), // Background based on theme
+                      borderRadius: BorderRadius.circular(12),
+                      elevation: 2, // Slight elevation for subtle shadow
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          // Handle export action here
+                          print('Export tapped');
+                        }, 
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            // Optional: If you want extra shadow beyond Material
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                spreadRadius: 1,
+                                blurRadius: 6,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Text(
                             'Export',
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              fontSize: 12,
+                              fontSize: 14,
                               color: ASColor.getTextColor(context),
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -247,12 +265,15 @@ class _StatisticsState extends State<Statistics> {
                     width: 100,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: ASColor.getTextColor(context),
-                          width: 1.5,
-                        ),
+                        color: ASColor.Background(context), // or any light background color
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Center(
                         child: DropdownButtonHideUnderline(
@@ -413,13 +434,16 @@ class _StatisticsState extends State<Statistics> {
                     width: 90,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: ASColor.getTextColor(context),
-                        width: 1.5,
+                        color: ASColor.Background(context), // or any light background color
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: selectedStat,
