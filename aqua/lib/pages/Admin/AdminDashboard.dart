@@ -1,5 +1,6 @@
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Admin/AdminHome.dart';
+import 'package:aqua/pages/Admin/AdminSettings.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
@@ -47,7 +48,7 @@ class _MainScreenState extends State<Admindashboard> {
     Center(child: Statistics()),
     Center(child: NotificationPage()),
     Center(child: CalendarPage()),
-    Center(child: SettingsPage()),
+    Center(child: AdminSettingsScreen()),
   ];
 
   final List<String> _titles = [
@@ -89,7 +90,7 @@ class _MainScreenState extends State<Admindashboard> {
                   ),
                   height: 70,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+                    color: ASColor.Background(context,)
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -126,7 +127,7 @@ class _MainScreenState extends State<Admindashboard> {
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+            color: ASColor.Background(context),
           ),
           child: SafeArea(
             top: false,

@@ -287,6 +287,78 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   }
   // --- END NEW ---
 
+  void _showAddEstablishmentDialog(BuildContext context) {
+  final TextEditingController nameController = TextEditingController();
+  final Map<String, bool> parameters = {
+    'Conductivity': false,
+    'EC': false,
+    'pH Level': false,
+    'Salinity': false,
+    'TDS': false,
+    'Temperature': false,
+    'Turbidity': false,
+  };
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('Add Establishment'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Establishment Name',
+                ),
+              ),
+              SizedBox(height: 20),
+              ...parameters.keys.map((key) {
+                return CheckboxListTile(
+                  title: Text(key),
+                  value: parameters[key],
+                  onChanged: (value) {
+                    parameters[key] = value!;
+                    // Required to rebuild UI when checkbox changes
+                    (context as Element).markNeedsBuild();
+                  },
+                );
+              }).toList(),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+            },
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Collect data here
+              String name = nameController.text;
+              Map<String, bool> selectedParams = {
+                for (var entry in parameters.entries)
+                  if (entry.value) entry.key: entry.value,
+              };
+
+              // TODO: Send to backend or handle as needed
+              print('Name: $name');
+              print('Selected: $selectedParams');
+
+              Navigator.of(context).pop(); // Close dialog
+            },
+            child: Text('Confirm'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -310,7 +382,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                           fontSize: 27,
                           fontWeight: FontWeight.bold,
                           color: ASColor.getTextColor(context),
-                          fontFamily: 'Poppins'
+                          fontFamily: 'Poppins',
                         ),
                       ),
 
@@ -364,6 +436,39 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
 
                 const SizedBox(height: 10),
 
+                Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.end, // Aligns button to the right
+                  children: [
+                    SizedBox(
+                      width: 150,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showAddEstablishmentDialog(context),
+                        // icon: Icon(Icons.add,
+                        // color: ASColor.getTextColor(context),),
+                        label: Text('Add Establishment',
+                        style: TextStyle(
+                          color: ASColor.getTextColor(context),
+                          fontFamily: 'Poppins',
+                          fontSize: 10,
+                        ),),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ASColor.buttonBackground(context),
+                          foregroundColor: Colors.white, // Text/icon color
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ), // Rounded corners
+                          ),
+                          elevation: 4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                SizedBox(height: 20),
+
                 // Use fetched data for Info Cards
                 if (_totalEstablishments == null)
                   const Center(child: CircularProgressIndicator())
@@ -375,7 +480,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                     icon: Icons.window_outlined,
                     color: Colors.blue,
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 5),
 
                 if (_totalSensors == null)
                   const Center(child: CircularProgressIndicator())
@@ -387,7 +492,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                     icon: Icons.sensors_rounded,
                     color: const Color(0xFF4BCA8C),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 5),
 
                 if (_totalUsers == null)
                   const Center(child: CircularProgressIndicator())

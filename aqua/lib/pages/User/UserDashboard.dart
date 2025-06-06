@@ -44,13 +44,14 @@ class Userdashboard extends StatefulWidget {
 
 class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
+  final TextEditingController _deviceIdController = TextEditingController();
 
   final List<Widget> _screens = [
     Center(child: DetailsScreen(key: ValueKey('Home'))),
-  Center(child: Statistics(key: ValueKey('Stats'))),
-  Center(child: NotificationPage(key: ValueKey('Notif'))),
-  Center(child: CalendarPage()),
-  Center(child: SettingsScreen()),
+    Center(child: Statistics(key: ValueKey('Stats'))),
+    Center(child: NotificationPage(key: ValueKey('Notif'))),
+    Center(child: CalendarPage()),
+    Center(child: SettingsScreen()),
   ];
 
   final List<String> _titles = [
@@ -119,85 +120,116 @@ class _MainScreenState extends State<Userdashboard> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    
 
     // Show popup dialog when the dashboard is first built (user just logged in)
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   showDialog(
-    //     context: context,
-    //     barrierDismissible: false,
-    //     barrierColor: Colors.black.withOpacity(
-    //       0.9,
-    //     ), // darken and blur background
-    //     builder:
-    //         (context) => Stack(
-    //           children: [
-    //             // Blur the background
-    //             BackdropFilter(
-    //               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-    //               child: Container(color: Colors.transparent),
-    //             ),
-    //             Center(
-    //               child: AlertDialog(
-    //                 backgroundColor: ASColor.getCardColor(context),
-    //                 title: Text(
-    //                   'Access Required',
-    //                   style: TextStyle(
-    //                     color: ASColor.getTextColor(context),
-    //                     fontFamily: 'Montserrat',
-    //                     fontSize: 18,
-    //                     fontWeight: FontWeight.bold,
-    //                   ),
-    //                 ),
-    //                 content: Text(
-    //                   'You need a Super Admin approval to view sensor data. Your request for access has been sent. Please wait for approval, or logout .',
-    //                   style: TextStyle(
-    //                     color: ASColor.getTextColor(context),
-    //                     fontFamily: 'Poppins',
-    //                     fontSize: 14,
-    //                   ),
-    //                 ),
-    //                 actions: [
-    //                   TextButton(
-    //                     onPressed: () {
-    //                       // Send request logic here
-    //                       Navigator.of(context).pop();
-    //                       // Optionally show a confirmation dialog or snackbar
-    //                     },
-    //                     child: Text(
-    //                       'Send Request',
-    //                       style: TextStyle(
-    //                         color: ASColor.getTextColor(context),
-    //                         fontFamily: 'Poppins',
-    //                         fontSize: 14,
-    //                       ),
-    //                     ),
-    //                   ),
-    //                   TextButton(
-    //                     onPressed: () {
-    //                       Navigator.of(context).pop();
-    //                       Navigator.pushReplacement(
-    //                         context,
-    //                         MaterialPageRoute(
-    //                           builder: (context) => LoginScreen(),
-    //                         ),
-    //                       );
-    //                     },
-    //                     child: Text(
-    //                       'Logout',
-    //                       style: TextStyle(
-    //                         color: ASColor.getTextColor(context),
-    //                         fontFamily: 'Poppins',
-    //                         fontSize: 14,
-    //                       ),
-    //                     ),
-    //                   ),
-    //                 ],
-    //               ),
-    //             ),
-    //           ],
-    //         ),
-    //   );
-    // });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        barrierColor: Colors.black.withOpacity(
+          0.9,
+        ), // darken and blur background
+        builder:
+            (context) => Stack(
+              children: [
+                // Blur the background
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                  child: Container(color: Colors.transparent),
+                ),
+                Center(
+                  child: AlertDialog(
+                    backgroundColor: ASColor.getCardColor(context),
+                    title: Text(
+                      'Access Required',
+                      style: TextStyle(
+                        color: ASColor.getTextColor(context),
+                        fontFamily: 'Montserrat',
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'You need a Super Admin approval to view sensor data. Your request for access has been sent. Please wait for approval, or logout .',
+                          style: TextStyle(
+                            color: ASColor.getTextColor(context),
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Container(
+                          height: 50, // Adjust this value to change the height
+                          child: TextField(
+                            controller: _deviceIdController,
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor:
+                                  isDarkMode ? Colors.white10 : Colors.black12,
+                              hintText: 'Input Device ID',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            obscureText: true,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          // Send request logic here
+                          Navigator.of(context).pop();
+                          // Optionally show a confirmation dialog or snackbar
+                        },
+                        child: Text(
+                          'Send Request',
+                          style: TextStyle(
+                            color: ASColor.getTextColor(context),
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Logout',
+                          style: TextStyle(
+                            color: ASColor.getTextColor(context),
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+      );
+    });
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -211,11 +243,9 @@ class _MainScreenState extends State<Userdashboard> {
             Column(
               children: [
                 Container(
-                  padding: EdgeInsets.only(top: 25, left: 15,),
+                  padding: EdgeInsets.only(top: 25, left: 15),
                   height: 70,
-                  decoration: BoxDecoration(
-                    color: ASColor.Background(context),
-                  ),
+                  decoration: BoxDecoration(color: ASColor.Background(context)),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -265,9 +295,7 @@ class _MainScreenState extends State<Userdashboard> {
           ],
         ),
         bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: ASColor.Background(context),
-          ),
+          decoration: BoxDecoration(color: ASColor.Background(context)),
           child: SafeArea(
             top: false,
             child: SizedBox(
@@ -280,7 +308,7 @@ class _MainScreenState extends State<Userdashboard> {
                     _buildNavItem(Icons.home, 'Home', 0),
                     _buildNavItem(Icons.history, 'History', 1),
                     _buildNavItem(Icons.notifications, 'Notifications', 2),
-                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 3),  
+                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 3),
                   ],
                 ),
               ),

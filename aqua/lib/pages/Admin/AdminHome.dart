@@ -238,137 +238,151 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.only(left: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        color: ASColor.Background(context),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.only(left: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Hi, $_loggedInUsername', // Display the fetched username
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontSize: 27,
+                                fontWeight: FontWeight.bold,
+                                color: ASColor.getTextColor(context),
+                              ),
+                        ),
+        
+                         IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: () {
+                            _fetchDashboardCounts();
+                            _fetchEstablishments(); // Refresh both counts and establishments
+                          },
+                        ),
+                      ],
+                    ),
+        
+                  ],
+                ),
+              ),
+        
+              const SizedBox(height: 20),
+        
+              Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Hi, $_loggedInUsername', // Display the fetched username
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 27,
-                              fontWeight: FontWeight.bold,
-                              color: ASColor.getTextColor(context),
-                            ),
+                  Container(
+                    height: 36,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: TextField(
+                      controller: _searchController, // Assign the controller
+                      style: TextStyle(
+                        color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
+                        fontSize: 14,
                       ),
-
-                       IconButton(
-                        icon: const Icon(Icons.refresh),
-                        onPressed: () {
-                          _fetchDashboardCounts();
-                          _fetchEstablishments(); // Refresh both counts and establishments
-                        },
+                      decoration: InputDecoration(
+                        icon: Icon(
+                          Icons.search,
+                          color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
+                          size: 20,
+                        ),
+                        hintText: 'Search Establishments...',
+                        border: InputBorder.none,
+                        hintStyle: const TextStyle(
+                          color: Colors.grey,
+                        ),
+                        contentPadding: const EdgeInsets.only(bottom: 10),
                       ),
-                    ],
+                      onChanged: _filterEstablishments, // Call the new filter method
+                    ),
                   ),
-
+        
+                  const SizedBox(height: 10),
+        
+                  // --- NEW: Use fetched data for Info Cards (Total Sensors) ---
+                  if (_totalSensors == null)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    buildInfoCard(
+                      context: context,
+                      title: 'Total Sensors',
+                      value: _totalSensors?.toString() ?? 'N/A',
+                      icon: Icons.sensors_rounded,
+                      color: const Color(0xFF4BCA8C),
+                    ),
+                  const SizedBox(height: 10), // Added spacing for consistency
+        
+                  // --- NEW: Use fetched data for Info Cards (Total Users) ---
+                  if (_totalUsers == null)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    buildInfoCard(
+                      context: context,
+                      title: 'Total Users',
+                      value: _totalUsers?.toString() ?? 'N/A',
+                      icon: Icons.people_alt_outlined,
+                      color: Colors.redAccent,
+                    ),
+                  // --- END NEW ---
+                  const SizedBox(height: 20),
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Assign Establishments', 
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: ASColor.getTextColor(context),
+                    )),
+                  ),
                 ],
               ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Column(
-              children: [
-                Container(
-                  height: 36,
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: TextField(
-                    controller: _searchController, // Assign the controller
-                    style: TextStyle(
-                      color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      icon: Icon(
-                        Icons.search,
-                        color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
-                        size: 20,
+        
+              const SizedBox(height: 20),
+        
+              // --- NEW: Dynamically generate DetailCards based on filtered establishments ---
+              if (_allEstablishmentNames.isEmpty && _searchController.text.isEmpty)
+                const Center(child: CircularProgressIndicator()) // Still loading if all names are empty and no search
+              else if (_filteredEstablishmentNames.isEmpty && _searchController.text.isNotEmpty)
+                const Center(child: Text('No matching establishments found.')) // No results for search
+              else if (_filteredEstablishmentNames.isEmpty)
+                const Center(child: Text('No establishments found.')) // No establishments after initial load
+              else
+                Column(
+                  children: _filteredEstablishmentNames.map((name) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0), // Add some spacing between cards
+                      child: DetailCard(
+                        title: name, // Use the filtered establishment name
+                        quality: 'Good', // Assuming 'Good' is a default or placeholder
+                        onEdit: () {
+                          // You can pass the establishment name or ID to AdminDetailsScreen if needed
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => AdminDetailsScreen()),
+                          );
+                        },
                       ),
-                      hintText: 'Search Establishments...',
-                      border: InputBorder.none,
-                      hintStyle: const TextStyle(
-                        color: Colors.grey,
-                      ),
-                      contentPadding: const EdgeInsets.only(bottom: 10),
-                    ),
-                    onChanged: _filterEstablishments, // Call the new filter method
-                  ),
+                    );
+                  }).toList(),
                 ),
-
-                const SizedBox(height: 10),
-
-                // --- NEW: Use fetched data for Info Cards (Total Sensors) ---
-                if (_totalSensors == null)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  buildInfoCard(
-                    context: context,
-                    title: 'Total Sensors',
-                    value: _totalSensors?.toString() ?? 'N/A',
-                    icon: Icons.sensors_rounded,
-                    color: const Color(0xFF4BCA8C),
-                  ),
-                const SizedBox(height: 16), // Added spacing for consistency
-
-                // --- NEW: Use fetched data for Info Cards (Total Users) ---
-                if (_totalUsers == null)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  buildInfoCard(
-                    context: context,
-                    title: 'Total Users',
-                    value: _totalUsers?.toString() ?? 'N/A',
-                    icon: Icons.people_alt_outlined,
-                    color: Colors.redAccent,
-                  ),
-                // --- END NEW ---
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // --- NEW: Dynamically generate DetailCards based on filtered establishments ---
-            if (_allEstablishmentNames.isEmpty && _searchController.text.isEmpty)
-              const Center(child: CircularProgressIndicator()) // Still loading if all names are empty and no search
-            else if (_filteredEstablishmentNames.isEmpty && _searchController.text.isNotEmpty)
-              const Center(child: Text('No matching establishments found.')) // No results for search
-            else if (_filteredEstablishmentNames.isEmpty)
-              const Center(child: Text('No establishments found.')) // No establishments after initial load
-            else
-              Column(
-                children: _filteredEstablishmentNames.map((name) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0), // Add some spacing between cards
-                    child: DetailCard(
-                      title: name, // Use the filtered establishment name
-                      quality: 'Good', // Assuming 'Good' is a default or placeholder
-                      onEdit: () {
-                        // You can pass the establishment name or ID to AdminDetailsScreen if needed
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => AdminDetailsScreen()),
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
-            // --- END NEW ---
-          ],
+              // --- END NEW ---
+            ],
+          ),
         ),
       ),
     );

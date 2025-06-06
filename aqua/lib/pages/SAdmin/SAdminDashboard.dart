@@ -178,12 +178,6 @@ class _MainScreenState extends State<Sadmindashboard> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
-            border: Border(
-              top: BorderSide(
-                color: ASColor.getTextColor(context), // Customize as needed
-                width: 1.0,
-              ),
-            ),
           ),
           child: SafeArea(
             top: false,
