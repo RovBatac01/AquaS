@@ -563,14 +563,14 @@ If you have any questions about these Terms, please contact us at [Your Contact 
                                         : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: ASColor.buttonBackground(context),
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.onPrimary,
+                                  foregroundColor: ASColor.getTextColor(context),
                                 ),
                                 child: const Text(
                                   'Sign Up',
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 16,
+                                    color: ASColor.txt1Color
                                   ),
                                 ),
                               ),

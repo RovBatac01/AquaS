@@ -30,12 +30,12 @@ class ASColor {
 
   static Color Background(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ? BGSecond : BGFourth;
+    return isDarkMode ? BGSecond : BGFifth;
   }
 
   static Color buttonBackground(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ? BGSecond : BGFourth;
+    return Colors.green;
   }
 
   static Color getTextColor(BuildContext context) {

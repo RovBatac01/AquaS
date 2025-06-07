@@ -3,6 +3,7 @@ import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/SAdmin/SAdminDetails.dart'; // Import SAdminDetails
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http; // Import http package
 import 'dart:convert'; // Import for json.decode
 import 'package:shared_preferences/shared_preferences.dart'; // Import for local storage
@@ -120,6 +121,7 @@ class SuperAdminHomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<SuperAdminHomeScreen> {
+  final TextEditingController establishmentName = TextEditingController();
   String _username =
       'Loading...'; // State variable to hold the fetched username
 
@@ -288,76 +290,131 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   // --- END NEW ---
 
   void _showAddEstablishmentDialog(BuildContext context) {
-  final TextEditingController nameController = TextEditingController();
-  final Map<String, bool> parameters = {
-    'Conductivity': false,
-    'EC': false,
-    'pH Level': false,
-    'Salinity': false,
-    'TDS': false,
-    'Temperature': false,
-    'Turbidity': false,
-  };
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final TextEditingController nameController = TextEditingController();
+    final Map<String, bool> parameters = {
+      'Conductivity': false,
+      'EC': false,
+      'pH Level': false,
+      'Salinity': false,
+      'TDS': false,
+      'Temperature': false,
+      'Turbidity': false,
+    };
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text('Add Establishment'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Establishment Name',
-                ),
-              ),
-              SizedBox(height: 20),
-              ...parameters.keys.map((key) {
-                return CheckboxListTile(
-                  title: Text(key),
-                  value: parameters[key],
-                  onChanged: (value) {
-                    parameters[key] = value!;
-                    // Required to rebuild UI when checkbox changes
-                    (context as Element).markNeedsBuild();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: ASColor.Background(context),
+          title: Text(
+            'Add Establishment',
+            style: TextStyle(
+              color: ASColor.getTextColor(context),
+              fontFamily: 'Montserrat',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: establishmentName,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Fill all the text field';
+                    }
+                    return null;
                   },
-                );
-              }).toList(),
-            ],
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: isDarkMode ? Colors.white10 : Colors.black12,
+                    hintText: 'Establishment Name',
+                    hintStyle: TextStyle(
+                      color: ASColor.getTextColor(context).withOpacity(0.5),
+                      fontFamily: 'Poppins',
+                      fontSize: 14.sp,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: ASColor.getTextColor(context),
+                    fontFamily: 'Poppins',
+                    fontSize: 14.sp,
+                  ),
+                ),
+                SizedBox(height: 20),
+                ...parameters.keys.map((key) {
+                  return CheckboxListTile(
+                    title: Text(
+                      key,
+                      style: TextStyle(
+                        color: ASColor.getTextColor(context),
+                        fontFamily: 'Poppins',
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                    value: parameters[key],
+                    onChanged: (value) {
+                      parameters[key] = value!;
+                      // Required to rebuild UI when checkbox changes
+                      (context as Element).markNeedsBuild();
+                    },
+                    activeColor: Colors.green, // Color of the checkbox when selected
+                    checkColor: Colors.white, // Color of the check icon itself
+                    controlAffinity: ListTileControlAffinity.leading, // optional: move checkbox to the left
+                  );
+                }).toList(),
+              ],
+            ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-            },
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Collect data here
-              String name = nameController.text;
-              Map<String, bool> selectedParams = {
-                for (var entry in parameters.entries)
-                  if (entry.value) entry.key: entry.value,
-              };
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text('Cancel',
+              style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',
+                fontSize: 12.sp,
+              ),),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              onPressed: () {
+                // Collect data here
+                String name = nameController.text;
+                Map<String, bool> selectedParams = {
+                  for (var entry in parameters.entries)
+                    if (entry.value) entry.key: entry.value,
+                };
 
-              // TODO: Send to backend or handle as needed
-              print('Name: $name');
-              print('Selected: $selectedParams');
+                // TODO: Send to backend or handle as needed
+                print('Name: $name');
+                print('Selected: $selectedParams');
 
-              Navigator.of(context).pop(); // Close dialog
-            },
-            child: Text('Confirm'),
-          ),
-        ],
-      );
-    },
-  );
-}
+                Navigator.of(context).pop(); // Close dialog
+              },
+              child: Text('Confirm',
+              style: TextStyle(
+                color: ASColor.txt1Color,
+                fontFamily: 'Poppins',
+                fontSize: 12.sp,
+              ),),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -446,12 +503,14 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                         onPressed: () => _showAddEstablishmentDialog(context),
                         // icon: Icon(Icons.add,
                         // color: ASColor.getTextColor(context),),
-                        label: Text('Add Establishment',
-                        style: TextStyle(
-                          color: ASColor.getTextColor(context),
-                          fontFamily: 'Poppins',
-                          fontSize: 10,
-                        ),),
+                        label: Text(
+                          'Add Establishment',
+                          style: TextStyle(
+                            color: ASColor.txt1Color,
+                            fontFamily: 'Poppins',
+                            fontSize: 10,
+                          ),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ASColor.buttonBackground(context),
                           foregroundColor: Colors.white, // Text/icon color

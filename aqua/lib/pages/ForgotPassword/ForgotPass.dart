@@ -35,8 +35,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _obscurenewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   // State variables to track the current stage
   bool _isOTPSent = false;
@@ -61,7 +62,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     // Replace with your actual API endpoint
-    final url = Uri.parse('https://aquasense-p36u.onrender.com/api/forgot-password');
+    final url = Uri.parse(
+      'https://aquasense-p36u.onrender.com/api/forgot-password',
+    );
     try {
       final response = await http.post(
         url,
@@ -196,7 +199,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     // Replace with your actual API endpoint
-    final url = Uri.parse('https://aquasense-p36u.onrender.com/api/change-password');
+    final url = Uri.parse(
+      'https://aquasense-p36u.onrender.com/api/change-password',
+    );
     try {
       final response = await http.post(
         url,
@@ -309,13 +314,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+
+                        // This is the next page once you click on forgot password
                         Text(
                           'Forgot Password',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: ASColor.getTextColor(context),
-                            fontFamily: 'poppins',
+                            fontFamily: 'Montserrat',
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -362,7 +369,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: ElevatedButton(
                               onPressed: () => _sendOTP(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: ASColor.buttonBackground(context),
+                                backgroundColor: ASColor.buttonBackground(
+                                  context,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -379,21 +388,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                         'Send OTP',
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: ASColor.getTextColor(context),
+                                          color: ASColor.txt1Color,
                                           fontFamily: 'poppins',
                                         ),
                                       ),
                             ),
                           ),
                         ],
+
+
+                        // Once you input the email and send OTP this is the next page that will be shown
                         if (_isOTPSent && !_isOTPVerified) ...[
                           // Show OTP input
-                          const Text(
+                          Text(
                             'Enter the OTP sent to your email',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white,
+                              color: ASColor.getTextColor(context),
                               fontFamily: 'poppins',
                             ),
                           ),
@@ -404,7 +416,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               filled: true,
                               fillColor:
                                   isDarkMode ? Colors.white10 : Colors.black12,
-                              hintText: 'OTP',
+                              hintText: 'Enter OTP',
+                              prefixIcon: Icon(
+                                Icons.lock,
+                                color: ASColor.getTextColor(context),
+                              ),
                               hintStyle: TextStyle(
                                 color: ASColor.getTextColor(context),
                               ),
@@ -424,7 +440,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: ElevatedButton(
                               onPressed: () => _verifyOTP(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: ASColor.buttonBackground(context),
+                                backgroundColor: ASColor.buttonBackground(
+                                  context,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -448,20 +466,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                           ),
                         ],
+
+
+                        //After OTP is verified this is the next page that will be shown
                         if (_isOTPVerified) ...[
                           // Show new password inputs
-                          const Text(
+                          Text(
                             'Enter your new password',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.white,
+                              color: ASColor.getTextColor(context),
                               fontFamily: 'poppins',
                             ),
                           ),
                           const SizedBox(height: 24),
                           TextField(
                             controller: _newPasswordController,
+                            obscureText: _obscurenewPassword,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
@@ -470,12 +492,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               hintStyle: TextStyle(
                                 color: ASColor.getTextColor(context),
                               ),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurenewPassword = !_obscurenewPassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscurenewPassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: ASColor.getTextColor(context),
+                                ),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            obscureText: true,
                             style: TextStyle(
                               color: isDarkMode ? Colors.white : Colors.black,
                             ),
@@ -483,6 +517,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           const SizedBox(height: 12),
                           TextField(
                             controller: _confirmPasswordController,
+                            obscureText: _obscureConfirmPassword,
                             decoration: InputDecoration(
                               filled: true,
                               fillColor:
@@ -491,12 +526,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               hintStyle: TextStyle(
                                 color: ASColor.getTextColor(context),
                               ),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
+                                  });
+                                },
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: ASColor.getTextColor(context),
+                                ),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: BorderSide.none,
                               ),
                             ),
-                            obscureText: true,
                             style: TextStyle(
                               color: isDarkMode ? Colors.white : Colors.black,
                             ),
@@ -507,7 +555,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             child: ElevatedButton(
                               onPressed: () => _changePassword(context),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: ASColor.buttonBackground(context),
+                                backgroundColor: ASColor.buttonBackground(
+                                  context,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -532,38 +582,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ],
                         const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Don\'t have an account?',
-                              style: TextStyle(
-                                color: ASColor.getTextColor(context),
-                                fontSize: 14,
-                                fontFamily: 'poppins',
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Signup(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Sign up',
-                                style: TextStyle(
-                                  color: ASColor.getTextColor(context),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'poppins',
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),

@@ -31,7 +31,7 @@ class Statistics extends StatefulWidget {
 
 class _StatisticsState extends State<Statistics> {
   String selectedStat = "Temp";
-  String selectedPeriod = "Daily"; // Default selection: "Daily" (maps to 24h)
+  String selectedPeriod = "Real-time"; // Default selection: "Daily" (maps to 24h)
 
   List<WaterQualityData> _currentData = [];
   bool _isLoading = true;
@@ -221,7 +221,7 @@ class _StatisticsState extends State<Statistics> {
                   Container(
                     height: 30,
                     child: Material(
-                      color: ASColor.Background(context), // Background based on theme
+                      color: ASColor.buttonBackground(context), // Background based on theme
                       borderRadius: BorderRadius.circular(12),
                       elevation: 2, // Slight elevation for subtle shadow
                       child: InkWell(
@@ -252,7 +252,7 @@ class _StatisticsState extends State<Statistics> {
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
-                              color: ASColor.getTextColor(context),
+                              color: ASColor.txt1Color,
                             ),
                           ),
                         ),
@@ -289,6 +289,7 @@ class _StatisticsState extends State<Statistics> {
                             },
                             items:
                                 <String>[
+                                  'Real-time',
                                   "Daily",
                                   "Weekly",
                                   "Monthly",

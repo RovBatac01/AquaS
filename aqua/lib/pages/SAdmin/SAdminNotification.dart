@@ -166,11 +166,6 @@ class _SAdminNotificationState extends State<SAdminNotification> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: ASColor.getCardColor(context), // Dynamic background color
-        foregroundColor: ASColor.getTextColor(context), // Dynamic text color for app bar
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator()) // Show loading indicator
           : _errorMessage != null

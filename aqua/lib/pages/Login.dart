@@ -376,7 +376,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               "Login",
                               style: TextStyle(
                                 fontFamily: 'Poppins',
-                                color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
+                                color: ASColor.txt1Color,
                                 fontSize: 16,
                               ),
                             ),

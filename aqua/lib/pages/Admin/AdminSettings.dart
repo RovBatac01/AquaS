@@ -1,4 +1,5 @@
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -53,10 +54,18 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               leading: Icon(Icons.person),
               title: Text(
                 'Profile Management',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context),
+                ),
               ),
               subtitle: Text(
                 'Manage your personal information and account security.',
+                style: TextStyle(
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
               ),
               trailing: Icon(
                 ProfileExpanded ? Icons.expand_less : Icons.expand_more,
@@ -76,9 +85,19 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               leading: Icon(Icons.dark_mode),
               title: Text(
                 'App Appearance',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context),
+                ),
               ),
-              subtitle: Text('Switch between dark and light themes.'),
+              subtitle: Text(
+                'Switch between dark and light themes.',
+                style: TextStyle(
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
+              ),
               trailing: Icon(
                 AppearanceExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -96,9 +115,19 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               leading: Icon(Icons.question_answer_outlined),
               title: Text(
                 'Help and Support',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context),
+                ),
               ),
-              subtitle: Text('Any Questions or Concerns?'),
+              subtitle: Text(
+                'Any Questions or Concerns?',
+                style: TextStyle(
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
+              ),
               trailing: Icon(
                 FAQExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -110,7 +139,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
             ),
             if (FAQExpanded) Question(),
 
-
             SizedBox(height: 20),
 
             //List Tile for Session History
@@ -118,9 +146,19 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               leading: Icon(Icons.history_rounded),
               title: Text(
                 'Session History',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context),
+                ),
               ),
-              subtitle: Text('You can monitor your account activity'),
+              subtitle: Text(
+                'You can monitor your account activity',
+                style: TextStyle(
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
+              ),
               trailing: Icon(
                 SessionExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -131,6 +169,72 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               },
             ),
             if (SessionExpanded) AccountActivityLog(),
+
+            SizedBox(height: 20),
+
+            //List tile for LogOut
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text(
+                'Log Out',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context),
+                ),
+              ),
+              trailing: Icon(Icons.arrow_forward_ios, size: 15),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(
+                        'Confirm Logout',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          color: ASColor.getTextColor(context)),
+                      ),
+                      content: Text(
+                        'Are you sure you want to log out?',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.getTextColor(context)),
+                      ),
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel',
+                          style: TextStyle(
+                            color: ASColor.getTextColor(context),
+                            fontFamily: 'Poppins',
+                          ),),
+                          onPressed:
+                              () => Navigator.of(context).pop(), // Close dialog
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ASColor.buttonBackground(context),
+                          ),
+                          child: Text('Logout',
+                          style: TextStyle(
+                            color: ASColor.txt1Color,
+                            fontFamily: 'Poppins',
+                          ),),
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close dialog first
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => LoginScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -173,7 +277,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       ),
     );
   }
-  
+
   //Help And Support Design
   Widget Question() {
     return Column(
@@ -217,7 +321,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  
   //
   Widget AccountActivityLog() {
     // Mock data – replace this with your actual login/logout history
@@ -294,10 +397,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   // Help and Support design
-  
-
-
-  
 
   //Profile Management Design
   Widget buildProfileForm() {
@@ -415,8 +514,15 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
 
           ElevatedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.save),
-            label: Text('Save Profile'),
+            icon: Icon(Icons.save, color: ASColor.txt1Color),
+            label: Text(
+              'Save Profile',
+              style: TextStyle(
+                color: ASColor.txt1Color,
+                fontFamily: 'Poppins',
+                fontSize: 16.sp.clamp(14, 18),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               minimumSize: Size.fromHeight(50),
               backgroundColor: ASColor.buttonBackground(context),
@@ -607,8 +713,15 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
 
           ElevatedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.new_label),
-            label: Text('Confirm New Password'),
+            icon: Icon(Icons.new_label, color: ASColor.txt1Color),
+            label: Text(
+              'Confirm New Password',
+              style: TextStyle(
+                color: ASColor.txt1Color,
+                fontFamily: 'Poppins',
+                fontSize: 16.sp.clamp(14, 18),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               minimumSize: Size.fromHeight(50),
               backgroundColor: ASColor.buttonBackground(context),

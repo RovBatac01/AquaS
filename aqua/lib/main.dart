@@ -9,13 +9,12 @@ import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
 import 'package:aqua/pages/User/UserSettings.dart';
-import 'package:aqua/pages/ForgotPassword/ConfirmPassword.dart';
+
 import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDetails.dart';
 import 'package:aqua/pages/SAdmin/SAdminNotification.dart';
 import 'package:aqua/pages/SAdmin/SAdminSettings.dart';
 import 'package:aqua/pages/User/Details.dart';
-import 'package:aqua/pages/ForgotPassword/OTP.dart';
 import 'package:aqua/pages/LandingPage.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
@@ -85,7 +84,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: Sadmindashboard(),
+      home: LoginScreen(),
     );
   }
 }

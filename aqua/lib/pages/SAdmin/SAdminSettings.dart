@@ -1,4 +1,5 @@
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -52,10 +53,16 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               leading: Icon(Icons.person),
               title: Text(
                 'Profile Management',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
               ),
               subtitle: Text(
                 'Manage your personal information and account security.',
+                style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',)
               ),
               trailing: Icon(
                 ProfileExpanded ? Icons.expand_less : Icons.expand_more,
@@ -75,9 +82,15 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               leading: Icon(Icons.dark_mode),
               title: Text(
                 'App Appearance',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
               ),
-              subtitle: Text('Switch between dark and light themes.'),
+              subtitle: Text('Switch between dark and light themes.',
+              style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',)),
               trailing: Icon(
                 AppearanceExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -96,9 +109,16 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               leading: Icon(Icons.history_rounded),
               title: Text(
                 'Session History',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
               ),
-              subtitle: Text('You can monitor your account activity'),
+              subtitle: Text('You can monitor your account activity',
+              style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',
+              ),),
               trailing: Icon(
                 SessionExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -109,6 +129,72 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               },
             ),
             if (SessionExpanded) AccountActivityLog(),
+
+            SizedBox(height: 20,),
+
+            //List tile for LogOut
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text(
+                'Log Out',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context),
+                ),
+              ),
+              trailing: Icon(Icons.arrow_forward_ios, size: 15),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(
+                        'Confirm Logout',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          color: ASColor.getTextColor(context)),
+                      ),
+                      content: Text(
+                        'Are you sure you want to log out?',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          color: ASColor.getTextColor(context)),
+                      ),
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel',
+                          style: TextStyle(
+                            color: ASColor.getTextColor(context),
+                            fontFamily: 'Poppins',
+                          ),),
+                          onPressed:
+                              () => Navigator.of(context).pop(), // Close dialog
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: ASColor.buttonBackground(context),
+                          ),
+                          child: Text('Logout',
+                          style: TextStyle(
+                            color: ASColor.txt1Color,
+                            fontFamily: 'Poppins',
+                          ),),
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Close dialog first
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => LoginScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -285,9 +371,6 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
   //   );
   // }
 
-
-  
-
   //Profile Management Design
   Widget buildProfileForm() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -404,8 +487,15 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           ElevatedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.save),
-            label: Text('Save Profile'),
+            icon: Icon(Icons.save,
+            color: ASColor.txt1Color,),
+            label: Text('Save Profile',
+              style: TextStyle(
+                color: ASColor.txt1Color,
+                fontFamily: 'Poppins',
+                fontSize: 14.sp.clamp(12, 16),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               minimumSize: Size.fromHeight(50),
               backgroundColor: ASColor.buttonBackground(context),
@@ -596,8 +686,14 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           ElevatedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.new_label),
-            label: Text('Confirm New Password'),
+            icon: Icon(Icons.new_label,
+            color: ASColor.txt1Color,),
+            label: Text('Confirm New Password',
+            style: TextStyle(
+              color: ASColor.txt1Color,
+              fontFamily: 'Poppins',
+              fontSize: 14.sp.clamp(12, 16),
+            ),),
             style: ElevatedButton.styleFrom(
               minimumSize: Size.fromHeight(50),
               backgroundColor: ASColor.buttonBackground(context),

@@ -1,6 +1,7 @@
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/SAdmin/AddAccount.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -51,7 +52,9 @@ class _UserListPageState extends State<UserListPage> {
     });
 
     try {
-      final response = await http.get(Uri.parse('https://aquasense-p36u.onrender.com/users'));
+      final response = await http.get(
+        Uri.parse('https://aquasense-p36u.onrender.com/users'),
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> fetchedData = jsonDecode(response.body);
@@ -269,49 +272,62 @@ class _UserListPageState extends State<UserListPage> {
                 padding: const EdgeInsets.all(8),
                 child: IntrinsicWidth(
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(
-                        width: 200,
-                        height: 40,
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (value) {
-                            setState(() {}); // Trigger rebuild to apply filter
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'Search username',
-                            prefixIcon: const Icon(Icons.search),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(6),
+                      Expanded(
+                        // makes the search bar take all remaining space
+                        child: SizedBox(
+                          height: 40,
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search username',
+                              hintStyle: TextStyle(
+                                color: ASColor.getTextColor(context),
+                                fontFamily: 'Poppins',
+                                fontSize: 14.sp.clamp(12, 16)
+                              ),
+                              prefixIcon: const Icon(Icons.search),
+                              contentPadding: const EdgeInsets.only(
+                                bottom: 15.0,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 15),
-                      DropdownButton<String>(
-                        value: _selectedRoleFilter,
-                        items: const [
-                          DropdownMenuItem(value: 'All', child: Text('All')),
-                          DropdownMenuItem(
-                            value: 'Super Admin',
-                            child: Text('Super Admin'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Admin',
-                            child: Text('Admin'),
-                          ),
-                          DropdownMenuItem(value: 'User', child: Text('User')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedRoleFilter = value!;
-                          });
-                        },
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        width: 100, // Optional: shrink or grow this if needed
+                        child: DropdownButton<String>(
+                          isExpanded:
+                              true, // Important to avoid overflow inside Dropdown
+                          value: _selectedRoleFilter,
+                          items: const [
+                            DropdownMenuItem(value: 'All', child: Text('All')),
+                            DropdownMenuItem(
+                              value: 'Super Admin',
+                              child: Text('Super Admin'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'Admin',
+                              child: Text('Admin'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'User',
+                              child: Text('User'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedRoleFilter = value!;
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -320,10 +336,8 @@ class _UserListPageState extends State<UserListPage> {
             ),
             const SizedBox(height: 16),
             // User Cards List or Loading/Error Indicator
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                ? Center(
+            _isLoading  ? const Center(child: CircularProgressIndicator()) : _error != null ? 
+              Center(
                   child: Text(
                     _error!,
                     style: const TextStyle(color: Colors.red, fontSize: 16),
@@ -349,16 +363,17 @@ class _UserListPageState extends State<UserListPage> {
                             title: Text(
                               user['username']!,
                               style: TextStyle(
-                                color:
-                                    Theme.of(context).colorScheme.onBackground,
+                                color: ASColor.getTextColor(context),
+                                fontSize: 14.sp.clamp(12, 16),
+                                fontFamily: 'Poppins',
                               ),
                             ),
                             subtitle: Text(
                               user['role']!,
                               style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onBackground.withOpacity(0.7),
+                                color: ASColor.getTextColor(context),
+                                fontSize: 14.sp.clamp(12, 16),
+                                fontFamily: 'Poppins',
                               ),
                             ),
                             trailing: Row(
@@ -366,7 +381,7 @@ class _UserListPageState extends State<UserListPage> {
                               children: [
                                 // --- Call edit function on press ---
                                 IconButton(
-                                  icon:  Icon(
+                                  icon: Icon(
                                     Icons.edit,
                                     color: ASColor.getTextColor(context),
                                   ),
@@ -376,7 +391,7 @@ class _UserListPageState extends State<UserListPage> {
                                 ),
                                 // --- Call delete function on press ---
                                 IconButton(
-                                  icon:  Icon(
+                                  icon: Icon(
                                     Icons.delete,
                                     color: ASColor.getTextColor(context),
                                   ),

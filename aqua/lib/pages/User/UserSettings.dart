@@ -1,4 +1,5 @@
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -52,10 +53,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Icon(Icons.person),
               title: Text(
                 'Profile Management',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
               ),
               subtitle: Text(
                 'Manage your personal information and account security.',
+                style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',)
               ),
               trailing: Icon(
                 ProfileExpanded ? Icons.expand_less : Icons.expand_more,
@@ -75,9 +82,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Icon(Icons.dark_mode),
               title: Text(
                 'App Appearance',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold,
+                fontFamily: 'Montserrat',
+                color: ASColor.getTextColor(context)),
               ),
-              subtitle: Text('Switch between dark and light themes.'),
+              subtitle: Text('Switch between dark and light themes.',
+              style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',)),
               trailing: Icon(
                 AppearanceExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -96,9 +108,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Icon(Icons.question_answer_outlined),
               title: Text(
                 'Help and Support',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
               ),
-              subtitle: Text('Any Questions or Concerns?'),
+              subtitle: Text('Any Questions or Concerns?',
+              style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',)),
               trailing: Icon(
                 FAQExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -116,9 +134,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               leading: Icon(Icons.history_rounded),
               title: Text(
                 'Session History',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
               ),
-              subtitle: Text('You can monitor your account activity'),
+              subtitle: Text('You can monitor your account activity',
+              style: TextStyle(
+                color: ASColor.getTextColor(context),
+                fontFamily: 'Poppins',)),
               trailing: Icon(
                 SessionExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -129,6 +153,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             if (SessionExpanded) AccountActivityLog(),
+
+            //List tile for LogOut
+            ListTile(
+              leading: Icon(Icons.logout), // Use logout icon for clarity
+              title: Text(
+                'Log Out',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Montserrat',
+                  color: ASColor.getTextColor(context)),
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios, // Optional: more intuitive logout indicator
+                size: 15,
+              ),
+              onTap: () {
+                // Navigate to LoginScreen and remove all previous routes
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+            ),
           ],
         ),
       ),
