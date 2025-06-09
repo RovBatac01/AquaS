@@ -182,7 +182,20 @@ app.post("/login", async (req, res) => {
     }
 });
 
+app.post("/logout", (req, res) => {
+  // Optionally log who is logging out (if token is sent)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    // You could decode token for logging if needed
+    console.log("User logged out with token:", token);
+  }
 
+  // Respond to the client
+  res.status(200).json({ message: "Logout successful." });
+});
+
+//UPDATE USER
 app.post('/api/update_user', async (req, res) => {
   const { id, username, email, phone } = req.body;
 

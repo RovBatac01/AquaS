@@ -281,8 +281,27 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                               fontFamily: 'Poppins',
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close dialog first
+                          onPressed: () async {
+                            // Optional: Notify server
+                            try {
+                              await http.post(
+                                Uri.parse(
+                                  "https://aquasense-p36u.onrender.com/logout",
+                                ),
+                                headers: {"Content-Type": "application/json"},
+                              );
+                            } catch (e) {
+                              print("Logout request failed (optional): $e");
+                            }
+
+                            // Clear session
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.remove('userToken');
+                            await prefs.remove('userId');
+                            await prefs.remove('loggedInUsername');
+
+                            // Navigate to login screen
+                            Navigator.of(context).pop();
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
                                 builder: (context) => LoginScreen(),
