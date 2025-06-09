@@ -182,6 +182,30 @@ app.post("/login", async (req, res) => {
     }
 });
 
+
+app.post('/api/update_user', async (req, res) => {
+  const { id, username, email, phone } = req.body;
+
+  if (!id || !username || !email || !phone) {
+    return res.status(400).json({ success: false, message: "Missing required fields." });
+  }
+
+  const query = 'UPDATE users SET username = ?, email = ?, phone = ? WHERE id = ?';
+
+  try {
+    const [result] = await db.query(query, [username, email, phone, id]);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    return res.status(200).json({ success: true, message: "User updated successfully." });
+  } catch (err) {
+    console.error("Update error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // NEW: Endpoint to fetch all users
 app.get("/users", async (req, res) => {
   const sql = "SELECT id, username, role FROM users";
@@ -404,6 +428,8 @@ async function login(username, res) {
     return res.status(500).json({ error: "Database error occurred" });
   }
 }
+
+
 
 
 app.post("/api/change-password", async (req, res) => {
@@ -1225,6 +1251,8 @@ app.get("/data/ec_compensated", async (req, res) => {
   }
 });
 
+
+
 /**
  * @route GET /data/temperature
  * @description Get historical Temperature readings based on the period (24h, 7d, 30d).
@@ -1246,3 +1274,4 @@ app.get("/data/temperature", async (req, res) => {
     return res.status(500).json({ error: "Database Query Error" });
   }
 });
+

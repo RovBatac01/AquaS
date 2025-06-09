@@ -1,9 +1,12 @@
+import 'dart:convert' show jsonEncode, jsonDecode;
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http show post;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(SettingsApp());
@@ -20,6 +23,76 @@ class SettingsApp extends StatelessWidget {
   }
 }
 
+//Profile Management UPDATE
+Future<void> updateUser(
+  BuildContext context, {
+  required String username,
+  required String email,
+  required String phone,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final int? userId = prefs.getInt('userId');
+
+  if (userId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("User ID not found. Please log in again.")),
+    );
+    return;
+  }
+
+  try {
+    // Show loading indicator
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Updating profile..."),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    final uri = Uri.parse(
+      'https://aquasense-p36u.onrender.com/api/update_user',
+    );
+    final response = await http.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "id": userId,
+        "username": username,
+        "email": email,
+        "phonenumber": phone,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data["success"] == true) {
+      // Update local storage with new values
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('loggedInUsername', username);
+      await prefs.setString('loggedInEmail', email);
+      await prefs.setString('loggedInPhone', phone);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("User information updated successfully!")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Update failed: ${data['message'] ?? 'Unknown error'}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error updating profile: ${e.toString()}"),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
 class SAdminSettingsScreen extends StatefulWidget {
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
@@ -32,13 +105,26 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
   bool FAQExpanded = false;
   final TextEditingController username = TextEditingController();
   final TextEditingController email = TextEditingController();
-  final TextEditingController phoneNumber = TextEditingController();
+  final TextEditingController phone = TextEditingController();
   final TextEditingController currentPassword = TextEditingController();
   final TextEditingController newPassword = TextEditingController();
   final TextEditingController confirm_password = TextEditingController();
   bool _obscurecurrentPassword = true;
   bool _obscurenewPassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    username.text = prefs.getString('loggedInUsername') ?? '';
+    email.text = prefs.getString('loggedInEmail') ?? '';
+    phone.text = prefs.getString('loggedInPhone') ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +142,15 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
+                  color: ASColor.getTextColor(context),
+                ),
               ),
               subtitle: Text(
                 'Manage your personal information and account security.',
                 style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',)
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
               ),
               trailing: Icon(
                 ProfileExpanded ? Icons.expand_less : Icons.expand_more,
@@ -85,12 +173,16 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
+                  color: ASColor.getTextColor(context),
+                ),
               ),
-              subtitle: Text('Switch between dark and light themes.',
-              style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',)),
+              subtitle: Text(
+                'Switch between dark and light themes.',
+                style: TextStyle(
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
+              ),
               trailing: Icon(
                 AppearanceExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -112,13 +204,16 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
+                  color: ASColor.getTextColor(context),
+                ),
               ),
-              subtitle: Text('You can monitor your account activity',
-              style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',
-              ),),
+              subtitle: Text(
+                'You can monitor your account activity',
+                style: TextStyle(
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Poppins',
+                ),
+              ),
               trailing: Icon(
                 SessionExpanded ? Icons.expand_less : Icons.expand_more,
               ),
@@ -130,7 +225,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
             ),
             if (SessionExpanded) AccountActivityLog(),
 
-            SizedBox(height: 20,),
+            SizedBox(height: 20),
 
             //List tile for LogOut
             ListTile(
@@ -153,21 +248,25 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                         'Confirm Logout',
                         style: TextStyle(
                           fontFamily: 'Montserrat',
-                          color: ASColor.getTextColor(context)),
+                          color: ASColor.getTextColor(context),
+                        ),
                       ),
                       content: Text(
                         'Are you sure you want to log out?',
                         style: TextStyle(
                           fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context)),
+                          color: ASColor.getTextColor(context),
+                        ),
                       ),
                       actions: [
                         TextButton(
-                          child: Text('Cancel',
-                          style: TextStyle(
-                            color: ASColor.getTextColor(context),
-                            fontFamily: 'Poppins',
-                          ),),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                           onPressed:
                               () => Navigator.of(context).pop(), // Close dialog
                         ),
@@ -175,11 +274,13 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: ASColor.buttonBackground(context),
                           ),
-                          child: Text('Logout',
-                          style: TextStyle(
-                            color: ASColor.txt1Color,
-                            fontFamily: 'Poppins',
-                          ),),
+                          child: Text(
+                            'Logout',
+                            style: TextStyle(
+                              color: ASColor.txt1Color,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
                           onPressed: () {
                             Navigator.of(context).pop(); // Close dialog first
                             Navigator.of(context).pushReplacement(
@@ -450,7 +551,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           const SizedBox(height: 10),
 
           TextFormField(
-            controller: phoneNumber,
+            controller: phone,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Fill all the text field';
@@ -486,10 +587,17 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           const SizedBox(height: 20),
 
           ElevatedButton.icon(
-            onPressed: () {},
-            icon: Icon(Icons.save,
-            color: ASColor.txt1Color,),
-            label: Text('Save Profile',
+            onPressed: () {
+              updateUser(
+                context,
+                username: username.text.trim(),
+                email: email.text.trim(),
+                phone: phone.text.trim(),
+              );
+            },
+            icon: Icon(Icons.save, color: ASColor.txt1Color),
+            label: Text(
+              'Save Profile',
               style: TextStyle(
                 color: ASColor.txt1Color,
                 fontFamily: 'Poppins',
@@ -686,14 +794,15 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           ElevatedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.new_label,
-            color: ASColor.txt1Color,),
-            label: Text('Confirm New Password',
-            style: TextStyle(
-              color: ASColor.txt1Color,
-              fontFamily: 'Poppins',
-              fontSize: 14.sp.clamp(12, 16),
-            ),),
+            icon: Icon(Icons.new_label, color: ASColor.txt1Color),
+            label: Text(
+              'Confirm New Password',
+              style: TextStyle(
+                color: ASColor.txt1Color,
+                fontFamily: 'Poppins',
+                fontSize: 14.sp.clamp(12, 16),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               minimumSize: Size.fromHeight(50),
               backgroundColor: ASColor.buttonBackground(context),
