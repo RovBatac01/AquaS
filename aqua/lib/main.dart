@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: LoginScreen(),
+      home: LandingPage(),
     );
   }
 }

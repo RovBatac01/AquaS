@@ -125,8 +125,6 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
 
   // Fetches the latest data (raw value only) for all water quality parameters
   Future<void> _fetchLatestDataForAllStats({bool isInitialFetch = false}) async {
-    // Only set to connecting if we don't have any initial data displayed yet.
-    // This prevents the UI from clearing during subsequent fetches.
     if (!_hasInitialDataLoaded) {
       setState(() {
         _connectionStatus = ConnectionStatus.connecting;
@@ -143,7 +141,6 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
       final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
       final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
 
-      // Check if any data was actually received (all lists should be non-empty)
       if (temp.isEmpty ||
           tds.isEmpty ||
           ph.isEmpty ||
@@ -154,12 +151,11 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
           _errorMessage = "No data received from one or more sensors.";
-          _hasInitialDataLoaded = true; // Mark as loaded even if no data
+          _hasInitialDataLoaded = true;
         });
-        return; // Exit if no data
+        return;
       }
 
-      // Update latest values from the fetched data
       final newTemp = temp.first.value;
       final newTDS = tds.first.value;
       final newPH = ph.first.value;
@@ -168,7 +164,6 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
       final newSalinity = salinity.first.value;
       final newECCompensated = ecCompensated.first.value;
 
-      // Create a payload from the newly fetched data for comparison
       final newPayload = {
         "temp": newTemp,
         "tds": newTDS,
@@ -179,16 +174,14 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         "ec_compensated": newECCompensated,
       };
 
-      // Compare with the last successful payload using jsonEncode for deep comparison
       if (_lastSuccessfulDataPayload != null &&
           jsonEncode(_lastSuccessfulDataPayload) == jsonEncode(newPayload)) {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
           _errorMessage = "No new data received from device.";
-          _hasInitialDataLoaded = true; // Mark as loaded
+          _hasInitialDataLoaded = true;
         });
       } else {
-        // Data is new or this is the first successful fetch
         _latestTemp = newTemp;
         _latestTDS = newTDS;
         _latestPH = newPH;
@@ -197,13 +190,14 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         _latestSalinity = newSalinity;
         _latestECCompensated = newECCompensated;
 
-        _lastSuccessfulDataPayload = newPayload; // Store the new payload
+        _lastSuccessfulDataPayload = newPayload;
 
         setState(() {
           _connectionStatus = ConnectionStatus.connected;
           _errorMessage = null;
-          _hasInitialDataLoaded = true; // Mark as loaded
+          _hasInitialDataLoaded = true;
           _updateCircularIndicatorValues(); // Update the UI with new values
+          _checkCriticalReadingsAndShowAlert(); // Check for critical readings and show alert
         });
       }
     } catch (e) {
@@ -211,9 +205,86 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
       setState(() {
         _connectionStatus = ConnectionStatus.disconnectedNetworkError;
         _errorMessage = 'Failed to load latest data: ${e.toString()}';
-        _hasInitialDataLoaded = true; // Mark as loaded even on error
+        _hasInitialDataLoaded = true;
       });
     }
+  }
+
+  /// Checks the latest sensor readings against critical thresholds
+  /// and triggers an alert if any are out of bounds.
+  void _checkCriticalReadingsAndShowAlert() {
+    List<String> criticalConditions = [];
+
+    // Turbidity, TDS, Salinity, EC, EC_Compensated: below 30
+    if (_latestTurbidity < 30) {
+      criticalConditions.add("Turbidity (${_latestTurbidity.toStringAsFixed(1)}) is below 30.");
+    }
+    if (_latestTDS < 30) {
+      criticalConditions.add("TDS (${_latestTDS.toStringAsFixed(1)}) is below 30.");
+    }
+    if (_latestSalinity < 30) {
+      criticalConditions.add("Salinity (${_latestSalinity.toStringAsFixed(1)}) is below 30.");
+    }
+    if (_latestConductivity < 30) {
+      criticalConditions.add("Conductivity (${_latestConductivity.toStringAsFixed(1)}) is below 30.");
+    }
+    if (_latestECCompensated < 30) {
+      criticalConditions.add("EC Compensated (${_latestECCompensated.toStringAsFixed(1)}) is below 30.");
+    }
+
+    // pH: above 8.5 or below 6.5
+    if (_latestPH > 8.5 || _latestPH < 6.5) {
+      criticalConditions.add("pH (${_latestPH.toStringAsFixed(1)}) is outside the safe range (6.5-8.5).");
+    }
+
+    // Temperature: above 50°C
+    if (_latestTemp > 50) {
+      criticalConditions.add("Temperature (${_latestTemp.toStringAsFixed(1)}°C) is above 50°C.");
+    }
+
+    if (criticalConditions.isNotEmpty) {
+      _showSafetyAlert(criticalConditions);
+    }
+  }
+
+  /// Displays a pop-up dialog warning about critical sensor readings.
+  void _showSafetyAlert(List<String> criticalConditions) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Water Quality Critical Alert!',
+            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView( // Use SingleChildScrollView for potentially long lists
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('One or more water quality parameters are outside the safe limits:'),
+                const SizedBox(height: 10),
+                // Display each critical condition as a bullet point
+                ...criticalConditions.map((condition) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: Text('• $condition'),
+                    )),
+                const SizedBox(height: 10),
+                const Text('Immediate action may be required to address these issues.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Dismiss the dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Helper to update the circular indicator's progress, label, and color
