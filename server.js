@@ -1290,7 +1290,7 @@ app.get("/data/temperature", async (req, res) => {
 app.put('/api/super-admin/profile', authenticateToken, async (req, res) => {
     const { username, email, phone } = req.body;
 
-    const userId = req.user.id;
+    const userId = req.user.id; // Assuming req.user.id is correctly set by authenticateToken
 
     if (!username || !email) {
         return res.status(400).json({ message: 'Username and email are required.' });
@@ -1298,18 +1298,18 @@ app.put('/api/super-admin/profile', authenticateToken, async (req, res) => {
 
     let connection;
     try {
-        connection = await pool.getConnection();
-        const [result] = await connection.execute(
+        connection = await db.getConnection(); // CORRECTED: Use db.getConnection()
+        const [result] = await connection.query( // CORRECTED: Use connection.query()
             'UPDATE users SET username = ?, email = ?, phone = ? WHERE id = ?',
             [username, email, phone, userId]
         );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found.' });
+            return res.status(404).json({ message: 'User not found or no changes made.' }); // Added 'or no changes made'
         }
 
         // Fetch the updated user data to send back
-        const [rows] = await connection.execute(
+        const [rows] = await connection.query( // CORRECTED: Use connection.query()
             'SELECT username, email, phone FROM users WHERE id = ?',
             [userId]
         );
@@ -1320,7 +1320,13 @@ app.put('/api/super-admin/profile', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error updating profile:', error);
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'Username or email already exists.' });
+            // More specific error messages for duplicate entries
+            if (error.sqlMessage.includes('username')) {
+                return res.status(409).json({ message: 'Username already exists.' });
+            }
+            if (error.sqlMessage.includes('email')) {
+                return res.status(409).json({ message: 'Email already exists.' });
+            }
         }
         res.status(500).json({ message: 'Failed to update profile due to a server error.' });
     } finally {
@@ -1331,7 +1337,7 @@ app.put('/api/super-admin/profile', authenticateToken, async (req, res) => {
 // POST /api/user/change-password - Change user password
 app.post('/api/super-admin/change-password', authenticateToken, async (req, res) => {
 
-    const userId = req.user.id;
+    const userId = req.user.id; // Assuming req.user.id is correctly set by authenticateToken
 
     const { currentPassword, newPassword } = req.body;
 
@@ -1339,32 +1345,31 @@ app.post('/api/super-admin/change-password', authenticateToken, async (req, res)
     if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: 'Current and new passwords are required.' });
     }
-    if (newPassword.length < 8) {
+    if (newPassword.length < 8) { // Basic length check for new password
         return res.status(400).json({ message: 'New password must be at least 8 characters long.' });
     }
+    // You might want to add more robust password complexity checks here (e.g., regex for uppercase, number, symbol)
+    // For example:
+    // if (!/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword) || !/[^a-zA-Z0-9]/.test(newPassword)) {
+    //     return res.status(400).json({ message: 'New password must contain at least one uppercase letter, one number, and one special character.' });
+    // }
 
     let connection;
     try {
-        connection = await pool.getConnection();
+        connection = await db.getConnection(); // CORRECTED: Use db.getConnection()
 
         // 2. Retrieve current hashed password from database
-        // Ensure column name 'password_hash' matches the actual column name in your database
-        const [rows] = await connection.execute(
+        const [rows] = await connection.query( // CORRECTED: Use connection.query()
             'SELECT password_hash FROM users WHERE id = ?',
             [userId]
         );
 
-        // 3. Handle case where user is not found
+        // 3. Handle case where user is not found (this should ideally be caught by authenticateToken, but good for robustness)
         if (rows.length === 0) {
-            // This 404 is good for "user not found based on ID",
-            // but in a fully authenticated flow, a 401 Unauthorized might be more appropriate
-            // if the user ID came from an invalid or missing token.
             return res.status(404).json({ message: 'User not found.' });
         }
 
-        // IMPORTANT: Ensure you are accessing the correct column name from the result
-        // If your column in the database is 'password_hash', then access 'password_hash'
-        const storedHashedPassword = rows[0].password_hash; // Changed from hashed_password to password_hash
+        const storedHashedPassword = rows[0].password_hash; // Access the correct column name
 
         // 4. Compare provided current password with stored hashed password
         const isMatch = await bcrypt.compare(currentPassword, storedHashedPassword);
@@ -1374,7 +1379,6 @@ app.post('/api/super-admin/change-password', authenticateToken, async (req, res)
         }
 
         // 5. Check if new password is the same as the current password (after hashing)
-        // This is a good security practice.
         if (await bcrypt.compare(newPassword, storedHashedPassword)) {
             return res.status(400).json({ message: 'New password cannot be the same as the current password.' });
         }
@@ -1383,15 +1387,14 @@ app.post('/api/super-admin/change-password', authenticateToken, async (req, res)
         const newHashedPassword = await bcrypt.hash(newPassword, 10); // 10 salt rounds is standard
 
         // 7. Update password in database
-        const [result] = await connection.execute(
+        const [result] = await connection.query( // CORRECTED: Use connection.query()
             'UPDATE users SET password_hash = ? WHERE id = ?',
             [newHashedPassword, userId]
         );
 
         // 8. Check if the update actually affected a row
         if (result.affectedRows === 0) {
-            // This could happen if the user was somehow deleted between select and update,
-            // or if the userId didn't match. A 404 is still appropriate here.
+            // This case is less likely if the user was found in step 3, but handles edge cases.
             return res.status(404).json({ message: 'User not found or password already updated (no change needed).' });
         }
 
