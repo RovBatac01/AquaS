@@ -3,13 +3,26 @@ import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:http/http.dart' as http show post;
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // Make sure this is imported
+import 'package:http/http.dart' as http; // Import both post and put
+
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(SettingsApp());
+  // Wrap your app with ScreenUtilInit
+  runApp(
+    ScreenUtilInit(
+      // IMPORTANT: Replace these with the width and height of your design artboard/frame in logical pixels
+      // For example, if your design was made for a 360dp width and 690dp height phone:
+      designSize: const Size(360, 690), // <--- YOU MUST SET YOUR DESIGN SIZE HERE
+      minTextAdapt: true, // This is now correctly set
+      splitScreenMode: true, // Good for multi-window/split-screen support
+      builder: (context, child) {
+        return SettingsApp(); // Your root app widget, which contains MaterialApp
+      },
+    ),
+  );
 }
 
 class SettingsApp extends StatelessWidget {
@@ -25,17 +38,18 @@ class SettingsApp extends StatelessWidget {
 
 //Profile Management UPDATE
 Future<void> updateUser(
-  BuildContext context, {
-  required String username,
-  required String email,
-  required String phone,
+    BuildContext context, {
+    required String username,
+    required String email,
+    required String phone,
 }) async {
   final prefs = await SharedPreferences.getInstance();
   final int? userId = prefs.getInt('userId');
+  final String? userToken = prefs.getString('userToken'); // Get the token
 
-  if (userId == null) {
+  if (userId == null || userToken == null) { // Check for token too
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("User ID not found. Please log in again.")),
+      SnackBar(content: Text("User ID or token not found. Please log in again.")),
     );
     return;
   }
@@ -50,27 +64,30 @@ Future<void> updateUser(
     );
 
     final uri = Uri.parse(
-      'https://aquasense-p36u.onrender.com/api/update_user',
+      'https://aquasense-p36u.onrender.com/api/super-admin/profile', // <--- CHANGED ENDPOINT
     );
-    final response = await http.post(
+    final response = await http.put( // <--- CHANGED TO PUT REQUEST
       uri,
-      headers: {"Content-Type": "application/json"},
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $userToken", // <--- ADDED AUTHORIZATION HEADER
+      },
       body: jsonEncode({
-        "id": userId,
+        // "id": userId, // Backend extracts userId from token, no need to send
         "username": username,
         "email": email,
-        "phonenumber": phone,
+        "phone": phone, // Ensure 'phone' matches backend field name
       }),
     );
 
     final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200 && data["success"] == true) {
-      // Update local storage with new values
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('loggedInUsername', username);
-      await prefs.setString('loggedInEmail', email);
-      await prefs.setString('loggedInPhone', phone);
+    if (response.statusCode == 200 && data["message"] == 'Profile updated successfully!') { // <--- Adjusted success condition
+      // Update local storage with new values from the backend's response
+      // It's safer to update with data from the server after a successful update.
+      await prefs.setString('loggedInUsername', data['user']['username']);
+      await prefs.setString('loggedInEmail', data['user']['email']);
+      await prefs.setString('loggedInPhone', data['user']['phone'] ?? ''); // Handle null phone if applicable
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("User information updated successfully!")),
@@ -125,6 +142,86 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
     email.text = prefs.getString('loggedInEmail') ?? '';
     phone.text = prefs.getString('loggedInPhone') ?? '';
   }
+
+  // --- PASSWORD CHANGE FUNCTION ---
+  Future<void> _changePassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userToken = prefs.getString('userToken');
+
+    if (userToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Authentication token not found. Please log in again.")),
+      );
+      return;
+    }
+
+    // Frontend validation for passwords
+    if (currentPassword.text.isEmpty || newPassword.text.isEmpty || confirm_password.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please fill all password fields."), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (newPassword.text != confirm_password.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("New password and confirm password do not match."), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Changing password..."),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      final uri = Uri.parse(
+        'https://aquasense-p36u.onrender.com/api/super-admin/change-password',
+      );
+      final response = await http.post(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $userToken",
+        },
+        body: jsonEncode({
+          "currentPassword": currentPassword.text,
+          "newPassword": newPassword.text,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data["message"] == 'Password changed successfully!') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Password changed successfully!")),
+        );
+        // Clear password fields on success
+        currentPassword.clear();
+        newPassword.clear();
+        confirm_password.clear();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Password change failed: ${data['message'] ?? 'Unknown error'}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error changing password: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  // --- END OF PASSWORD CHANGE FUNCTION ---
+
 
   @override
   Widget build(BuildContext context) {
@@ -286,8 +383,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                             try {
                               await http.post(
                                 Uri.parse(
-                                  "https://aquasense-p36u.onrender.com/logout",
-                                ),
+                                    "https://aquasense-p36u.onrender.com/logout"),
                                 headers: {"Content-Type": "application/json"},
                               );
                             } catch (e) {
@@ -334,7 +430,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               child: Text(
                 themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 16, // Consider using 16.sp here
                   fontFamily: 'Poppins',
                   color: Theme.of(context).colorScheme.onBackground,
                 ),
@@ -389,7 +485,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           Text(
             'Account Activity',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 16, // Consider using 16.sp here
               fontWeight: FontWeight.bold,
               fontFamily: 'Poppins',
               color: Theme.of(context).colorScheme.onSurface,
@@ -403,13 +499,13 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               dense: true,
               leading: Icon(
                 isLogin ? Icons.login : Icons.logout,
-                size: 20,
+                size: 20, // Consider using 20.sp here
                 color: isLogin ? Colors.green : Colors.red,
               ),
               title: Text(
                 entry['action']!,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 14, // Consider using 14.sp here
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Poppins',
                   color: Theme.of(context).colorScheme.onSurface,
@@ -418,7 +514,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               subtitle: Text(
                 entry['timestamp']!,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 12, // Consider using 12.sp here
                   fontFamily: 'Poppins',
                   color: Theme.of(
                     context,
@@ -431,65 +527,6 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
       ),
     );
   }
-
-  // Help and Support design
-  //   Widget AccountActivityLog() {
-  //   // Mock data: Replace this with real data from your backend
-  //   final List<Map<String, String>> activityLog = [
-  //     {
-  //       'action': 'Login',
-  //       'timestamp': '2025-05-30 10:42 AM',
-  //     },
-  //     {
-  //       'action': 'Logout',
-  //       'timestamp': '2025-05-30 11:15 AM',
-  //     },
-  //     {
-  //       'action': 'Login',
-  //       'timestamp': '2025-05-29 09:08 PM',
-  //     },
-  //   ];
-
-  //   return Column(
-  //     children: activityLog.map((entry) {
-  //       bool isLogin = entry['action'] == 'Login';
-  //       return ListTile(
-  //         contentPadding: const EdgeInsets.only(
-  //           left: 50.0,
-  //           right: 16.0,
-  //           top: 4.0,
-  //           bottom: 4.0,
-  //         ),
-  //         dense: true,
-  //         leading: Icon(
-  //           isLogin ? Icons.login : Icons.logout,
-  //           size: 20,
-  //           color: isLogin
-  //               ? Colors.green
-  //               : Colors.red,
-  //         ),
-  //         title: Text(
-  //           '${entry['action']}',
-  //           style: TextStyle(
-  //             fontSize: 14,
-  //             fontWeight: FontWeight.w500,
-  //             fontFamily: 'Poppins',
-  //             color: ASColor.getTextColor(context),
-  //           ),
-  //         ),
-  //         subtitle: Text(
-  //           '${entry['timestamp']}',
-  //           style: TextStyle(
-  //             fontSize: 12,
-  //             fontFamily: 'Poppins',
-  //             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-  //             height: 1.3,
-  //           ),
-  //         ),
-  //       );
-  //     }).toList(),
-  //   );
-  // }
 
   //Profile Management Design
   Widget buildProfileForm() {
@@ -541,7 +578,12 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               if (value == null || value.trim().isEmpty) {
                 return 'Fill all the text field';
               }
-              if (!value.trim().endsWith('@')) {
+              // This email validation needs to be more robust.
+              // A simple '@' check isn't enough. Consider a regex like:
+              // if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+              //   return 'Enter a valid email address';
+              // }
+              if (!value.trim().contains('@')) { // Changed to contains '@'
                 return 'Enter a valid email address';
               }
               return null;
@@ -577,8 +619,8 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
               }
               final phone = value.trim();
               if (phone.length != 11 ||
-                  !RegExp(r'^\d{11}[0m').hasMatch(phone)) {
-                return 'Enter a valid phone number';
+                  !RegExp(r'^\d{11}$').hasMatch(phone)) { // Corrected regex to match 11 digits
+                return 'Enter a valid 11-digit phone number';
               }
               return null;
             },
@@ -634,8 +676,18 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.lock),
-            title: Text('Change Password'),
-            onTap: () {}, // Can add a toggle here for expansion too
+            title: Text(
+              'Change Password',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Montserrat',
+                color: ASColor.getTextColor(context),
+              ),
+            ),
+            onTap: () {
+              // You might want to expand a section here for password fields
+              // if you don't want them always visible.
+            },
           ),
 
           const SizedBox(height: 10),
@@ -644,27 +696,17 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           TextFormField(
             controller: currentPassword,
             obscureText: _obscurecurrentPassword,
+            // For password validation, I've used the original logic,
+            // but ensure it's appropriate for your backend's requirements.
+            // Note: The example backend only checks length, not complexity.
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Fill all the text field';
+                return 'Current password is required.';
               }
-              final pwd = value.trim();
-              List<String> errors = [];
-              if (pwd.length < 8) {
-                errors.add('• At least 8 characters');
-              }
-              if (!RegExp(r'[A-Z]').hasMatch(pwd)) {
-                errors.add('• At least one capital letter (A-Z)');
-              }
-              if (!RegExp(r'[0-9]').hasMatch(pwd)) {
-                errors.add('• At least one number (0-9)');
-              }
-              if (!pwd.contains('@') && !pwd.contains('_')) {
-                errors.add('• At least one symbol: @ or _');
-              }
-              if (errors.isNotEmpty) {
-                return errors.join('\n');
-              }
+              // The backend for change-password only checks length, not complexity
+              // if (value.length < 8) {
+              //   return 'Current password must be at least 8 characters long.';
+              // }
               return null;
             },
             decoration: InputDecoration(
@@ -703,12 +745,13 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           const SizedBox(height: 10),
 
+          // New Password TextField
           TextFormField(
             controller: newPassword,
             obscureText: _obscurenewPassword,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Fill all the text field';
+                return 'New password is required.';
               }
               final pwd = value.trim();
               List<String> errors = [];
@@ -763,12 +806,13 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           SizedBox(height: 10),
 
+          // Confirm New Password TextField
           TextFormField(
             controller: confirm_password,
             obscureText: _obscureConfirmPassword,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Fill all the text field';
+                return 'Confirm password is required.';
               }
               if (value != newPassword.text) {
                 return 'Passwords do not match';
@@ -811,8 +855,11 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           SizedBox(height: 20),
 
+          // Confirm New Password Button (calls _changePassword)
           ElevatedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              _changePassword(); // <--- This will now call your new password change logic
+            },
             icon: Icon(Icons.new_label, color: ASColor.txt1Color),
             label: Text(
               'Confirm New Password',

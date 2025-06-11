@@ -98,7 +98,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
 
     _fetchLatestDataForAllStats(isInitialFetch: true); // Initial fetch
     // Set up a timer to fetch data every 1.5 seconds
-    _timer = Timer.periodic(const Duration(milliseconds: 1500), (Timer t) {
+    _timer = Timer.periodic(const Duration(milliseconds: 2000), (Timer t) {
       _fetchLatestDataForAllStats();
     });
   }
@@ -299,9 +299,9 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
     const double maxTDS = 1000.0; // Adjusted max TDS to a more realistic value (e.g., 1000 PPM)
     const double maxPH = 14.0; // Max pH scale
     const double maxTurbidity = 100.0; // Max turbidity percentage (0-100%)
-    const double maxConductivity = 10.0; // Adjusted max conductivity (e.g., 10 mS/cm)
-    const double maxSalinity = 40.0; // Adjusted max salinity (e.g., 40 ppt for seawater)
-    const double maxECCompensated = 10.0; // Adjusted max compensated EC (e.g., 10 mS/cm)
+    const double maxConductivity = 100.0; // Adjusted max conductivity (e.g., 10 mS/cm)
+    const double maxSalinity = 100.0; // Adjusted max salinity (e.g., 40 ppt for seawater)
+    const double maxECCompensated = 100.0; // Adjusted max compensated EC (e.g., 10 mS/cm)
 
     switch (selectedStat) {
       case "Temp":
@@ -311,7 +311,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         break;
       case "TDS":
         targetProgress = _latestTDS / maxTDS;
-        currentLabel = "${_latestTDS.toStringAsFixed(1)} PPM";
+        currentLabel = "${_latestTDS.toStringAsFixed(1)}%";
         currentColor = Colors.green;
         break;
       case "pH":
@@ -326,17 +326,17 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         break;
       case "Conductivity":
         targetProgress = _latestConductivity / maxConductivity;
-        currentLabel = "${_latestConductivity.toStringAsFixed(1)} mS/cm";
+        currentLabel = "${_latestConductivity.toStringAsFixed(1)}%";
         currentColor = Colors.red;
         break;
       case "Salinity":
         targetProgress = _latestSalinity / maxSalinity;
-        currentLabel = "${_latestSalinity.toStringAsFixed(1)} ppt";
+        currentLabel = "${_latestSalinity.toStringAsFixed(1)}%";
         currentColor = Colors.teal;
         break;
       case "Electrical Conductivity (Condensed)":
         targetProgress = _latestECCompensated / maxECCompensated;
-        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} mS/cm";
+        currentLabel = "${_latestECCompensated.toStringAsFixed(1)}%";
         currentColor = Colors.indigo;
         break;
     }
