@@ -22,8 +22,19 @@ class SAdminNotification extends StatefulWidget {
 class _SAdminNotificationState extends State<SAdminNotification> {
   // Use a List of Map<String, dynamic> to accommodate various data types from backend
   List<Map<String, dynamic>> notifications = [];
+  List<Map<String, dynamic>> filteredNotifications = [];
   bool _isLoading = true; // To show a loading indicator
   String? _errorMessage; // To display any fetch errors
+  String _selectedFilter = 'All'; // Current filter selection
+
+  // Filter options
+  final List<String> _filterOptions = [
+    'All',
+    'Sensor',
+    'Schedule',
+    'Request',
+    'New User',
+  ];
 
   @override
   void initState() {
@@ -41,7 +52,9 @@ class _SAdminNotificationState extends State<SAdminNotification> {
     try {
       // The endpoint for Super Admin notifications (unauthenticated)
       final response = await http.get(
-        Uri.parse('https://aquasense-p36u.onrender.com/api/notifications/superadmin'), // <-- Adjust your backend URL if different
+        Uri.parse(
+          'https://aquasense-p36u.onrender.com/api/notifications/superadmin',
+        ), // <-- Adjust your backend URL if different
         headers: {
           'Content-Type': 'application/json',
           // No 'Authorization' header needed for this unauthenticated endpoint
@@ -53,25 +66,41 @@ class _SAdminNotificationState extends State<SAdminNotification> {
         final List<dynamic> fetchedNotifications = json.decode(response.body);
 
         setState(() {
-          notifications = fetchedNotifications.map((notif) {
-            // Map backend fields to your local notification structure.
-            // Ensure the keys match what your backend returns (e.g., 'id', 'type', 'title', 'message', 'createdAt', 'read').
-            return {
-              'id': notif['id'].toString(), // Convert ID to string for consistency
-              'title': notif['title'] ?? 'No Title', // Use 'title' from backend
-              'subtitle': notif['message'] ?? 'No Message', // Use 'message' from backend as 'subtitle'
-              'time': _formatTimestamp(notif['createdAt']), // Format 'createdAt' from backend
-              'type': notif['type'] ?? 'default', // Use 'type' for icon mapping
-              'is_read': notif['read'] == 1 || notif['read'] == true, // Handle boolean from DB (int 1/0 or actual boolean)
-            };
-          }).toList();
+          notifications =
+              fetchedNotifications.map((notif) {
+                // Map backend fields to your local notification structure.
+                // Ensure the keys match what your backend returns (e.g., 'id', 'type', 'title', 'message', 'createdAt', 'read').
+                return {
+                  'id':
+                      notif['id']
+                          .toString(), // Convert ID to string for consistency
+                  'title':
+                      notif['title'] ?? 'No Title', // Use 'title' from backend
+                  'subtitle':
+                      notif['message'] ??
+                      'No Message', // Use 'message' from backend as 'subtitle'
+                  'time': _formatTimestamp(
+                    notif['createdAt'],
+                  ), // Format 'createdAt' from backend
+                  'type':
+                      notif['type'] ?? 'default', // Use 'type' for icon mapping
+                  'is_read':
+                      notif['read'] == 1 ||
+                      notif['read'] ==
+                          true, // Handle boolean from DB (int 1/0 or actual boolean)
+                };
+              }).toList();
+          _applyFilter(); // Apply the current filter after fetching notifications
         });
       } else {
         // Handle non-200 responses (e.g., 404, 500)
         setState(() {
-          _errorMessage = 'Failed to load notifications: ${response.statusCode} ${response.reasonPhrase}';
+          _errorMessage =
+              'Failed to load notifications: ${response.statusCode} ${response.reasonPhrase}';
         });
-        print('Failed to load notifications: ${response.statusCode} ${response.body}');
+        print(
+          'Failed to load notifications: ${response.statusCode} ${response.body}',
+        );
       }
     } catch (e) {
       // Handle network errors or other exceptions during the HTTP request
@@ -86,11 +115,38 @@ class _SAdminNotificationState extends State<SAdminNotification> {
     }
   }
 
+  /// Applies the current filter to the notifications list
+  void _applyFilter() {
+    setState(() {
+      if (_selectedFilter == 'All') {
+        filteredNotifications = List.from(notifications);
+      } else {
+        filteredNotifications =
+            notifications.where((notification) {
+              return notification['type'].toString().toLowerCase() ==
+                  _selectedFilter.toLowerCase();
+            }).toList();
+      }
+    });
+  }
+
+  /// Updates the filter and reapplies it
+  void _updateFilter(String? newFilter) {
+    if (newFilter != null) {
+      setState(() {
+        _selectedFilter = newFilter;
+      });
+      _applyFilter();
+    }
+  }
+
   /// Deletes a notification from the backend and updates the UI.
   Future<void> _deleteNotification(String notificationId, int index) async {
     try {
       final response = await http.delete(
-        Uri.parse('https://aquasense-p36u.onrender.com/api/notifications/superadmin/$notificationId'), // <-- Adjust your backend URL if different
+        Uri.parse(
+          'https://aquasense-p36u.onrender.com/api/notifications/superadmin/$notificationId',
+        ), // <-- Adjust your backend URL if different
         headers: {
           'Content-Type': 'application/json',
           // No 'Authorization' header needed for this unauthenticated endpoint
@@ -109,7 +165,11 @@ class _SAdminNotificationState extends State<SAdminNotification> {
         // Parse error message from backend if available
         final errorData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete notification: ${errorData['message'] ?? response.reasonPhrase}')),
+          SnackBar(
+            content: Text(
+              'Failed to delete notification: ${errorData['message'] ?? response.reasonPhrase}',
+            ),
+          ),
         );
       }
     } catch (e) {
@@ -124,7 +184,8 @@ class _SAdminNotificationState extends State<SAdminNotification> {
     if (timestamp == null) return 'N/A';
     try {
       // Parse the timestamp string received from the backend
-      final dateTime = DateTime.parse(timestamp).toLocal(); // Convert to local time zone
+      final dateTime =
+          DateTime.parse(timestamp).toLocal(); // Convert to local time zone
       final now = DateTime.now();
       final difference = now.difference(dateTime);
 
@@ -153,11 +214,20 @@ class _SAdminNotificationState extends State<SAdminNotification> {
       case 'sensor':
         return Icon(Icons.sensors, color: Colors.red); // For sensor alerts
       case 'schedule':
-        return Icon(Icons.calendar_month, color: Colors.blue); // For scheduled events
+        return Icon(
+          Icons.calendar_month,
+          color: Colors.blue,
+        ); // For scheduled events
       case 'request':
-        return Icon(Icons.pending_actions, color: Colors.orange); // For access requests
+        return Icon(
+          Icons.pending_actions,
+          color: Colors.orange,
+        ); // For access requests
       case 'new_user':
-        return Icon(Icons.person_add, color: Colors.green); // For new user registrations
+        return Icon(
+          Icons.person_add,
+          color: Colors.green,
+        ); // For new user registrations
       default:
         return Icon(Icons.notifications, color: Colors.grey); // Default icon
     }
@@ -166,156 +236,274 @@ class _SAdminNotificationState extends State<SAdminNotification> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator()) // Show loading indicator
-          : _errorMessage != null
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(),
+              ) // Show loading indicator
+              : _errorMessage != null
               ? Center(
-                  // Show error message if fetch failed
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                // Show error message if fetch failed
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchNotifications, // Retry button
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              : notifications.isEmpty
+              ? Center(
+                // Show message if no notifications are found
+                child: Text(
+                  'No notifications to display.',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: ASColor.getTextColor(context),
+                  ),
+                ),
+              )
+              : Column(
+                children: [
+                  // Filter Dropdown
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 10.h,
+                    ),
+                    child: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                        const SizedBox(height: 16),
                         Text(
-                          _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                          'Filter by type:',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: ASColor.getTextColor(context),
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _fetchNotifications, // Retry button
-                          child: const Text('Retry'),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.3),
+                              ),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _selectedFilter,
+                                isExpanded: true,
+                                icon: Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: ASColor.getTextColor(context),
+                                ),
+                                style: TextStyle(
+                                  color: ASColor.getTextColor(context),
+                                ),
+                                dropdownColor: ASColor.getCardColor(context),
+                                items:
+                                    _filterOptions.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                onChanged: _updateFilter,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                )
-              : notifications.isEmpty
-                  ? Center(
-                      // Show message if no notifications are found
-                      child: Text(
-                        'No notifications to display.',
-                        style: TextStyle(fontSize: 16.sp, color: ASColor.getTextColor(context)),
-                      ),
-                    )
-                  : ListView.separated(
-                      itemCount: notifications.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox.shrink(), // Remove the default divider between list items
-                      itemBuilder: (context, index) {
-                        final notification = notifications[index];
-                        // `is_read` from backend isn't used for visual indicator here, but can be for future features
-                        final isRead = notification['is_read'] ?? false;
-
-                        return GestureDetector(
-                          onTap: () {
-                            // Navigate to detail page
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NotificationDetailPage(
-                                  title: notification['title']!,
-                                  subtitle: notification['subtitle']!,
-                                  time: notification['time']!,
-                                  // You might pass other details to the detail page if needed
-                                ),
-                              ),
-                            );
-                          },
-                          child: Card(
-                            color: ASColor.getCardColor(context), // Dynamic card background
-                            margin: EdgeInsets.fromLTRB(
-                              16.w,
-                              index == 0 ? 20.h : 0, // Top margin for the first card
-                              16.w,
-                              20.h,
-                            ),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.all(16.w),
-                              leading: _getNotificationIcon(notification['type']!), // Use 'type' for icon
-                              title: Text(
-                                notification['title']!,
+                  // Notifications List
+                  Expanded(
+                    child:
+                        filteredNotifications.isEmpty
+                            ? Center(
+                              child: Text(
+                                'No notifications found for the selected filter.',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
                                   fontSize: 16.sp,
                                   color: ASColor.getTextColor(context),
                                 ),
                               ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    notification['subtitle']!,
-                                    style: TextStyle(fontSize: 14.sp),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    notification['time']!,
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
-                                  ),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Iconsax.trash, size: 16, color: Colors.red),
-                                onPressed: () async {
-                                  // Show confirmation dialog before deleting
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(
-                                        'Delete Notification',
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
-                                          fontSize: 18.sp,
-                                        ),
-                                      ),
-                                      content: const Text(
-                                        'Are you sure you want to delete this notification?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(false),
-                                          child: Text(
-                                            'Cancel',
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 16.sp,
-                                              color: ASColor.getTextColor(context),
+                            )
+                            : ListView.separated(
+                              itemCount: filteredNotifications.length,
+                              separatorBuilder:
+                                  (context, index) =>
+                                      const SizedBox.shrink(), // Remove the default divider between list items
+                              itemBuilder: (context, index) {
+                                final notification =
+                                    filteredNotifications[index];
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    // Navigate to detail page
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => NotificationDetailPage(
+                                              title: notification['title']!,
+                                              subtitle:
+                                                  notification['subtitle']!,
+                                              time: notification['time']!,
+                                              // You might pass other details to the detail page if needed
                                             ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(true),
-                                          child: Text(
-                                            'Delete',
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 16.sp,
-                                              color: ASColor.getTextColor(context),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                      ),
+                                    );
+                                  },
+                                  child: Card(
+                                    color: ASColor.getCardColor(
+                                      context,
+                                    ), // Dynamic card background
+                                    margin: EdgeInsets.fromLTRB(
+                                      16.w,
+                                      index == 0
+                                          ? 20.h
+                                          : 0, // Top margin for the first card
+                                      16.w,
+                                      20.h,
                                     ),
-                                  );
-                                  if (confirm == true && notification['id'] != null) {
-                                    // Call delete function if confirmed
-                                    _deleteNotification(notification['id'], index);
-                                  }
-                                },
-                                tooltip: 'Delete notification',
-                              ),
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: EdgeInsets.all(16.w),
+                                      leading: _getNotificationIcon(
+                                        notification['type']!,
+                                      ), // Use 'type' for icon
+                                      title: Text(
+                                        notification['title']!,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16.sp,
+                                          color: ASColor.getTextColor(context),
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            notification['subtitle']!,
+                                            style: TextStyle(fontSize: 14.sp),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Text(
+                                            notification['time']!,
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12.sp,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      trailing: IconButton(
+                                        icon: const Icon(
+                                          Iconsax.trash,
+                                          size: 16,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () async {
+                                          // Show confirmation dialog before deleting
+                                          final confirm = await showDialog<
+                                            bool
+                                          >(
+                                            context: context,
+                                            builder:
+                                                (context) => AlertDialog(
+                                                  title: Text(
+                                                    'Delete Notification',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Montserrat',
+                                                      fontSize: 18.sp,
+                                                    ),
+                                                  ),
+                                                  content: const Text(
+                                                    'Are you sure you want to delete this notification?',
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed:
+                                                          () => Navigator.of(
+                                                            context,
+                                                          ).pop(false),
+                                                      child: Text(
+                                                        'Cancel',
+                                                        style: TextStyle(
+                                                          fontFamily: 'Poppins',
+                                                          fontSize: 16.sp,
+                                                          color:
+                                                              ASColor.getTextColor(
+                                                                context,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed:
+                                                          () => Navigator.of(
+                                                            context,
+                                                          ).pop(true),
+                                                      child: Text(
+                                                        'Delete',
+                                                        style: TextStyle(
+                                                          fontFamily: 'Poppins',
+                                                          fontSize: 16.sp,
+                                                          color:
+                                                              ASColor.getTextColor(
+                                                                context,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                          );
+                                          if (confirm == true &&
+                                              notification['id'] != null) {
+                                            // Call delete function if confirmed
+                                            _deleteNotification(
+                                              notification['id'],
+                                              index,
+                                            );
+                                          }
+                                        },
+                                        tooltip: 'Delete notification',
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                  ),
+                ],
+              ),
     );
   }
 }
