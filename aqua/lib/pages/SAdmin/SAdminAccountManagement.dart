@@ -376,34 +376,6 @@ class _UserListPageState extends State<UserListPage> {
                                 fontFamily: 'Poppins',
                               ),
                             ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // --- Call edit function on press ---
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.edit,
-                                    color: ASColor.getTextColor(context),
-                                  ),
-                                  onPressed: () {
-                                    _showEditDialog(user); // Open edit dialog
-                                  },
-                                ),
-                                // --- Call delete function on press ---
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.delete,
-                                    color: ASColor.getTextColor(context),
-                                  ),
-                                  onPressed: () {
-                                    _deleteUser(
-                                      user['id'],
-                                      user['username'],
-                                    ); // Pass ID and username
-                                  },
-                                ),
-                              ],
-                            ),
                           ),
                         );
                       },
@@ -413,19 +385,19 @@ class _UserListPageState extends State<UserListPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: ASColor.buttonBackground(context),
-        onPressed: () {
-          setState(() {
-            // Add your action here, e.g., navigate to a new page
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AddAccount()),
-            );
-          });
-        },
-        child: Icon(Icons.add, color: ASColor.BGFifth),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: ASColor.buttonBackground(context),
+      //   onPressed: () {
+      //     setState(() {
+      //       // Add your action here, e.g., navigate to a new page
+      //       Navigator.push(
+      //         context,
+      //         MaterialPageRoute(builder: (context) => AddAccount()),
+      //       );
+      //     });
+      //   },
+      //   child: Icon(Icons.add, color: ASColor.BGFifth),
+      // ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.endFloat, // Bottom right
     );
