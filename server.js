@@ -1,3 +1,4 @@
+// Import the necessary modules.
 const express = require("express");
 const mysql = require('mysql2/promise'); // Use the promise version of mysql2
 const { SerialPort } = require("serialport");
@@ -22,11 +23,11 @@ const otpStorage = {}; // { email: { otp, expiry } }
 
 // Nodemailer setup (replace with your email provider details)
 const transporter = nodemailer.createTransport({
-  service: "gmail", // e.g., 'Gmail', 'Outlook'
-  auth: {
-    user: "aquasense35@gmail.com",
-    pass: "ijmcosuxpnioehya",
-  },
+  service: "gmail", // e.g., 'Gmail', 'Outlook'
+  auth: {
+    user: "aquasense35@gmail.com",
+    pass: "ijmcosuxpnioehya",
+  },
 });
 
 // Middleware
@@ -56,6 +57,9 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// Key Fix: Define the HTTP server before the Socket.IO server.
+const server = http.createServer(app);
+
 // Initialize Socket.IO server with CORS options
 const io = new Server(server, {
   cors: {
@@ -67,75 +71,75 @@ const io = new Server(server, {
 
 // MySQL Connection
 const db = mysql.createPool({
-  host: "aquasense.c10u8c6s49c0.ap-southeast-2.rds.amazonaws.com",
-  user: "admin",
-  password: "aquasense123",
-  database: "aquasense",
+  host: "aquasense.c10u8c6s49c0.ap-southeast-2.rds.amazonaws.com",
+  user: "admin",
+  password: "aquasense123",
+  database: "aquasense",
   port: 3306, // Default MySQL port
-  waitForConnections: true, 
-  connectionLimit: 10, 
-  queueLimit: 0, 
+  waitForConnections: true, 
+  connectionLimit: 10, 
+  queueLimit: 0, 
 });
 
 // Function to send OTP via email
 async function sendOTP(email, otp) {
-  const mailOptions = {
-    from: 'your-email@example.com',
-    to: email,
-    subject: 'Password Reset OTP',
-    text: `Your OTP for password reset is: ${otp}`,
-  };
+  const mailOptions = {
+    from: 'your-email@example.com',
+    to: email,
+    subject: 'Password Reset OTP',
+    text: `Your OTP for password reset is: ${otp}`,
+  };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`OTP sent to ${email}: ${otp}`);
-  } catch (error) {
-    console.error('Error sending OTP email:', error);
-    console.error('Original Email Error:', error); // Log the original error
-    throw new Error('Failed to send OTP. Please check your email configuration.  Original error: ' + error.message); // Include original error message
-  }
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`OTP sent to ${email}: ${otp}`);
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+    console.error('Original Email Error:', error); // Log the original error
+    throw new Error('Failed to send OTP. Please check your email configuration.  Original error: ' + error.message); // Include original error message
+  }
 }
 
 // Import the User model (assuming it's in ./models/user.js)
 const User = require('./models/user'); // <===== ADD THIS LINE
 
 app.post("/register", async (req, res) => {
-  const {
-    username,
-    email,
-    phone,
-    password,
-    confirm_password,
-  } = req.body;
+  const {
+    username,
+    email,
+    phone,
+    password,
+    confirm_password,
+  } = req.body;
 
-  if (!username || !email || !password || !confirm_password) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
+  if (!username || !email || !password || !confirm_password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
 
-  if (password !== confirm_password) {
-    return res.status(400).json({ error: "Passwords do not match" });
-  }
+  if (password !== confirm_password) {
+    return res.status(400).json({ error: "Passwords do not match" });
+  }
 
-  try {
-    // Hash Password
-    const hashedPassword = await bcrypt.hash(password, saltRounds); // SQL Query
+  try {
+    // Hash Password
+    const hashedPassword = await bcrypt.hash(password, saltRounds); // SQL Query
 
-    const sql =
-      "INSERT INTO users (username, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'user')"; // Insert User Data, added role
-    const [result] = await db.query(sql, [
-      username,
-      email,
-      phone || null,
-      hashedPassword,
-    ]); // Use await and destructuring
-    res.json({
-      message: "User registered successfully!",
-      userId: result.insertId, // Return inserted user ID
-    });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Server error" });
-  }
+    const sql =
+      "INSERT INTO users (username, email, phone, password_hash, role) VALUES (?, ?, ?, ?, 'user')"; // Insert User Data, added role
+    const [result] = await db.query(sql, [
+      username,
+      email,
+      phone || null,
+      hashedPassword,
+    ]); // Use await and destructuring
+    res.json({
+      message: "User registered successfully!",
+      userId: result.insertId, // Return inserted user ID
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 // Login route (public, does not use authenticateToken)
@@ -224,298 +228,298 @@ app.post('/api/update_user', async (req, res) => {
 
 // NEW: Endpoint to fetch all users
 app.get("/users", async (req, res) => {
-  const sql = "SELECT id, username, role FROM users";
-  try {
-    const [results] = await db.query(sql);
-    res.status(200).json(results);
-  } catch (err) {
-    console.error("Database error fetching users:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to fetch users from database." });
-    }
+  const sql = "SELECT id, username, role FROM users";
+  try {
+    const [results] = await db.query(sql);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Database error fetching users:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to fetch users from database." });
+    }
 });
 
 // NEW: Endpoint to update a user by ID (PUT request)
 app.put("/users/:id", async (req, res) => {
-  const userId = req.params.id;
-  const { username, role } = req.body;
+  const userId = req.params.id;
+  const { username, role } = req.body;
 
-  if (!username || !role) {
-    return res
-      .status(400)
-      .json({ error: "Username and role are required for update." });
-  }
-  const sql = "UPDATE users SET username = ?, role = ? WHERE id = ?";
-  try {
-    const [result] = await db.query(sql, [username, role, userId]);
-    if (result.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ error: "User not found or no changes made." });
-    }
-    res.status(200).json({ message: "User updated successfully!" });
-  } catch (err) {
-    console.error("Database error updating user:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to update user in database." });
-    }
+  if (!username || !role) {
+    return res
+      .status(400)
+      .json({ error: "Username and role are required for update." });
+  }
+  const sql = "UPDATE users SET username = ?, role = ? WHERE id = ?";
+  try {
+    const [result] = await db.query(sql, [username, role, userId]);
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "User not found or no changes made." });
+    }
+    res.status(200).json({ message: "User updated successfully!" });
+  } catch (err) {
+    console.error("Database error updating user:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to update user in database." });
+    }
 });
 
 // NEW: Endpoint to delete a user by ID (DELETE request)
 app.delete("/users/:id", async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.params.id;
 
-  const sql = "DELETE FROM users WHERE id = ?";
-  try {
-    const [result] = await db.query(sql, [userId]);
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "User not found." });
-    }
-    res.status(200).json({ message: "User deleted successfully!" });
-  } catch (err) {
-    console.error("Database error deleting user:", err);
-    return res
-      .status(500)
-      .json({ error: "Failed to delete user from database." });
-    }
+  const sql = "DELETE FROM users WHERE id = ?";
+  try {
+    const [result] = await db.query(sql, [userId]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+    res.status(200).json({ message: "User deleted successfully!" });
+  } catch (err) {
+    console.error("Database error deleting user:", err);
+    return res
+      .status(500)
+      .json({ error: "Failed to delete user from database." });
+    }
 });
 
 // 1. Forgot Password Endpoint
 app.post("/api/forgot-password", async (req, res) => {
-  console.log("Received request for /api/forgot-password");
-  const { email } = req.body;
-  console.log("Email received:", email);
+  console.log("Received request for /api/forgot-password");
+  const { email } = req.body;
+  console.log("Email received:", email);
 
-  if (!email) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email is required" });
-  }
+  if (!email) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email is required" });
+  }
 
-  try {
-    // Check if the user exists in the database
-    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [
-      email,
-    ]); // Corrected query
-    const user = users[0];
+  try {
+    // Check if the user exists in the database
+    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [
+      email,
+    ]); // Corrected query
+    const user = users[0];
 
-    if (!user) {
-      console.log("User not found for email:", email);
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Email not found. Please check your email address.",
-        }); // Prevents email enumeration
-    }
+    if (!user) {
+      console.log("User not found for email:", email);
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "Email not found. Please check your email address.",
+        }); // Prevents email enumeration
+    }
 
-    console.log("User found:", user); //  log // Generate OTP
+    console.log("User found:", user); //  log // Generate OTP
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-    const expiry = Date.now() + 300000; // OTP expires in 5 minutes (300000 ms) // Store OTP (in a real app, use Redis or a database with TTL)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+    const expiry = Date.now() + 300000; // OTP expires in 5 minutes (300000 ms) // Store OTP (in a real app, use Redis or a database with TTL)
 
-    otpStorage[email] = { otp, expiry }; // Send OTP via email
+    otpStorage[email] = { otp, expiry }; // Send OTP via email
 
-    await sendOTP(email, otp);
-    res.json({
-      success: true,
-      message: "OTP sent successfully. Please check your email.",
-    });
-  } catch (error) {
-    console.error("Error during forgot-password process:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error: " + error.message,
-      }); // Improved error message
-  }
+    await sendOTP(email, otp);
+    res.json({
+      success: true,
+      message: "OTP sent successfully. Please check your email.",
+    });
+  } catch (error) {
+    console.error("Error during forgot-password process:", error);
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal server error: " + error.message,
+      }); // Improved error message
+  }
 });
 
 // 2. Verify OTP Endpoint
 app.post("/api/verify-otp", async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp } = req.body;
 
-  if (!email || !otp) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and OTP are required" });
-  }
+  if (!email || !otp) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and OTP are required" });
+  }
 
-  try {
-    // 1.  Find the user by email
-    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]); //  findOne
-    const user = users[0];
-    if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid email." });
-    }
+  try {
+    // 1.  Find the user by email
+    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]); //  findOne
+    const user = users[0];
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid email." });
+    }
 
-    // 2.  Get the stored OTP
-    const storedOTP = otpStorage[email];
-    if (!storedOTP) {
-      return res.status(404).json({
-        success: false,
-        message: "OTP not found or expired. Please request a new one.",
-      });
-    }
+    // 2.  Get the stored OTP
+    const storedOTP = otpStorage[email];
+    if (!storedOTP) {
+      return res.status(404).json({
+        success: false,
+        message: "OTP not found or expired. Please request a new one.",
+      });
+    }
 
-    // 3.  Verify the OTP and expiry
-    if (storedOTP.otp === otp) {
-      if (storedOTP.expiry < Date.now()) {
-        delete otpStorage[email];
-        return res.status(410).json({
-          success: false,
-          message: "OTP expired. Please request a new one.",
-        });
-      }
+    // 3.  Verify the OTP and expiry
+    if (storedOTP.otp === otp) {
+      if (storedOTP.expiry < Date.now()) {
+        delete otpStorage[email];
+        return res.status(410).json({
+          success: false,
+          message: "OTP expired. Please request a new one.",
+        });
+      }
 
-      // OTP is valid
-      // 4.  Mark the user as verified and remove the OTP
-      // ==========================================================
-      //  Database Logic Starts Here
-      // ==========================================================
+      // OTP is valid
+      // 4.  Mark the user as verified and remove the OTP
+      // ==========================================================
+      //  Database Logic Starts Here
+      // ==========================================================
 
-      // --- MySQL (mysql2) Example ---
-      await db.query('UPDATE users SET is_verified = 1 WHERE email = ?', [email]);
-      //await connection.query('DELETE FROM otps WHERE email = ?', [email]); // There is no OTP table in the database
-      // ==========================================================
-      //  Database Logic Ends Here
-      // ==========================================================
+      // --- MySQL (mysql2) Example ---
+      await db.query('UPDATE users SET is_verified = 1 WHERE email = ?', [email]);
+      //await connection.query('DELETE FROM otps WHERE email = ?', [email]); // There is no OTP table in the database
+      // ==========================================================
+      //  Database Logic Ends Here
+      // ==========================================================
 
-      res.json({
-        success: true,
-        message: "OTP verified successfully. You can now change your password.",
-      });
-    } else {
-      return res.status(400).json({ success: false, message: "Invalid OTP." });
-    }
-  } catch (error) {
-    console.error("Error verifying OTP:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message, // Include the error message for debugging
-    });
-  }
+      res.json({
+        success: true,
+        message: "OTP verified successfully. You can now change your password.",
+      });
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid OTP." });
+    }
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message, // Include the error message for debugging
+    });
+  }
 });
 
 
 // async function setStateOTPVerified(email) {
-//   const sql = "UPDATE users SET reset_otp = 1 WHERE email = ?"; // Use reset_otp
-//   try {
-//     const [result] = await db.query(sql, [email]);
-//     if (result.affectedRows === 0) {
-//       console.warn(
-//         "setStateOTPVerified: Email not found or user already verified:",
-//         email
-//       ); //  Don't treat this as an error.
-//     }
-//   } catch (error) {
-//     console.error("Database error in setStateOTPVerified:", error);
-//     throw error; // Re-throw the error to be caught by the caller
-//   }
+//  const sql = "UPDATE users SET reset_otp = 1 WHERE email = ?"; // Use reset_otp
+//  try {
+//    const [result] = await db.query(sql, [email]);
+//    if (result.affectedRows === 0) {
+//      console.warn(
+//        "setStateOTPVerified: Email not found or user already verified:",
+//        email
+//      ); //  Don't treat this as an error.
+//    }
+//  } catch (error) {
+//    console.error("Database error in setStateOTPVerified:", error);
+//    throw error; // Re-throw the error to be caught by the caller
+//  }
 // }
 
 // 3. Change Password Endpoint
 // ... (Keep your existing code, and add this login function)
 async function login(username, res) {
-  const sql = "SELECT *, role FROM users WHERE username = ?";
-  try {
-    const [results] = await db.query(sql, [username]); // Use await
-    if (results.length === 0) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+  const sql = "SELECT *, role FROM users WHERE username = ?";
+  try {
+    const [results] = await db.query(sql, [username]); // Use await
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    const user = results[0];
-    // In a real app, you would compare the password.  Since we just changed it, we know it's correct.
-    // const passwordMatch = await bcrypt.compare(password, user.password_hash);
-    // if (!passwordMatch) {
-    //   return res.status(401).json({ error: "Invalid credentials" });
-    // }
+    const user = results[0];
+    // In a real app, you would compare the password.  Since we just changed it, we know it's correct.
+    // const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    // if (!passwordMatch) {
+    //   return res.status(401).json({ error: "Invalid credentials" });
+    // }
 
-    res.json({
-      message: "Login successful!",
-      role: user.role, // token: "your_jwt_token_here"  <==  Important:  Add a token here.
-    });
-  } catch (err) {
-    console.error("Database error:", err);
-    return res.status(500).json({ error: "Database error occurred" });
-  }
+    res.json({
+      message: "Login successful!",
+      role: user.role, // token: "your_jwt_token_here"  <==  Important:  Add a token here.
+    });
+  } catch (err) {
+    console.error("Database error:", err);
+    return res.status(500).json({ error: "Database error occurred" });
+  }
 }
 
 
 
 
 app.post("/api/change-password", async (req, res) => {
-  const { email, new_password: newPassword } = req.body;
-  console.log("Received /api/change-password request", { email, newPassword });
+  const { email, new_password: newPassword } = req.body;
+  console.log("Received /api/change-password request", { email, newPassword });
 
-  if (!email || !newPassword) {
-    console.log("Missing email or newPassword");
-    return res
-      .status(400)
-      .json({ success: false, message: "Email and new password are required" });
-  }
+  if (!email || !newPassword) {
+    console.log("Missing email or newPassword");
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and new password are required" });
+  }
 
-  try {
-    console.log("Fetching user from database with email:", email);
-    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]); // Corrected query
-    const user = users[0];
+  try {
+    console.log("Fetching user from database with email:", email);
+    const [users] = await db.query("SELECT * FROM users WHERE email = ?", [email]); // Corrected query
+    const user = users[0];
 
-    if (!user) {
-      console.log("User not found for email:", email);
-      return res
-        .status(404)
-        .json({ success: false, message: "Email not found." });
-    }
-    console.log("Found user:", user);
-    if (user.is_verified !== 1) {
-      console.log("User is_verified is not 1.  is_verified:", user.is_verified);
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Password change request is not valid. Verify OTP first.",
-        });
-    }
+    if (!user) {
+      console.log("User not found for email:", email);
+      return res
+        .status(404)
+        .json({ success: false, message: "Email not found." });
+    }
+    console.log("Found user:", user);
+    if (user.is_verified !== 1) {
+      console.log("User is_verified is not 1.  is_verified:", user.is_verified);
+      return res
+        .status(403)
+        .json({
+          success: false,
+          message: "Password change request is not valid. Verify OTP first.",
+        });
+    }
 
-    if (newPassword.length < 8) {
-      console.log("New password is too short");
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Password must be at least 8 characters long",
-        });
-    }
-    console.log("Hashing new password");
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-    console.log("Hashed password:", hashedPassword);
-    console.log("Updating user password and setting is_verified to 0 for email:", email);
-    const sql =
-      "UPDATE users SET password_hash = ? WHERE email = ?";
-    const [result] = await db.query(sql, [hashedPassword, email]);
-    console.log("Database update result:", result);
-    // res.json({ success: true, message: "Password changed successfully." });     <== REMOVE THIS LINE
+    if (newPassword.length < 8) {
+      console.log("New password is too short");
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Password must be at least 8 characters long",
+        });
+    }
+    console.log("Hashing new password");
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    console.log("Hashed password:", hashedPassword);
+    console.log("Updating user password and setting is_verified to 0 for email:", email);
+    const sql =
+      "UPDATE users SET password_hash = ? WHERE email = ?";
+    const [result] = await db.query(sql, [hashedPassword, email]);
+    console.log("Database update result:", result);
+    // res.json({ success: true, message: "Password changed successfully." });      <== REMOVE THIS LINE
 
-    //  Inform the client to redirect.  Do NOT try to redirect from the backend.
-    res.json({
-      success: true,
-      message: "Password changed successfully.  Please redirect to login.",
-      redirect: "/login" //  Add a redirect property.  The value is the route on the FRONTEND.
-    });
-    
-  } catch (error) {
-    console.error("Error changing password:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error: " + error.message,
-      });
-    }
+    //  Inform the client to redirect.  Do NOT try to redirect from the backend.
+    res.json({
+      success: true,
+      message: "Password changed successfully.  Please redirect to login.",
+      redirect: "/login" //  Add a redirect property.  The value is the route on the FRONTEND.
+    });
+    
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal server error: " + error.message,
+      });
+    }
 });
 
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
@@ -689,32 +693,32 @@ app.delete('/api/notifications/admin/:id', async (req, res) => {
 
 // 4. (Optional) Register User Endpoint for Testing
 // app.post('/api/register', async (req, res) => {
-//   const { email, password } = req.body;
+//  const { email, password } = req.body;
 
-//   if (!email || !password) {
-//     return res.status(400).json({ success: false, message: 'Email and password are required' });
-//   }
+//  if (!email || !password) {
+//    return res.status(400).json({ success: false, message: 'Email and password are required' });
+//  }
 
-//   // Check if the user already exists
-//   const userExists = users.find(u => u.email === email);
-//   if (userExists) {
-//     return res.status(409).json({ success: false, message: 'Email already exists' });
-//   }
+//  // Check if the user already exists
+//  const userExists = users.find(u => u.email === email);
+//  if (userExists) {
+//    return res.status(409).json({ success: false, message: 'Email already exists' });
+//  }
 
-//   // Hash the password
-//   const salt = await bcrypt.genSalt(10);
-//   const hashedPassword = await bcrypt.hash(password, saltRounds);
+//  // Hash the password
+//  const salt = await bcrypt.genSalt(10);
+//  const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-//   // Create a new user
-//   const newUser = {
-//     id: uuidv4(),
-//     email,
-//     password: hashedPassword,
-//     resetPassword: false, // Add the resetPassword property here, initially false
-//   };
-//   users.push(newUser);
+//  // Create a new user
+//  const newUser = {
+//    id: uuidv4(),
+//    email,
+//    password: hashedPassword,
+//    resetPassword: false, // Add the resetPassword property here, initially false
+//  };
+//  users.push(newUser);
 
-//   res.status(201).json({ success: true, message: 'User registered successfully' });
+//  res.status(201).json({ success: true, message: 'User registered successfully' });
 // });
 
 // Helper function to emit notifications (it no longer inserts into the database)
@@ -922,22 +926,6 @@ const createGetDataEndpoint = (endpoint, tableName, timestampColumn) => {
     }
   });
 };
-
-// Create endpoints for each sensor type
-createGetDataEndpoint('turbidity', 'turbidity_readings', 'timestamp');
-createGetDataEndpoint('ph', 'phlevel_readings', 'timestamp');
-createGetDataEndpoint('tds', 'tds_readings', 'timestamp');
-createGetDataEndpoint('salinity', 'salinity_readings', 'timestamp');
-createGetDataEndpoint('ec', 'ec_readings', 'timestamp');
-createGetDataEndpoint('ec_compensated', 'ec_compensated_readings', 'timestamp');
-createGetDataEndpoint('temperature', 'temperature_readings', 'timestamp');
-
-
-// Start servers
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend running on port ${PORT}`);
-});
 
 // PUT /api/user/profile - Update user profile information
 app.put('/api/super-admin/profile', authenticateToken, async (req, res) => {
