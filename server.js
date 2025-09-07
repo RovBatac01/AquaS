@@ -17,7 +17,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!';
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 // const users = []; // REMOVE this - you'll fetch from the database
 const otpStorage = {}; // { email: { otp, expiry } }
 
