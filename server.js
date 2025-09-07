@@ -12,6 +12,10 @@ const https = require("https");
 const { v4: uuidv4 } = require("uuid"); // For generating unique IDs
 const nodemailer = require("nodemailer"); // For sending emails
 const jwt = require('jsonwebtoken');
+const express = require("express");
+
+
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!';
 
@@ -56,11 +60,14 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Create HTTP server for Socket.IO
-const server = http.createServer(app);
+// Initialize Socket.IO server with CORS options
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: "*", // Allow all origins for simplicity in development
+    methods: ["GET", "POST"],
+  },
 });
+
 
 // MySQL Connection
 const db = mysql.createPool({
@@ -714,238 +721,155 @@ app.delete('/api/notifications/admin/:id', async (req, res) => {
 //   res.status(201).json({ success: true, message: 'User registered successfully' });
 // });
 
-// SerialPort setup
-// const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 });
-// const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
+// Helper function to emit notifications (it no longer inserts into the database)
+const emitNotification = (readingValue, threshold) => {
+  console.log("🔔 Emitting real-time notification...");
+  // Emit the notification to clients
+  io.emit("newNotification", {
+    id: Date.now(), // Use a timestamp as a simple unique ID for this real-time event
+    readingValue,
+    threshold,
+    timestamp: new Date().toISOString(),
+  });
+};
 
-// serialPort.on("open", () => {
-//   console.log("✅ Serial Port Opened: COM5");
-// });
+// --- Consolidated Data Handling (Moved from Serial Port to HTTP Post) ---
+const insertAndEmit = async (
+  tableName,
+  valueColumn,
+  value,
+  socketEventName,
+  threshold = null,
+  notificationType = null
+) => {
+  if (value !== undefined && value !== null) {
+    console.log(`📡 Received ${valueColumn} Data:`, value);
+    const currentTime = new Date();
+    const query = `INSERT INTO ${tableName} (${valueColumn}, timestamp) VALUES (?, ?)`;
+    try {
+      const [result] = await db.query(query, [value, currentTime]);
+      console.log(
+        `✅ ${tableName} Data Inserted Successfully: ID`,
+        result.insertId
+      );
 
-// parser.on("data", (rawData) => {
-//   console.log("📡 Raw Data Received:", rawData.trim());
-
-//   const jsonStartIndex = rawData.indexOf("{");
-
-//   if (jsonStartIndex !== -1) {
-//     const jsonString = rawData.substring(jsonStartIndex);
-
-//     try {
-//       const jsonData = JSON.parse(jsonString);
-
-//       console.log("🔄 Parsed Data:", jsonData);
-
-//       // Example timestamp if available or generate here
-//       const timestamp = new Date();
-
-//       // Handling Turbidity
-//       if (jsonData.turbidity_value !== undefined) {
-//         const turbidityValue = jsonData.turbidity_value;
-//         console.log("🔄 Parsed Turbidity Value:", turbidityValue, "Timestamp:", timestamp);
-//         const query = "INSERT INTO turbidity_readings (turbidity_value, timestamp) VALUES (?, ?)";
-//         db.query(query, [turbidityValue, timestamp], (err, result) => {
-//           if (err) {
-//             console.error("❌ Turbidity Database Insert Error:", err);
-//           } else {
-//             console.log("✅ Turbidity Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updateData", { value: turbidityValue, timestamp });
-//             console.log("📢 WebSocket Event Emitted: updateData", { value: turbidityValue, timestamp });
-//           }
-//         });
-//       }
-
-//       // Handling pH data
-//       if (jsonData.ph_value !== undefined) {
-//         const phValue = jsonData.ph_value;
-//         console.log("📡 Received pH Level Data:", phValue);
-//         const query = "INSERT INTO phlevel_readings (ph_value) VALUES (?)";
-//         db.query(query, [phValue], (err, result) => {
-//           if (err) {
-//             console.error("❌ pH Database Insert Error:", err);
-//           } else {
-//             console.log("✅ pH Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updatePHData", { value: phValue });
-//             console.log("📢 WebSocket Event Emitted: updatePHData", { value: phValue });
-//           }
-//         });
-//       }
-
-//       // Handling TDS data
-//       if (jsonData.tds_value !== undefined) {
-//         const tdsValue = jsonData.tds_value;
-//         console.log("📡 Received TDS Data:", tdsValue);
-//         const query = "INSERT INTO tds_readings (tds_value) VALUES (?)";
-//         db.query(query, [tdsValue], (err, result) => {
-//           if (err) {
-//             console.error("❌ TDS Database Insert Error:", err);
-//           } else {
-//             console.log("✅ TDS Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updateTDSData", { value: tdsValue });
-//             console.log("📢 WebSocket Event Emitted: updateTDSData", { value: tdsValue });
-//           }
-//         });
-//       }
-
-//       // Handling Salinity data
-//       if (jsonData.salinity_value !== undefined) {
-//         const salinityValue = jsonData.salinity_value;
-//         console.log("📡 Received Salinity Data:", salinityValue);
-//         const query = "INSERT INTO salinity_readings (salinity_value) VALUES (?)";
-//         db.query(query, [salinityValue], (err, result) => {
-//           if (err) {
-//             console.error("❌ Salinity Database Insert Error:", err);
-//           } else {
-//             console.log("✅ Salinity Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updateSalinityData", { value: salinityValue });
-//             console.log("📢 WebSocket Event Emitted: updateSalinityData", { value: salinityValue });
-//           }
-//         });
-//       }
-
-//       // Handling EC data
-//       if (jsonData.ec_value !== undefined) {
-//         const ecValue = jsonData.ec_value;
-//         console.log("📡 Received EC Data (mS/cm):", ecValue);
-//         const query = "INSERT INTO ec_readings (ec_value_mS) VALUES (?)";
-//         db.query(query, [ecValue], (err, result) => {
-//           if (err) {
-//             console.error("❌ EC Database Insert Error:", err);
-//           } else {
-//             console.log("✅ EC Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updateECData", { value: ecValue });
-//             console.log("📢 WebSocket Event Emitted: updateECData", { value: ecValue });
-//           }
-//         });
-//       }
-
-//       // Handling EC Compensated data
-//       if (jsonData.ec_compensated_value !== undefined) {
-//         const ecCompensatedValue = jsonData.ec_compensated_value;
-//         console.log("📡 Received Compensated EC Data (mS/cm):", ecCompensatedValue);
-//         const query = "INSERT INTO ec_compensated_readings (ec_compensated_mS) VALUES (?)";
-//         db.query(query, [ecCompensatedValue], (err, result) => {
-//           if (err) {
-//             console.error("❌ Compensated EC Database Insert Error:", err);
-//           } else {
-//             console.log("✅ Compensated EC Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updateECCompensatedData", { value: ecCompensatedValue });
-//             console.log("📢 WebSocket Event Emitted: updateECCompensatedData", { value: ecCompensatedValue });
-//           }
-//         });
-//       }
-
-//       // Handling Temperature data
-//       if (jsonData.temperature_value !== undefined) {
-//         const temperatureValue = jsonData.temperature_value;
-//         console.log("📡 Received Temperature Data (°C):", temperatureValue);
-//         const query = "INSERT INTO temperature_readings (temperature_celsius) VALUES (?)";
-//         db.query(query, [temperatureValue], (err, result) => {
-//           if (err) {
-//             console.error("❌ Temperature Database Insert Error:", err);
-//           } else {
-//             console.log("✅ Temperature Data Inserted Successfully: ID", result.insertId);
-//             io.emit("updateTemperatureData", { value: temperatureValue });
-//             console.log("📢 WebSocket Event Emitted: updateTemperatureData", { value: temperatureValue });
-//           }
-//         });
-//       }
-
-//     } catch (err) {
-//       console.error("❌ JSON Parse Error:", err);
-//     }
-//   } else {
-//     console.warn("⚠️ No JSON object found in raw data");
-//   }
-// });
-
-// API endpoint to get total users
-app.get('/api/total-users', async (req, res) => { // Added 'async'
-  const querySql = 'SELECT COUNT(*) AS totalUsers FROM users'; // Assuming your user table is named 'users'
-
-  console.log('Attempting to fetch total users from the database...');
-
-  try {
-    // Corrected: Use db.query directly (assuming 'db' is your mysql2/promise pool)
-    const [results] = await db.query(querySql);
-
-    // Check if results are valid and contain the expected data
-    if (results && results.length > 0 && results[0].hasOwnProperty('totalUsers')) {
-      const totalUsers = results[0].totalUsers;
-      console.log(`Successfully fetched total users: ${totalUsers}`);
-      res.json({ totalUsers: totalUsers });
-    } else {
-      // This case handles unexpected query results (e.g., empty results, or missing 'totalUsers' column)
-      console.warn('Query for total users returned an unexpected or empty result set:', results);
-      return res.status(500).json({
-        error: 'Failed to retrieve total users count; unexpected database response format.',
-        details: 'The database query returned an invalid or empty result for total users.'
+      // Emit real-time data to connected clients
+      io.emit(socketEventName, {
+        value: value,
+        timestamp: currentTime.toISOString(),
       });
-    }
-  } catch (error) { // Changed 'err' to 'error' for consistency and clarity
-    console.error('Database query error when fetching total users:', error.message);
 
-    // Log more specific details from the MySQL error object
-    if (error.code) {
-      console.error(`MySQL Error Code: ${error.code}`);
+      // Handle notifications based on type and threshold
+      if (notificationType === "turbidity" && threshold !== null && value < threshold) {
+        // We now only emit the notification, not insert it
+        emitNotification(value, threshold);
+      }
+    } catch (err) {
+      console.error(
+        `❌ ${tableName} Database Insert Error:`,
+        err.sqlMessage || err.message
+      );
     }
-    if (error.sqlMessage) {
-      console.error(`MySQL Error Message: ${error.sqlMessage}`);
-    }
-    if (error.sql) {
-      console.error(`Faulty SQL Query: ${error.sql}`);
-    }
+  }
+};
 
-    // Send a 500 Internal Server Error response to the client
-    return res.status(500).json({
-      error: 'Failed to fetch total users due to a server-side database error.',
-      details: error.message // Include error message for debugging purposes (consider removing in production)
-    });
+// --- New Endpoint to receive data from local-bridge.js ---
+app.post("/api/sensor-data", async (req, res) => {
+  try {
+    const jsonData = req.body;
+    console.log("Receiving data from local-bridge:", jsonData);
+
+    const {
+      turbidity_value,
+      ph_value,
+      tds_value,
+      salinity_value,
+      ec_value_mS,
+      ec_compensated_mS,
+      temperature_celsius,
+    } = jsonData;
+
+    // Process each sensor value
+    await Promise.all([
+      insertAndEmit(
+        "turbidity_readings",
+        "turbidity_value",
+        turbidity_value,
+        "updateTurbidityData",
+        40,
+        "turbidity"
+      ),
+      insertAndEmit("phlevel_readings", "ph_value", ph_value, "updatePHData"),
+      insertAndEmit("tds_readings", "tds_value", tds_value, "updateTDSData"),
+      insertAndEmit(
+        "salinity_readings",
+        "salinity_value",
+        salinity_value,
+        "updateSalinityData"
+      ),
+      insertAndEmit(
+        "ec_readings",
+        "ec_value_mS",
+        ec_value_mS,
+        "updateECData"
+      ),
+      insertAndEmit(
+        "ec_compensated_readings",
+        "ec_compensated_mS",
+        ec_compensated_mS,
+        "updateECCompensatedData"
+      ),
+      insertAndEmit(
+        "temperature_readings",
+        "temperature_celsius",
+        temperature_celsius,
+        "updateTemperatureData"
+      ),
+    ]);
+
+    // Send a success response back to the bridge
+    res.status(200).json({ message: "Data received and processed successfully" });
+  } catch (err) {
+    console.error("❌ Error processing data:", err);
+    res.status(500).json({ error: "Failed to process data" });
   }
 });
 
-// fetch estab 
-app.get('/api/total-establishments', async (req, res) => { // Added 'async'
-  const querySql = 'SELECT COUNT(*) AS totalEstablishments FROM estab'; // Changed 'query' to 'querySql' for clarity
-
+// --- API Endpoints for Dashboard Metrics ---
+app.get('/api/total-users', async (req, res) => {
+  const querySql = 'SELECT COUNT(*) AS totalUsers FROM users';
   try {
-    const [results] = await db.query(querySql); // Use await db.query and destructure
+    const [results] = await db.query(querySql);
+    const totalUsers = results[0].totalUsers;
+    res.json({ totalUsers });
+  } catch (error) {
+    console.error('Database query error when fetching total users:', error.message);
+    res.status(500).json({ error: 'Failed to fetch total users due to a server-side database error.' });
+  }
+});
 
+app.get('/api/total-establishments', async (req, res) => {
+  const querySql = 'SELECT COUNT(*) AS totalEstablishments FROM estab';
+  try {
+    const [results] = await db.query(querySql);
     const total = results[0].totalEstablishments;
     res.json({ totalEstablishments: total });
   } catch (err) {
     console.error('Error fetching total establishments:', err);
-    return res.status(500).json({ error: 'Failed to fetch total establishments' });
+    res.status(500).json({ error: 'Failed to fetch total establishments' });
   }
 });
 
-// ✅ Direct endpoint for fetching total sensors
-app.get('/api/total-sensors', async (req, res) => { // Added 'async'
-  const querySql = 'SELECT COUNT(*) AS totalSensors FROM sensors'; // Changed 'query' to 'querySql' for clarity
-
+app.get('/api/total-sensors', async (req, res) => {
+  const querySql = 'SELECT COUNT(*) AS totalSensors FROM sensors';
   try {
-    const [results] = await db.query(querySql); // Use await db.query and destructure
-
+    const [results] = await db.query(querySql);
     const total = results[0].totalSensors;
     res.json({ totalSensors: total });
   } catch (err) {
     console.error('Error fetching total sensors:', err);
-    return res.status(500).json({ error: 'Failed to fetch total sensors' });
+    res.status(500).json({ error: 'Failed to fetch total sensors' });
   }
-});
-
-// fetch for the modal
-app.get('/api/total-sensors', (req, res) => {
-  const query = 'SELECT COUNT(*) AS totalSensors FROM sensors'; // Replace 'sensors' with your actual table name
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error('Error fetching total sensors:', err);
-      return res.status(500).json({ error: 'Failed to fetch total sensors' });
-    }
-
-    const total = results[0].totalSensors;
-    res.json({ totalSensors: total });
-  });
 });
 
 // GET route to fetch establishments
@@ -954,160 +878,19 @@ app.get('/api/establishments', async (req, res) => {
   try {
     const [results] = await db.query(sql);
     const estabNames = results.map(row => row.estab_name);
-    res.json(estabNames); // This will send back an array like ["Home Water Tank", "School Water Tank", ...]
+    res.json(estabNames);
   } catch (err) {
     console.error('Error querying database for establishments:', err);
     res.status(500).json({ error: 'Failed to fetch establishments' });
   }
 });
 
-/**
- * @route GET /data/turbidity
- * @description Get last 10 Turbidity readings from the database.
- * @returns {Array} An array of turbidity reading objects.
- */
-app.get("/data/turbidity", async (req, res) => {
-  console.log("📥 GET /data/turbidity request received");
-  try {
-    // Execute the query using await, which returns a promise
-    // The result is an array: [rows, fields]
-    const [rows, fields] = await db.query(
-      "SELECT * FROM turbidity_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ Turbidity API Response Sent: ${rows.length} records`);
-    res.json(rows); // Send the rows (data) as JSON
-  } catch (err) {
-    console.error("❌ Turbidity Database Query Error:", err);
-    // Send a 500 status code and a JSON error message
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
 
-/**
- * @route GET /data/ph
- * @description Get last 10 pH readings from the database.
- * @returns {Array} An array of pH reading objects.
- */
-app.get("/data/ph", async (req, res) => {
-  console.log("📥 GET /data/ph request received");
-  try {
-    const [rows, fields] = await db.query(
-      "SELECT * FROM phlevel_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ pH API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ pH Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/tds
- * @description Get last 10 TDS readings from the database.
- * @returns {Array} An array of TDS reading objects.
- */
-app.get("/data/tds", async (req, res) => {
-  console.log("📥 GET /data/tds request received");
-  try {
-    const [rows, fields] = await db.query(
-      "SELECT * FROM tds_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ TDS API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ TDS Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/salinity
- * @description Get last 10 Salinity readings from the database.
- * @returns {Array} An array of Salinity reading objects.
- */
-app.get("/data/salinity", async (req, res) => {
-  console.log("📥 GET /data/salinity request received");
-  try {
-    const [rows, fields] = await db.query(
-      "SELECT * FROM salinity_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ Salinity API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ Salinity Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/ec
- * @description Get last 10 EC readings from the database.
- * @returns {Array} An array of EC reading objects.
- */
-app.get("/data/ec", async (req, res) => {
-  console.log("📥 GET /data/ec request received");
-  try {
-    const [rows, fields] = await db.query(
-      "SELECT * FROM ec_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ EC API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ EC Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/ec_compensated
- * @description Get last 10 EC Compensated readings from the database.
- * @returns {Array} An array of EC Compensated reading objects.
- */
-app.get("/data/ec_compensated", async (req, res) => {
-  console.log("📥 GET /data/ec_compensated request received");
-  try {
-    const [rows, fields] = await db.query(
-      "SELECT * FROM ec_compensated_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ EC Compensated API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ EC Compensated Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/temperature
- * @description Get last 10 Temperature readings from the database.
- * @returns {Array} An array of Temperature reading objects.
- */
-app.get("/data/temperature", async (req, res) => {
-  console.log("📥 GET /data/temperature request received");
-  try {
-    const [rows, fields] = await db.query(
-      "SELECT * FROM temperature_readings ORDER BY id DESC LIMIT 10"
-    );
-    console.log(`✅ Temperature API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ Temperature Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-// Start servers
-server.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Backend running on http://localhost:${port}`);
-});
-
-// Helper function to get the WHERE clause for time filtering
+// --- API Endpoints for Historical Data (Flutter Charts) ---
 function getTimeFilterClause(period) {
   let timeClause = '';
   switch (period) {
     case '24h':
-      // Assumes 'timestamp' or 'created_at' or 'reading_time' is the column name
       timeClause = "WHERE timestamp >= NOW() - INTERVAL 24 HOUR";
       break;
     case '7d':
@@ -1117,173 +900,47 @@ function getTimeFilterClause(period) {
       timeClause = "WHERE timestamp >= NOW() - INTERVAL 30 DAY";
       break;
     default:
-      // Default to 24 hours if no valid period is provided
       timeClause = "WHERE timestamp >= NOW() - INTERVAL 24 HOUR";
       break;
   }
   return timeClause;
 }
 
-// 5. API Routes (Updated to handle 'period' query parameter)
+const createGetDataEndpoint = (endpoint, tableName, timestampColumn) => {
+  app.get(`/data/${endpoint}`, async (req, res) => {
+    console.log(`📥 GET /data/${endpoint} request received`);
+    const period = req.query.period || '24h';
+    const timeFilter = getTimeFilterClause(period);
 
-/**
- * @route GET /data/turbidity
- * @description Get historical Turbidity readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of turbidity reading objects.
- */
-app.get("/data/turbidity", async (req, res) => {
-  console.log("📥 GET /data/turbidity request received");
-  const period = req.query.period || '24h'; // Default to 24h if not provided
-  const timeFilter = getTimeFilterClause(period);
+    // Fetch all data for the specified period, ordered by timestamp
+    const query = `SELECT * FROM ${tableName} ${timeFilter} ORDER BY ${timestampColumn} ASC`;
+    console.log(`Executing query for ${tableName}: ${query}`);
 
-  // IMPORTANT: Adjust 'timestamp' to your actual timestamp column name (e.g., 'created_at', 'reading_time')
-  // For this example, I'm using 'timestamp'. If your table has 'created_at', change the timeFilter function.
-  // Also, consider removing 'LIMIT 10' if you want all data for the period.
-  // For now, I'm keeping 'LIMIT 10' as per your original request, but it might not show all data for longer periods.
-  const query = `SELECT * FROM turbidity_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit for better graph data
-  console.log(`Executing query for turbidity: ${query}`);
+    try {
+      const [rows] = await db.query(query);
+      console.log(`✅ ${tableName} API Response Sent: ${rows.length} records`);
+      res.json(rows);
+    } catch (err) {
+      console.error(`❌ ${tableName} Database Query Error:`, err);
+      return res.status(500).json({ error: "Database Query Error" });
+    }
+  });
+};
 
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ Turbidity API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ Turbidity Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
+// Create endpoints for each sensor type
+createGetDataEndpoint('turbidity', 'turbidity_readings', 'timestamp');
+createGetDataEndpoint('ph', 'phlevel_readings', 'timestamp');
+createGetDataEndpoint('tds', 'tds_readings', 'timestamp');
+createGetDataEndpoint('salinity', 'salinity_readings', 'timestamp');
+createGetDataEndpoint('ec', 'ec_readings', 'timestamp');
+createGetDataEndpoint('ec_compensated', 'ec_compensated_readings', 'timestamp');
+createGetDataEndpoint('temperature', 'temperature_readings', 'timestamp');
 
-/**
- * @route GET /data/ph
- * @description Get historical pH readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of pH reading objects.
- */
-app.get("/data/ph", async (req, res) => {
-  console.log("📥 GET /data/ph request received");
-  const period = req.query.period || '24h';
-  const timeFilter = getTimeFilterClause(period);
-  const query = `SELECT * FROM phlevel_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
 
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ pH API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ pH Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/tds
- * @description Get historical TDS readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of TDS reading objects.
- */
-app.get("/data/tds", async (req, res) => {
-  console.log("📥 GET /data/tds request received");
-  const period = req.query.period || '24h';
-  const timeFilter = getTimeFilterClause(period);
-  const query = `SELECT * FROM tds_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
-
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ TDS API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ TDS Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/salinity
- * @description Get historical Salinity readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of Salinity reading objects.
- */
-app.get("/data/salinity", async (req, res) => {
-  console.log("📥 GET /data/salinity request received");
-  const period = req.query.period || '24h';
-  const timeFilter = getTimeFilterClause(period);
-  const query = `SELECT * FROM salinity_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
-
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ Salinity API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ Salinity Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/ec
- * @description Get historical EC readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of EC reading objects.
- */
-app.get("/data/ec", async (req, res) => {
-  console.log("📥 GET /data/ec request received");
-  const period = req.query.period || '24h';
-  const timeFilter = getTimeFilterClause(period);
-  const query = `SELECT * FROM ec_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
-
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ EC API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ EC Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/ec_compensated
- * @description Get historical EC Compensated readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of EC Compensated reading objects.
- */
-app.get("/data/ec_compensated", async (req, res) => {
-  console.log("📥 GET /data/ec_compensated request received");
-  const period = req.query.period || '24h';
-  const timeFilter = getTimeFilterClause(period);
-  const query = `SELECT * FROM ec_compensated_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
-
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ EC Compensated API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ EC Compensated Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
-});
-
-/**
- * @route GET /data/temperature
- * @description Get historical Temperature readings based on the period (24h, 7d, 30d).
- * @queryParam {string} period - '24h', '7d', '30d'
- * @returns {Array} An array of Temperature reading objects.
- */
-app.get("/data/temperature", async (req, res) => {
-  console.log("📥 GET /data/temperature request received");
-  const period = req.query.period || '24h';
-  const timeFilter = getTimeFilterClause(period);
-  const query = `SELECT * FROM temperature_readings ${timeFilter} ORDER BY timestamp DESC LIMIT 100`; // Increased limit
-
-  try {
-    const [rows, fields] = await db.query(query);
-    console.log(`✅ Temperature API Response Sent: ${rows.length} records`);
-    res.json(rows);
-  } catch (err) {
-    console.error("❌ Temperature Database Query Error:", err);
-    return res.status(500).json({ error: "Database Query Error" });
-  }
+// Start servers
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend running on port ${PORT}`);
 });
 
 // PUT /api/user/profile - Update user profile information

@@ -7,6 +7,7 @@ import 'dart:convert'; // For JSON encoding/decoding
 import 'package:aqua/water_quality_model.dart'; // Corrected import path
 import 'package:aqua/water_quality_service.dart'; // Corrected import path
 import 'package:aqua/components/colors.dart'; // Assuming you have this file for ASColor
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 void main() {
   runApp(const MyApp());
@@ -77,6 +78,9 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
 
+  // Socket.IO client instance
+  io.Socket? _socket;
+
   @override
   void initState() {
     super.initState();
@@ -97,17 +101,79 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
       });
 
     _fetchLatestDataForAllStats(isInitialFetch: true); // Initial fetch
-    // Set up a timer to fetch data every 1.5 seconds
+    // Set up a timer to fetch data every 2 seconds
     _timer = Timer.periodic(const Duration(milliseconds: 2000), (Timer t) {
       _fetchLatestDataForAllStats();
     });
+
+    // --- New: Connect to Socket.IO and listen for real-time notifications ---
+    _connectAndListen();
+    // -----------------------------------------------------------------------
   }
 
   @override
   void dispose() {
     _timer?.cancel(); // Cancel the timer to prevent memory leaks
     _animationController.dispose(); // Dispose of the animation controller
+    _socket?.disconnect(); // Disconnect the Socket.IO client
+    _socket?.dispose(); // Dispose of the socket
     super.dispose();
+  }
+
+  // New method to connect to the backend via Socket.IO
+  void _connectAndListen() {
+    // Replace with your backend server's IP and port
+    // Example: 'http://192.168.1.10:3000'
+    _socket = io.io('http://10.0.2.2:3000', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    _socket?.connect();
+
+    _socket?.onConnect((_) {
+      print('Socket.IO connected');
+    });
+
+    // Listen for the 'newNotification' event from the backend
+    _socket?.on('newNotification', (data) {
+      print('Received real-time notification: $data');
+      if (mounted) {
+        final readingValue = data['readingValue'];
+        final threshold = data['threshold'];
+        _showNotificationAlert(readingValue, threshold);
+      }
+    });
+
+    _socket?.onDisconnect((_) => print('Socket.IO disconnected'));
+    _socket?.on('error', (error) => print('Socket.IO error: $error'));
+  }
+
+  /// Displays a pop-up dialog for real-time notifications.
+  void _showNotificationAlert(double readingValue, double threshold) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Real-Time Water Quality Alert',
+            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Turbidity reading ($readingValue) is below the threshold ($threshold).',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Dismiss the dialog
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Helper to create a comparable payload from current data
@@ -215,10 +281,9 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
   void _checkCriticalReadingsAndShowAlert() {
     List<String> criticalConditions = [];
 
+    // NOTE: The turbidity check has been removed as the backend now handles
+    // real-time notifications for this specific alert.
     // Turbidity, TDS, Salinity, EC, EC_Compensated: below 30
-    if (_latestTurbidity < 30) {
-      criticalConditions.add("Turbidity (${_latestTurbidity.toStringAsFixed(1)}) is below 30.");
-    }
     if (_latestTDS < 30) {
       criticalConditions.add("TDS (${_latestTDS.toStringAsFixed(1)}) is below 30.");
     }
@@ -266,9 +331,9 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
                 const SizedBox(height: 10),
                 // Display each critical condition as a bullet point
                 ...criticalConditions.map((condition) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: Text('• $condition'),
-                    )),
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Text('• $condition'),
+                  )),
                 const SizedBox(height: 10),
                 const Text('Immediate action may be required to address these issues.'),
               ],
@@ -311,7 +376,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         break;
       case "TDS":
         targetProgress = _latestTDS / maxTDS;
-        currentLabel = "${_latestTDS.toStringAsFixed(1)}%";
+        currentLabel = "${_latestTDS.toStringAsFixed(1)} PPM"; // Changed % to PPM
         currentColor = Colors.green;
         break;
       case "pH":
@@ -321,22 +386,22 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
         break;
       case "Turbidity":
         targetProgress = _latestTurbidity / maxTurbidity;
-        currentLabel = "${_latestTurbidity.toStringAsFixed(1)}%";
+        currentLabel = "${_latestTurbidity.toStringAsFixed(1)} NTU"; // Changed % to NTU
         currentColor = Colors.orange;
         break;
       case "Conductivity":
         targetProgress = _latestConductivity / maxConductivity;
-        currentLabel = "${_latestConductivity.toStringAsFixed(1)}%";
+        currentLabel = "${_latestConductivity.toStringAsFixed(1)} mS/cm";
         currentColor = Colors.red;
         break;
       case "Salinity":
         targetProgress = _latestSalinity / maxSalinity;
-        currentLabel = "${_latestSalinity.toStringAsFixed(1)}%";
+        currentLabel = "${_latestSalinity.toStringAsFixed(1)} ppt";
         currentColor = Colors.teal;
         break;
       case "Electrical Conductivity (Condensed)":
         targetProgress = _latestECCompensated / maxECCompensated;
-        currentLabel = "${_latestECCompensated.toStringAsFixed(1)}%";
+        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} mS/cm";
         currentColor = Colors.indigo;
         break;
     }
@@ -546,7 +611,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
                           icon: Icons.water_damage,
                           label: "Turbidity",
                           value: displayLiveValues
-                              ? "${_latestTurbidity.toStringAsFixed(1)}%"
+                              ? "${_latestTurbidity.toStringAsFixed(1)} NTU" // Changed unit
                               : "...",
                           isSelected: selectedStat == "Turbidity",
                           onTap: () => _onStatCardTap("Turbidity"),
