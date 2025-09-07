@@ -12,10 +12,6 @@ const https = require("https");
 const { v4: uuidv4 } = require("uuid"); // For generating unique IDs
 const nodemailer = require("nodemailer"); // For sending emails
 const jwt = require('jsonwebtoken');
-const express = require("express");
-
-
-
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!';
 
