@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: Sadmindashboard(),
+      home: LoginScreen(),
     );
   }
 }
