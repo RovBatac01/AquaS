@@ -4,7 +4,7 @@ import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/User/UserSettings.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
-import 'package:aqua/pages/Login.dart';
+
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
 import 'package:aqua/pages/SAdmin/SAdminNotification.dart';
@@ -56,58 +56,32 @@ class _MainScreenState extends State<Sadmindashboard> {
   final List<String> _titles = [
     'Home',
     'Account Management',
-    'Statistics',
+    'Historical Data',
     'Notification',
     'Calendar',
     'Settings',
   ];
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Logout"),
-          content: Text("Are you sure you want to log out?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-              },
-              child: Text(
-                "Cancel",
-                style: TextStyle(
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog first
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ASColor.BGSecond,
-              ),
-              child: Text(
-                "Confirm",
-                style: TextStyle(
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+  String _getSubtitle(int index) {
+    switch (index) {
+      case 0:
+        return 'System overview and monitoring';
+      case 1:
+        return 'Manage user accounts';
+      case 2:
+        return 'Analytics and reports';
+      case 3:
+        return 'System alerts and notifications';
+      case 4:
+        return 'Schedule and events';
+      case 5:
+        return 'System configuration';
+      default:
+        return '';
+    }
   }
+
+
 
   //Code for the bottom navigation bar
   void _onItemTapped(int index) {
@@ -134,39 +108,77 @@ class _MainScreenState extends State<Sadmindashboard> {
               children: [
                 Container(
                   padding: EdgeInsets.only(
-                    top: 25,
-                    left: 15,
-                    right: 15,
+                    top: 30,
+                    left: 20,
+                    right: 20,
+                    bottom: 10,
                   ),
-                  height: 70,
                   decoration: BoxDecoration(
-                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _titles[_currentIndex],
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 22,
-                          color: ASColor.getTextColor(context),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.settings,
-                          color: ASColor.getTextColor(context),
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _currentIndex = _titles.indexOf('Settings');
-                          });
-                        },
-                        tooltip: 'Settings',
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDarkMode 
+                        ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+                        : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
                       ),
                     ],
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _titles[_currentIndex],
+                              style: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 24,
+                                color: ASColor.getTextColor(context),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _getSubtitle(_currentIndex),
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: ASColor.getTextColor(context).withOpacity(0.6),
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.settings_rounded,
+                              color: Colors.green,
+                              size: 24,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _currentIndex = _titles.indexOf('Settings');
+                              });
+                            },
+                            tooltip: 'Settings',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 // Remaining body content
@@ -178,24 +190,28 @@ class _MainScreenState extends State<Sadmindashboard> {
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 15,
+                offset: const Offset(0, -3),
+              ),
+            ],
           ),
           child: SafeArea(
             top: false,
-            child: SizedBox(
-              height: 80, // Total height of nav bar
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(Icons.home, 'Home', 0),
-                    _buildNavItem(Icons.person, 'Account', 1),
-                    _buildNavItem(Icons.history, 'History', 2),
-                    _buildNavItem(Icons.notifications, 'Notifications', 3),
-                    _buildNavItem(Icons.calendar_month_outlined, 'Calendar', 4),
-                    // Removed settings from bottom navigation bar
-                  ],
-                ),
+            child: Container(
+              height: 75,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(child: _buildEnhancedNavItem(Icons.home_rounded, 'Home', 0)),
+                  Expanded(child: _buildEnhancedNavItem(Icons.people_rounded, 'Users', 1)),
+                  Expanded(child: _buildEnhancedNavItem(Icons.analytics_rounded, 'Stats', 2)),
+                  Expanded(child: _buildEnhancedNavItem(Icons.notifications_rounded, 'Alerts', 3)),
+                  Expanded(child: _buildEnhancedNavItem(Icons.calendar_month_rounded, 'Calendar', 4)),
+                ],
               ),
             ),
           ),
@@ -204,23 +220,62 @@ class _MainScreenState extends State<Sadmindashboard> {
     );
   }
 
-  // Move _buildNavItem inside _MainScreenState as a method
-  Widget _buildNavItem(IconData icon, String label, int index) {
+  // Enhanced Navigation Item
+  Widget _buildEnhancedNavItem(IconData icon, String label, int index) {
     final isSelected = _currentIndex == index;
-    final color =
-        isSelected
-            ? ASColor.getTextColor(context)
-            : ASColor.getTextColor(context).withOpacity(0.6);
-
+    
     return GestureDetector(
       onTap: () => _onItemTapped(index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: color)),
-        ],
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected 
+            ? Colors.green.withOpacity(0.12)
+            : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isSelected 
+                  ? Colors.green
+                  : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected 
+                  ? Colors.white
+                  : ASColor.getTextColor(context).withOpacity(0.6),
+                size: 20,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected 
+                    ? Colors.green
+                    : ASColor.getTextColor(context).withOpacity(0.6),
+                  fontFamily: 'Poppins',
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -313,16 +313,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
     });
   }
 
-  String _getConnectionStatusText() {
-    switch (_connectionStatus) {
-      case ConnectionStatus.connecting:
-        return "Device Status: Connecting...";
-      case ConnectionStatus.connected:
-        return "Device Status: Connected";
-      case ConnectionStatus.disconnectedNetworkError:
-        return "Device Status: Disconnected (Network Error)";
-    }
-  }
+
 
   Color _getConnectionStatusColor() {
     switch (_connectionStatus) {
@@ -337,6 +328,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     String? disconnectedMessageForIndicator;
     if (_connectionStatus == ConnectionStatus.disconnectedNetworkError) {
       disconnectedMessageForIndicator = "Network Error";
@@ -345,173 +337,396 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
     bool displayLiveValues = _connectionStatus == ConnectionStatus.connected;
 
     return Scaffold(
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'DETAILS',
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Text(
+          'Water Quality Monitor',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-            letterSpacing: 1,
+            fontFamily: 'Montserrat',
+            color: isDarkMode ? Colors.white : Colors.black87,
           ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 15),
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.white10 : Colors.black12,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.arrow_back_ios_new,
+              size: 16,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _getConnectionStatusColor().withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _getConnectionStatusColor().withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _getConnectionStatusColor(),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _connectionStatus == ConnectionStatus.connected
+                      ? 'Live'
+                      : _connectionStatus == ConnectionStatus.connecting
+                          ? 'Connecting'
+                          : 'Offline',
+                  style: TextStyle(
+                    color: _getConnectionStatusColor(),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Home Water Tank',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-              Text(
-                _getConnectionStatusText(),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: _getConnectionStatusColor(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      size: const Size(250, 250),
-                      painter: CircularIndicator(
-                        progress: _progressAnimation.value,
-                        label: label,
-                        color: indicatorColor,
-                        brightness: Theme.of(context).brightness,
-                        disconnectedMessage: disconnectedMessageForIndicator,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                _connectionStatus == ConnectionStatus.connected
-                    ? "Water quality: Live Reading"
-                    : "Water quality: Not Live",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: _connectionStatus == ConnectionStatus.connected
-                      ? Colors.black
-                      : Colors.red,
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Error: $_errorMessage',
-                    style: const TextStyle(fontSize: 14, color: Colors.red),
-                  ),
-                ),
-              const SizedBox(height: 20),
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.thermostat,
-                          label: "Temp",
-                          value: displayLiveValues ? "${_latestTemp.toStringAsFixed(1)}°C" : "...",
-                          isSelected: selectedStat == "Temp",
-                          onTap: () => _onStatCardTap("Temp"),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.water,
-                          label: "TDS",
-                          value: displayLiveValues ? "${_latestTDS.toStringAsFixed(1)} %" : "...",
-                          isSelected: selectedStat == "TDS",
-                          onTap: () => _onStatCardTap("TDS"),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.opacity,
-                          label: "pH",
-                          value: displayLiveValues ? "${_latestPH.toStringAsFixed(1)}" : "...",
-                          isSelected: selectedStat == "pH",
-                          onTap: () => _onStatCardTap("pH"),
-                        ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode 
+              ? [Colors.grey[900]!, Colors.grey[850]!]
+              : [Colors.grey[50]!, Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Enhanced Header Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.water_damage,
-                          label: "Turbidity",
-                          value: displayLiveValues ? "${_latestTurbidity.toStringAsFixed(1)} %" : "...",
-                          isSelected: selectedStat == "Turbidity",
-                          onTap: () => _onStatCardTap("Turbidity"),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.flash_on,
-                          label: "Conductivity",
-                          value: displayLiveValues ? "${_latestConductivity.toStringAsFixed(1)} %" : "...",
-                          isSelected: selectedStat == "Conductivity",
-                          onTap: () => _onStatCardTap("Conductivity"),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.bubble_chart,
-                          label: "Salinity",
-                          value: displayLiveValues ? "${_latestSalinity.toStringAsFixed(1)} %" : "...",
-                          isSelected: selectedStat == "Salinity",
-                          onTap: () => _onStatCardTap("Salinity"),
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.business_rounded,
+                              color: Colors.blue,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Home Water Tank',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDarkMode ? Colors.white : Colors.black87,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Real-time water quality monitoring',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          icon: Icons.battery_charging_full,
-                          label: "Electrical Conductivity (Condensed)",
-                          value: displayLiveValues ? "${_latestECCompensated.toStringAsFixed(1)} %" : "...",
-                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
-                        ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Enhanced Circular Indicator
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ],
+                  child: Column(
+                    children: [
+                      Text(
+                        'Current Reading',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                          fontFamily: 'Montserrat',
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: AnimatedBuilder(
+                          animation: _animationController,
+                          builder: (context, child) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: indicatorColor.withOpacity(0.3),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: CustomPaint(
+                                size: const Size(280, 280),
+                                painter: CircularIndicator(
+                                  progress: _progressAnimation.value,
+                                  label: label,
+                                  color: indicatorColor,
+                                  brightness: Theme.of(context).brightness,
+                                  disconnectedMessage: disconnectedMessageForIndicator,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _connectionStatus == ConnectionStatus.connected
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: _connectionStatus == ConnectionStatus.connected
+                                ? Colors.green.withOpacity(0.3)
+                                : Colors.red.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Text(
+                          _connectionStatus == ConnectionStatus.connected
+                              ? "🟢 Live monitoring active"
+                              : "🔴 Connection lost",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: _connectionStatus == ConnectionStatus.connected
+                                ? Colors.green
+                                : Colors.red,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12.0),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline, color: Colors.red, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Error: $_errorMessage',
+                                    style: const TextStyle(fontSize: 12, color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Enhanced Parameters Section
+                Text(
+                  'Water Parameters',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Enhanced Stats Grid
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: EnhancedStatCard(
+                            icon: Icons.thermostat_rounded,
+                            label: "Temperature",
+                            value: displayLiveValues ? "${_latestTemp.toStringAsFixed(1)}°C" : "---",
+                            unit: "°C",
+                            isSelected: selectedStat == "Temp",
+                            onTap: () => _onStatCardTap("Temp"),
+                            color: Colors.orange,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: EnhancedStatCard(
+                            icon: Icons.water_drop_rounded,
+                            label: "TDS",
+                            value: displayLiveValues ? "${_latestTDS.toStringAsFixed(1)}" : "---",
+                            unit: "ppm",
+                            isSelected: selectedStat == "TDS",
+                            onTap: () => _onStatCardTap("TDS"),
+                            color: Colors.blue,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: EnhancedStatCard(
+                            icon: Icons.science_rounded,
+                            label: "pH Level",
+                            value: displayLiveValues ? "${_latestPH.toStringAsFixed(1)}" : "---",
+                            unit: "pH",
+                            isSelected: selectedStat == "pH",
+                            onTap: () => _onStatCardTap("pH"),
+                            color: Colors.purple,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: EnhancedStatCard(
+                            icon: Icons.visibility_rounded,
+                            label: "Turbidity",
+                            value: displayLiveValues ? "${_latestTurbidity.toStringAsFixed(1)}" : "---",
+                            unit: "NTU",
+                            isSelected: selectedStat == "Turbidity",
+                            onTap: () => _onStatCardTap("Turbidity"),
+                            color: Colors.brown,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: EnhancedStatCard(
+                            icon: Icons.flash_on_rounded,
+                            label: "Conductivity",
+                            value: displayLiveValues ? "${_latestConductivity.toStringAsFixed(1)}" : "---",
+                            unit: "μS/cm",
+                            isSelected: selectedStat == "Conductivity",
+                            onTap: () => _onStatCardTap("Conductivity"),
+                            color: Colors.amber,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: EnhancedStatCard(
+                            icon: Icons.grain_rounded,
+                            label: "Salinity",
+                            value: displayLiveValues ? "${_latestSalinity.toStringAsFixed(1)}" : "---",
+                            unit: "ppt",
+                            isSelected: selectedStat == "Salinity",
+                            onTap: () => _onStatCardTap("Salinity"),
+                            color: Colors.teal,
+                            isDarkMode: isDarkMode,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: EnhancedStatCard(
+                        icon: Icons.electrical_services_rounded,
+                        label: "EC Compensated",
+                        value: displayLiveValues ? "${_latestECCompensated.toStringAsFixed(1)}" : "---",
+                        unit: "μS/cm",
+                        isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+                        onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
+                        color: Colors.indigo,
+                        isDarkMode: isDarkMode,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -586,6 +801,128 @@ class StatCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class EnhancedStatCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String unit;
+  final VoidCallback onTap;
+  final bool isSelected;
+  final Color color;
+  final bool isDarkMode;
+
+  const EnhancedStatCard({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.unit,
+    required this.onTap,
+    required this.isSelected,
+    required this.color,
+    required this.isDarkMode,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(0.1)
+              : isDarkMode
+                  ? Colors.grey[800]
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : isDarkMode
+                    ? Colors.grey[700]!
+                    : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? color.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: isSelected ? 15 : 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: color,
+                  ),
+                ),
+                const Spacer(),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: color,
+                    size: 16,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  unit,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

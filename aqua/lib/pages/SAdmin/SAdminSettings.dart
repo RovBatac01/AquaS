@@ -225,194 +225,341 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            //List Tile for Profile Management Drop Down
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text(
-                'Profile Management',
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode 
+              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Text(
+                'Settings',
                 style: TextStyle(
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
                   color: ASColor.getTextColor(context),
+                  fontFamily: 'Montserrat',
                 ),
               ),
-              subtitle: Text(
-                'Manage your personal information and account security.',
+              Text(
+                'Manage your account and preferences',
                 style: TextStyle(
-                  color: ASColor.getTextColor(context),
+                  fontSize: 16,
+                  color: ASColor.getTextColor(context).withOpacity(0.6),
                   fontFamily: 'Poppins',
                 ),
               ),
-              trailing: Icon(
-                ProfileExpanded ? Icons.expand_less : Icons.expand_more,
+              
+              const SizedBox(height: 24),
+
+              // Enhanced Profile Management Section
+              _buildEnhancedSettingsCard(
+                icon: Icons.person_rounded,
+                title: 'Profile Management',
+                subtitle: 'Manage your personal information and security',
+                isExpanded: ProfileExpanded,
+                onTap: () {
+                  setState(() {
+                    ProfileExpanded = !ProfileExpanded;
+                  });
+                },
+                child: ProfileExpanded ? buildProfileForm() : null,
+                color: Colors.blue,
+                isDarkMode: isDarkMode,
               ),
-              onTap: () {
-                setState(() {
-                  ProfileExpanded = !ProfileExpanded;
-                });
-              },
-            ),
-            if (ProfileExpanded) buildProfileForm(),
 
-            SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            //List Tile for Dark Mode and Light Mode Drop Down
-            ListTile(
-              leading: Icon(Icons.dark_mode),
-              title: Text(
-                'App Appearance',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context),
+              // Enhanced Appearance Section
+              _buildEnhancedSettingsCard(
+                icon: isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                title: 'App Appearance',
+                subtitle: 'Switch between dark and light themes',
+                isExpanded: AppearanceExpanded,
+                onTap: () {
+                  setState(() {
+                    AppearanceExpanded = !AppearanceExpanded;
+                  });
+                },
+                child: AppearanceExpanded ? Appearance() : null,
+                color: Colors.purple,
+                isDarkMode: isDarkMode,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Enhanced Session History Section
+              _buildEnhancedSettingsCard(
+                icon: Icons.history_rounded,
+                title: 'Session History',
+                subtitle: 'Monitor your account activity and sessions',
+                isExpanded: SessionExpanded,
+                onTap: () {
+                  setState(() {
+                    SessionExpanded = !SessionExpanded;
+                  });
+                },
+                child: SessionExpanded ? AccountActivityLog() : null,
+                color: Colors.green,
+                isDarkMode: isDarkMode,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Enhanced Logout Section
+              Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                'Switch between dark and light themes.',
-                style: TextStyle(
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              trailing: Icon(
-                AppearanceExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onTap: () {
-                setState(() {
-                  AppearanceExpanded = !AppearanceExpanded;
-                });
-              },
-            ),
-            if (AppearanceExpanded) Appearance(),
-
-            SizedBox(height: 20),
-
-            //List Tile for Session History
-            ListTile(
-              leading: Icon(Icons.history_rounded),
-              title: Text(
-                'Session History',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context),
-                ),
-              ),
-              subtitle: Text(
-                'You can monitor your account activity',
-                style: TextStyle(
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              trailing: Icon(
-                SessionExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onTap: () {
-                setState(() {
-                  SessionExpanded = !SessionExpanded;
-                });
-              },
-            ),
-            if (SessionExpanded) AccountActivityLog(),
-
-            SizedBox(height: 20),
-
-            //List tile for LogOut
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text(
-                'Log Out',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context),
-                ),
-              ),
-              trailing: Icon(Icons.arrow_forward_ios, size: 15),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text(
-                        'Confirm Logout',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          color: ASColor.getTextColor(context),
-                        ),
-                      ),
-                      content: Text(
-                        'Are you sure you want to log out?',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          color: ASColor.getTextColor(context),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          child: Text(
-                            'Cancel',
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.logout_rounded,
+                      color: Colors.red,
+                      size: 24,
+                    ),
+                  ),
+                  title: Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Montserrat',
+                      fontSize: 16,
+                      color: ASColor.getTextColor(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Sign out from your account',
+                    style: TextStyle(
+                      color: ASColor.getTextColor(context).withOpacity(0.6),
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                    ),
+                  ),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: ASColor.getTextColor(context).withOpacity(0.4),
+                  ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          backgroundColor: ASColor.getCardColor(context),
+                          title: Text(
+                            'Sign Out',
                             style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontWeight: FontWeight.w600,
                               color: ASColor.getTextColor(context),
-                              fontFamily: 'Poppins',
                             ),
                           ),
-                          onPressed:
-                              () => Navigator.of(context).pop(), // Close dialog
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ASColor.buttonBackground(context),
-                          ),
-                          child: Text(
-                            'Logout',
+                          content: Text(
+                            'Are you sure you want to sign out of your account?',
                             style: TextStyle(
-                              color: ASColor.txt1Color,
                               fontFamily: 'Poppins',
+                              color: ASColor.getTextColor(context),
                             ),
                           ),
-                          onPressed: () async {
-                            // Optional: Notify server
-                            try {
-                              await http.post(
-                                Uri.parse(
-                                    "https://aquasense-p36u.onrender.com/logout"),
-                                headers: {"Content-Type": "application/json"},
-                              );
-                            } catch (e) {
-                              print("Logout request failed (optional): $e");
-                            }
-
-                            // Clear session
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.remove('userToken');
-                            await prefs.remove('userId');
-                            await prefs.remove('loggedInUsername');
-
-                            // Navigate to login screen
-                            Navigator.of(context).pop();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => LoginScreen(),
+                          actions: [
+                            TextButton(
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: ASColor.getTextColor(context).withOpacity(0.6),
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'Sign Out',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'Poppins',
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onPressed: () async {
+                                // Optional: Notify server
+                                try {
+                                  await http.post(
+                                    Uri.parse("https://aquasense-p36u.onrender.com/logout"),
+                                    headers: {"Content-Type": "application/json"},
+                                  );
+                                } catch (e) {
+                                  print("Logout request failed (optional): $e");
+                                }
+
+                                // Clear session
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.remove('userToken');
+                                await prefs.remove('userId');
+                                await prefs.remove('loggedInUsername');
+
+                                // Navigate to login screen
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) => LoginScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
-          ],
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEnhancedSettingsCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isExpanded,
+    required VoidCallback onTap,
+    required Widget? child,
+    required Color color,
+    required bool isDarkMode,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode 
+          ? Colors.white.withOpacity(0.05)
+          : Colors.white.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode ? Colors.white12 : Colors.black12,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Montserrat',
+                              fontSize: 16,
+                              color: ASColor.getTextColor(context),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context).withOpacity(0.6),
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: ASColor.getTextColor(context).withOpacity(0.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (child != null)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              height: isExpanded ? null : 0,
+              child: isExpanded 
+                ? Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: child,
+                  )
+                : const SizedBox.shrink(),
+            ),
+        ],
       ),
     );
   }

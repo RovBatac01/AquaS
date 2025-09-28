@@ -1,7 +1,6 @@
 import 'package:aqua/NavBar/NotificationDetailPage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:iconsax/iconsax.dart';
+
 import 'package:aqua/components/colors.dart'; // Assuming this file defines ASColor
 import 'package:http/http.dart' as http; // Import for making HTTP requests
 import 'dart:convert'; // Import for JSON encoding/decoding
@@ -208,302 +207,486 @@ class _SAdminNotificationState extends State<SAdminNotification> {
     }
   }
 
-  /// Returns an appropriate icon based on the notification type from the backend.
-  Icon _getNotificationIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'sensor':
-        return Icon(Icons.sensors, color: Colors.red); // For sensor alerts
-      case 'schedule':
-        return Icon(
-          Icons.calendar_month,
-          color: Colors.blue,
-        ); // For scheduled events
-      case 'request':
-        return Icon(
-          Icons.pending_actions,
-          color: Colors.orange,
-        ); // For access requests
-      case 'new_user':
-        return Icon(
-          Icons.person_add,
-          color: Colors.green,
-        ); // For new user registrations
-      default:
-        return Icon(Icons.notifications, color: Colors.grey); // Default icon
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(),
-              ) // Show loading indicator
-              : _errorMessage != null
-              ? Center(
-                // Show error message if fetch failed
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode 
+              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
+          ),
+        ),
+        child: _isLoading
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading notifications...',
+                    style: TextStyle(
+                      color: ASColor.getTextColor(context).withOpacity(0.6),
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : _errorMessage != null
+            ? Center(
+                child: Container(
+                  padding: const EdgeInsets.all(32),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.error_outline,
+                      Icon(
+                        Icons.error_outline_rounded,
                         color: Colors.red,
-                        size: 48,
+                        size: 64,
                       ),
                       const SizedBox(height: 16),
                       Text(
+                        'Error Loading Notifications',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: ASColor.getTextColor(context),
+                          fontFamily: 'Montserrat',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
                         _errorMessage!,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchNotifications, // Retry button
-                        child: const Text('Retry'),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: _fetchNotifications,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               )
-              : notifications.isEmpty
+            : notifications.isEmpty
               ? Center(
-                // Show message if no notifications are found
-                child: Text(
-                  'No notifications to display.',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: ASColor.getTextColor(context),
-                  ),
-                ),
-              )
-              : Column(
-                children: [
-                  // Filter Dropdown
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 10.h,
-                    ),
-                    child: Row(
+                  child: Container(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Icon(
+                          Icons.notifications_none_rounded,
+                          size: 64,
+                          color: ASColor.getTextColor(context).withOpacity(0.3),
+                        ),
+                        const SizedBox(height: 16),
                         Text(
-                          'Filter by type:',
+                          'No Notifications',
                           style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
                             color: ASColor.getTextColor(context),
+                            fontFamily: 'Montserrat',
                           ),
                         ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12.w),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: ASColor.getTextColor(
-                                  context,
-                                ).withOpacity(0.3),
-                              ),
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedFilter,
-                                isExpanded: true,
-                                icon: Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: ASColor.getTextColor(context),
-                                ),
-                                style: TextStyle(
-                                  color: ASColor.getTextColor(context),
-                                ),
-                                dropdownColor: ASColor.getCardColor(context),
-                                items:
-                                    _filterOptions.map((String value) {
-                                      return DropdownMenuItem<String>(
-                                        value: value,
-                                        child: Text(value),
-                                      );
-                                    }).toList(),
-                                onChanged: _updateFilter,
-                              ),
-                            ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You\'re all caught up! No new notifications to display.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: ASColor.getTextColor(context).withOpacity(0.6),
+                            fontFamily: 'Poppins',
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   ),
-                  // Notifications List
-                  Expanded(
-                    child:
-                        filteredNotifications.isEmpty
-                            ? Center(
-                              child: Text(
-                                'No notifications found for the selected filter.',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: ASColor.getTextColor(context),
-                                ),
+                )
+              : Column(
+                  children: [
+                    // Enhanced Header with Filter
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${filteredNotifications.length} notifications',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: ASColor.getTextColor(context).withOpacity(0.6),
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
+                                ],
                               ),
-                            )
-                            : ListView.separated(
-                              itemCount: filteredNotifications.length,
-                              separatorBuilder:
-                                  (context, index) =>
-                                      const SizedBox.shrink(), // Remove the default divider between list items
-                              itemBuilder: (context, index) {
-                                final notification =
-                                    filteredNotifications[index];
-
-                                return GestureDetector(
-                                  onTap: () {
-                                    // Navigate to detail page
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => NotificationDetailPage(
-                                              title: notification['title']!,
-                                              subtitle:
-                                                  notification['subtitle']!,
-                                              time: notification['time']!,
-                                              // You might pass other details to the detail page if needed
-                                            ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          
+                          // Enhanced Filter Dropdown
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDarkMode 
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.black.withOpacity(0.02),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDarkMode ? Colors.white12 : Colors.black12,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.filter_list_rounded,
+                                  color: ASColor.getTextColor(context).withOpacity(0.6),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Filter:',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: ASColor.getTextColor(context),
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: _selectedFilter,
+                                      isExpanded: true,
+                                      icon: Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: ASColor.getTextColor(context).withOpacity(0.6),
                                       ),
-                                    );
-                                  },
-                                  child: Card(
-                                    color: ASColor.getCardColor(
-                                      context,
-                                    ), // Dynamic card background
-                                    margin: EdgeInsets.fromLTRB(
-                                      16.w,
-                                      index == 0
-                                          ? 20.h
-                                          : 0, // Top margin for the first card
-                                      16.w,
-                                      20.h,
+                                      style: TextStyle(
+                                        color: ASColor.getTextColor(context),
+                                        fontFamily: 'Poppins',
+                                        fontSize: 14,
+                                      ),
+                                      dropdownColor: ASColor.getCardColor(context),
+                                      items: _filterOptions.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: _updateFilter,
                                     ),
-                                    elevation: 4,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Enhanced Notifications List
+                    Expanded(
+                      child: filteredNotifications.isEmpty
+                        ? Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(32),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.search_off_rounded,
+                                    size: 64,
+                                    color: ASColor.getTextColor(context).withOpacity(0.3),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No Matching Notifications',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: ASColor.getTextColor(context),
+                                      fontFamily: 'Montserrat',
                                     ),
-                                    child: ListTile(
-                                      contentPadding: EdgeInsets.all(16.w),
-                                      leading: _getNotificationIcon(
-                                        notification['type']!,
-                                      ), // Use 'type' for icon
-                                      title: Text(
-                                        notification['title']!,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16.sp,
-                                          color: ASColor.getTextColor(context),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'No notifications found for the selected filter.',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: ASColor.getTextColor(context).withOpacity(0.6),
+                                      fontFamily: 'Poppins',
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            itemCount: filteredNotifications.length,
+                            itemBuilder: (context, index) {
+                              final notification = filteredNotifications[index];
+                              final notificationType = notification['type'] ?? 'default';
+                              
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode 
+                                    ? Colors.white.withOpacity(0.05)
+                                    : Colors.white.withOpacity(0.8),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: _getNotificationTypeColor(notificationType).withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => NotificationDetailPage(
+                                            title: notification['title']!,
+                                            subtitle: notification['subtitle']!,
+                                            time: notification['time']!,
+                                          ),
                                         ),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
                                         children: [
-                                          Text(
-                                            notification['subtitle']!,
-                                            style: TextStyle(fontSize: 14.sp),
-                                          ),
-                                          SizedBox(height: 4.h),
-                                          Text(
-                                            notification['time']!,
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12.sp,
+                                          // Enhanced notification icon
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: _getNotificationTypeColor(notificationType).withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
                                             ),
+                                            child: _getEnhancedNotificationIcon(notificationType),
                                           ),
-                                        ],
-                                      ),
-                                      trailing: IconButton(
-                                        icon: const Icon(
-                                          Iconsax.trash,
-                                          size: 16,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () async {
-                                          // Show confirmation dialog before deleting
-                                          final confirm = await showDialog<
-                                            bool
-                                          >(
-                                            context: context,
-                                            builder:
-                                                (context) => AlertDialog(
-                                                  title: Text(
-                                                    'Delete Notification',
-                                                    style: TextStyle(
-                                                      fontFamily: 'Montserrat',
-                                                      fontSize: 18.sp,
-                                                    ),
+                                          const SizedBox(width: 16),
+                                          
+                                          // Content
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  notification['title']!,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 16,
+                                                    color: ASColor.getTextColor(context),
+                                                    fontFamily: 'Poppins',
                                                   ),
-                                                  content: const Text(
-                                                    'Are you sure you want to delete this notification?',
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  notification['subtitle']!,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: ASColor.getTextColor(context).withOpacity(0.7),
+                                                    fontFamily: 'Poppins',
                                                   ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed:
-                                                          () => Navigator.of(
-                                                            context,
-                                                          ).pop(false),
-                                                      child: Text(
-                                                        'Cancel',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Poppins',
-                                                          fontSize: 16.sp,
-                                                          color:
-                                                              ASColor.getTextColor(
-                                                                context,
-                                                              ),
-                                                        ),
-                                                      ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.access_time_rounded,
+                                                      size: 14,
+                                                      color: ASColor.getTextColor(context).withOpacity(0.5),
                                                     ),
-                                                    TextButton(
-                                                      onPressed:
-                                                          () => Navigator.of(
-                                                            context,
-                                                          ).pop(true),
-                                                      child: Text(
-                                                        'Delete',
-                                                        style: TextStyle(
-                                                          fontFamily: 'Poppins',
-                                                          fontSize: 16.sp,
-                                                          color:
-                                                              ASColor.getTextColor(
-                                                                context,
-                                                              ),
-                                                        ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      notification['time']!,
+                                                      style: TextStyle(
+                                                        color: ASColor.getTextColor(context).withOpacity(0.5),
+                                                        fontSize: 12,
+                                                        fontFamily: 'Poppins',
                                                       ),
                                                     ),
                                                   ],
                                                 ),
-                                          );
-                                          if (confirm == true &&
-                                              notification['id'] != null) {
-                                            // Call delete function if confirmed
-                                            _deleteNotification(
-                                              notification['id'],
-                                              index,
-                                            );
-                                          }
-                                        },
-                                        tooltip: 'Delete notification',
+                                              ],
+                                            ),
+                                          ),
+                                          
+                                          // Actions
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.red.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline_rounded,
+                                                size: 20,
+                                                color: Colors.red,
+                                              ),
+                                              onPressed: () async {
+                                                final confirm = await showDialog<bool>(
+                                                  context: context,
+                                                  builder: (context) => AlertDialog(
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(16),
+                                                    ),
+                                                    title: Text(
+                                                      'Delete Notification',
+                                                      style: TextStyle(
+                                                        fontFamily: 'Montserrat',
+                                                        fontSize: 18,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                    content: Text(
+                                                      'Are you sure you want to delete this notification?',
+                                                      style: TextStyle(
+                                                        fontFamily: 'Poppins',
+                                                      ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () => Navigator.of(context).pop(false),
+                                                        child: Text(
+                                                          'Cancel',
+                                                          style: TextStyle(
+                                                            fontFamily: 'Poppins',
+                                                            color: ASColor.getTextColor(context),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      ElevatedButton(
+                                                        onPressed: () => Navigator.of(context).pop(true),
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor: Colors.red,
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                        ),
+                                                        child: Text(
+                                                          'Delete',
+                                                          style: TextStyle(
+                                                            fontFamily: 'Poppins',
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                                if (confirm == true && notification['id'] != null) {
+                                                  _deleteNotification(notification['id'], index);
+                                                }
+                                              },
+                                              tooltip: 'Delete notification',
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                  ),
-                ],
-              ),
+                                ),
+                              );
+                            },
+                          ),
+                    ),
+                  ],
+                ),
+      ),
     );
+  }
+
+  Color _getNotificationTypeColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'sensor':
+        return Colors.red;
+      case 'schedule':
+        return Colors.blue;
+      case 'request':
+        return Colors.orange;
+      case 'new_user':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _getEnhancedNotificationIcon(String type) {
+    final color = _getNotificationTypeColor(type);
+    IconData iconData;
+    
+    switch (type.toLowerCase()) {
+      case 'sensor':
+        iconData = Icons.sensors_rounded;
+        break;
+      case 'schedule':
+        iconData = Icons.calendar_month_rounded;
+        break;
+      case 'request':
+        iconData = Icons.pending_actions_rounded;
+        break;
+      case 'new_user':
+        iconData = Icons.person_add_rounded;
+        break;
+      default:
+        iconData = Icons.notifications_rounded;
+    }
+    
+    return Icon(iconData, color: color, size: 24);
   }
 }

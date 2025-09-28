@@ -144,7 +144,7 @@ class _CalendarPageState extends State<CalendarPage> {
               const SizedBox(height: 20),
 
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color:
                       Theme.of(context).brightness == Brightness.dark
@@ -158,11 +158,24 @@ class _CalendarPageState extends State<CalendarPage> {
                     width: 1, // Set the thickness of the border
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Selected Date:\n${DateFormat.yMMMMEEEEd().format(_selectedDay)}',
+                      'Selected Date:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w600,
+                        color:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      DateFormat.yMMMMEEEEd().format(_selectedDay),
                       style: TextStyle(
                         fontSize: 14,
                         fontFamily: 'Poppins',
@@ -172,8 +185,9 @@ class _CalendarPageState extends State<CalendarPage> {
                                 : Colors.black,
                       ),
                     ),
+                    SizedBox(height: 12),
                     SizedBox(
-                      width: 140,
+                      width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
                           final titleController = TextEditingController();
@@ -507,6 +521,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                           );
                         },
+                        icon: Icon(Icons.add, size: 18),
                         label: Text(
                           'Add Schedule',
                           style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
@@ -514,6 +529,10 @@ class _CalendarPageState extends State<CalendarPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: ASColor.buttonBackground(context),
                           foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),

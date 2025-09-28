@@ -1,4 +1,3 @@
-import 'package:aqua/pages/User/DetailCard.dart';
 import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/SAdmin/SAdminDetails.dart'; // Import SAdminDetails
@@ -420,257 +419,567 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.only(left: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Hi, $_username', // Display the fetched username
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontSize: 27,
-                          fontWeight: FontWeight.bold,
-                          color: ASColor.getTextColor(context),
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-
-                      IconButton(
-                        icon: const Icon(Icons.refresh),
-                        onPressed: () {
-                          _fetchDashboardCounts();
-                          _fetchEstablishments(); // Refresh both counts and establishments
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Column(
-              children: [
-                Container(
-                  height: 36,
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? ASColor.BGSecond : ASColor.BGFifth,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: TextField(
-                    controller: _searchController, // Assign the controller
-                    style: TextStyle(
-                      color: isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      icon: Icon(
-                        Icons.search,
-                        color:
-                            isDarkMode ? ASColor.txt1Color : ASColor.txt2Color,
-                        size: 20,
-                      ),
-                      hintText: 'Search Establishments...',
-                      border: InputBorder.none,
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      contentPadding: const EdgeInsets.only(bottom: 10),
-                    ),
-                    onChanged:
-                        _filterEstablishments, // Call the new filter method
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode 
+              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Enhanced Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.02),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
+                    width: 1,
                   ),
                 ),
-
-                const SizedBox(height: 10),
-
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.end, // Aligns button to the right
+                child: Row(
                   children: [
-                    SizedBox(
-                      width: 150,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showAddEstablishmentDialog(context),
-                        // icon: Icon(Icons.add,
-                        // color: ASColor.getTextColor(context),),
-                        label: Text(
-                          'Add Establishment',
-                          style: TextStyle(
-                            color: ASColor.txt1Color,
-                            fontFamily: 'Poppins',
-                            fontSize: 10,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back! 👋',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ASColor.getTextColor(context).withOpacity(0.7),
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: ASColor.buttonBackground(context),
-                          foregroundColor: Colors.white, // Text/icon color
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              12,
-                            ), // Rounded corners
+                          const SizedBox(height: 4),
+                          Text(
+                            _username,
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Montserrat',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          elevation: 4,
-                        ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Enhanced Search Bar
+              Container(
+                height: 48,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                    ? Colors.white.withOpacity(0.08)
+                    : Colors.black.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: TextStyle(
+                    color: ASColor.getTextColor(context),
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                  ),
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: ASColor.getTextColor(context).withOpacity(0.6),
+                      size: 20,
+                    ),
+                    hintText: 'Search establishments...',
+                    hintStyle: TextStyle(
+                      color: ASColor.getTextColor(context).withOpacity(0.5),
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                  onChanged: _filterEstablishments,
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // Enhanced Stats Cards Section
+              Text(
+                'System Overview',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+
+              // Stats Cards with better layout
+              if (_totalEstablishments == null || _totalSensors == null || _totalUsers == null)
+                Container(
+                  height: 100,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                    ),
+                  ),
+                )
+              else
+                Column(
+                  children: [
+                    buildEnhancedInfoCard(
+                      context: context,
+                      title: 'Total Establishments',
+                      value: _totalEstablishments?.toString() ?? 'N/A',
+                      icon: Icons.business_rounded,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF4285F4), Color(0xFF1976D2)],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    buildEnhancedInfoCard(
+                      context: context,
+                      title: 'Active Sensors',
+                      value: _totalSensors?.toString() ?? 'N/A',
+                      icon: Icons.sensors_rounded,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    buildEnhancedInfoCard(
+                      context: context,
+                      title: 'Registered Users',
+                      value: _totalUsers?.toString() ?? 'N/A',
+                      icon: Icons.people_rounded,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFFFF6B35), Color(0xFFE65100)],
                       ),
                     ),
                   ],
                 ),
 
-                SizedBox(height: 20),
+              const SizedBox(height: 30),
 
-                // Use fetched data for Info Cards
-                if (_totalEstablishments == null)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  buildInfoCard(
-                    context: context,
-                    title: 'Total Establishments',
-                    value: _totalEstablishments?.toString() ?? 'N/A',
-                    icon: Icons.window_outlined,
-                    color: Colors.blue,
+              // Enhanced Establishments Section
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Establishments',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: ASColor.getTextColor(context),
+                        fontFamily: 'Montserrat',
+                      ),
+                    ),
                   ),
-                const SizedBox(height: 5),
-
-                if (_totalSensors == null)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  buildInfoCard(
-                    context: context,
-                    title: 'Total Sensors',
-                    value: _totalSensors?.toString() ?? 'N/A',
-                    icon: Icons.sensors_rounded,
-                    color: const Color(0xFF4BCA8C),
-                  ),
-                const SizedBox(height: 5),
-
-                if (_totalUsers == null)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  buildInfoCard(
-                    context: context,
-                    title: 'Total Users',
-                    value: _totalUsers?.toString() ?? 'N/A',
-                    icon: Icons.people_alt_outlined,
-                    color: Colors.redAccent,
-                  ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // --- UPDATED: Dynamically generate DetailCards based on _filteredEstablishmentNames ---
-            if (_allEstablishmentNames.isEmpty &&
-                _searchController.text.isEmpty)
-              const Center(
-                child: CircularProgressIndicator(),
-              ) // Still loading if all names are empty and no search
-            else if (_filteredEstablishmentNames.isEmpty &&
-                _searchController.text.isNotEmpty)
-              const Center(
-                child: Text('No matching establishments found.'),
-              ) // No results for search
-            else if (_filteredEstablishmentNames.isEmpty)
-              const Center(
-                child: Text('No establishments found.'),
-              ) // No establishments after initial load
-            else
-              Column(
-                children:
-                    _filteredEstablishmentNames.map((name) {
-                      return Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 10.0,
-                        ), // Add some spacing between cards
-                        child: DetailCard(
-                          title: name, // Use the filtered establishment name
-                          quality:
-                              'Good', // Assuming 'Good' is a default or placeholder
-                          onEdit: () {
-                            // You might want to pass the establishment name or ID to SAdminDetails
-                            // For example: MaterialPageRoute(builder: (context) => SAdminDetails(establishmentName: name)),
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SAdminDetails(),
-                              ),
-                            );
-                          },
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          color: Colors.green,
+                          size: 6,
                         ),
-                      );
-                    }).toList(),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${_filteredEstablishmentNames.length} Active',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            // --- END UPDATED ---
-          ],
+
+              const SizedBox(height: 16),
+
+              // Enhanced Establishments List
+              if (_allEstablishmentNames.isEmpty && _searchController.text.isEmpty)
+                Container(
+                  height: 100,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                    ),
+                  ),
+                )
+              else if (_filteredEstablishmentNames.isEmpty && _searchController.text.isNotEmpty)
+                buildEmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: 'No matches found',
+                  subtitle: 'Try adjusting your search terms',
+                )
+              else if (_filteredEstablishmentNames.isEmpty)
+                buildEmptyState(
+                  icon: Icons.business_rounded,
+                  title: 'No establishments yet',
+                  subtitle: 'Establishments will appear here once added',
+                )
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: _filteredEstablishmentNames.length,
+                  itemBuilder: (context, index) {
+                    final name = _filteredEstablishmentNames[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: buildEnhancedDetailCard(
+                        name: name,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SAdminDetails(),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// Ensure this function is defined outside the class or in a utility file
-Widget buildInfoCard({
+// Enhanced UI Components
+Widget buildEnhancedInfoCard({
   required BuildContext context,
   required String title,
   required String value,
   required IconData icon,
-  required Color color,
+  required Gradient gradient,
 }) {
-  final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
   return Container(
-    height: 90,
-    margin: const EdgeInsets.symmetric(vertical: 8),
+    height: 95,
+    width: double.infinity,
     decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[900] : color,
+      gradient: gradient,
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
-          blurRadius: 8,
+          color: gradient.colors.first.withOpacity(0.2),
+          blurRadius: 10,
           offset: const Offset(0, 4),
+          spreadRadius: 0,
         ),
       ],
     ),
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Poppins',
-                color: Colors.white,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          // Background decoration
+          Positioned(
+            right: -15,
+            top: -15,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.08),
+                shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
-                color: Colors.white,
+          ),
+          Positioned(
+            right: -5,
+            bottom: -5,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
               ),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Poppins',
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          value,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Montserrat',
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget buildEmptyState({
+  required IconData icon,
+  required String title,
+  required String subtitle,
+}) {
+  return Container(
+    padding: EdgeInsets.all(40),
+    child: Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.grey.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 48,
+            color: Colors.grey.withOpacity(0.5),
+          ),
+        ),
+        SizedBox(height: 16),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+            fontFamily: 'Montserrat',
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.withOpacity(0.7),
+            fontFamily: 'Poppins',
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget buildEnhancedDetailCard({
+  required String name,
+  required VoidCallback onTap,
+}) {
+  return Builder(
+    builder: (context) {
+      final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        decoration: BoxDecoration(
+          color: isDarkMode 
+            ? Colors.white.withOpacity(0.05)
+            : Colors.white.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDarkMode ? Colors.white12 : Colors.black12,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        Icon(icon, color: Colors.white, size: 40),
-      ],
-    ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Status indicator
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.2),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Establishment icon
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.business_rounded,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: ASColor.getTextColor(context),
+                            fontFamily: 'Poppins',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.sensors_rounded,
+                                size: 14,
+                                color: Colors.green,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  'Active monitoring',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.green,
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Arrow icon
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: ASColor.getTextColor(context).withOpacity(0.4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
   );
 }
