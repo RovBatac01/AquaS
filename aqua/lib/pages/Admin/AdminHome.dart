@@ -105,6 +105,44 @@ class ApiService {
       return null;
     }
   }
+
+  // Enhanced logout method with session destroy
+  Future<bool> performLogout() async {
+    try {
+      // Get stored token
+      final prefs = await SharedPreferences.getInstance();
+      final String? userToken = prefs.getString('userToken');
+      
+      // Call logout endpoint with authentication
+      if (userToken != null) {
+        try {
+          final response = await http.post(
+            Uri.parse('http://localhost:5000/logout'),
+            headers: {
+              'Authorization': 'Bearer $userToken',
+              'Content-Type': 'application/json',
+            },
+          ).timeout(Duration(seconds: 10)); // Add 10 second timeout
+          
+          if (response.statusCode == 200) {
+            print('Server logout successful');
+          } else {
+            print('Server logout failed: ${response.statusCode} - ${response.body}');
+          }
+        } catch (e) {
+          print('Logout API call failed (non-critical): $e');
+        }
+      }
+      
+      // Clear local session data
+      await prefs.clear();
+      
+      return true;
+    } catch (e) {
+      print('Logout error: $e');
+      return false;
+    }
+  }
 }
 // --- END NEW: API Service ---
 

@@ -167,13 +167,46 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/logout", (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.split(" ")[1];
-    console.log("User logged out with token:", token);
+app.post("/logout", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      console.log(`User ${userId} logged out with token: ${token.substring(0, 10)}...`);
+      
+      // Optional: Store logout activity in database
+      try {
+        const logoutTime = new Date();
+        await db.query(
+          'INSERT INTO user_activity (user_id, action, timestamp, ip_address) VALUES (?, ?, ?, ?)',
+          [userId, 'logout', logoutTime, req.ip || 'unknown']
+        );
+      } catch (activityErr) {
+        console.log("Activity logging failed (non-critical):", activityErr.message);
+      }
+      
+      // Clear any server-side session data if exists
+      try {
+        await db.query(
+          'UPDATE users SET access_token = NULL WHERE id = ?',
+          [userId]
+        );
+      } catch (tokenErr) {
+        console.log("Token clearing failed (non-critical):", tokenErr.message);
+      }
+    }
+    
+    res.status(200).json({ 
+      message: "Logout successful.",
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Still return success for logout even if cleanup fails
+    res.status(200).json({ message: "Logout successful." });
   }
-  res.status(200).json({ message: "Logout successful." });
 });
 
 app.post('/api/update_user', async (req, res) => {

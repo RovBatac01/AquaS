@@ -1,8 +1,11 @@
 import 'package:aqua/components/colors.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
+import 'package:aqua/pages/Login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'AdminHome.dart'; // Import for ApiService
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(SettingsApp());
@@ -38,6 +41,185 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
   bool _obscurecurrentPassword = true;
   bool _obscurenewPassword = true;
   bool _obscureConfirmPassword = true;
+  
+  // ApiService instance for logout functionality
+  final ApiService _apiService = ApiService();
+
+  // Quick logout without loading dialog (for testing)
+  Future<void> _quickLogout(BuildContext context) async {
+    try {
+      // Clear session data immediately
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      // Navigate immediately
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+      
+      // Try server logout in background (non-blocking)
+      _apiService.performLogout().catchError((e) {
+        print('Background logout failed: $e');
+        return false; // Return false on error
+      });
+      
+    } catch (error) {
+      print('Quick logout error: $error');
+      // Even if there's an error, try to navigate
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
+  }
+
+  // Enhanced SignOut function with session destroy
+  Future<void> _performSignOut(BuildContext context) async {
+    // Store the navigator and scaffold messenger to avoid context issues
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) {
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: Center(
+              child: Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Signing out...',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+
+      // Use ApiService for logout with session destroy (with timeout)
+      final bool logoutSuccess = await _apiService.performLogout()
+          .timeout(Duration(seconds: 15), onTimeout: () {
+        print('Logout timed out, but continuing with local cleanup...');
+        return true; // Continue with local cleanup even if server call times out
+      });
+      
+      if (!logoutSuccess) {
+        throw Exception("Logout failed");
+      }
+
+      // Close loading dialog - use pop with result to ensure it closes
+      if (context.mounted) {
+        navigator.pop();
+      }      // Navigate immediately to login screen - no delays to avoid context issues
+      try {
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+          (Route<dynamic> route) => false,
+        );
+        
+        // Show success message after navigation
+        Future.delayed(Duration(milliseconds: 100), () {
+          if (context.mounted) {
+            scaffoldMessenger.showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Signed out successfully',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        });
+        
+      } catch (navError) {
+        print('Navigation error: $navError');
+        // If navigation fails, try to close dialog and show error
+        if (context.mounted) {
+          navigator.pop(); // Close any remaining dialogs
+        }
+        throw Exception('Navigation failed: $navError');
+      }
+
+    } catch (error) {
+      print('Signout error: $error');
+      
+      // Close any open dialogs
+      try {
+        if (context.mounted) {
+          navigator.pop(); // Close loading dialog
+        }
+      } catch (e) {
+        print('Failed to close dialog: $e');
+      }
+      
+      // Show error message
+      try {
+        if (context.mounted) {
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Signout failed: ${error.toString()}',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        print('Failed to show error message: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -592,6 +774,51 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               ),
             );
           }).toList(),
+          const SizedBox(height: 16),
+          // Enhanced Sign Out All Sessions Button
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red, Colors.red.shade700],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  await _quickLogout(context); // Use quick logout for immediate response
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Sign Out All Sessions',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -668,9 +895,9 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Navigate to login - you'll need to import the Login screen
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close dialog
+                await _performSignOut(context);
               },
             ),
           ],
