@@ -14,7 +14,23 @@ class ApiService {
 
   Future<int?> fetchTotalUsers() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/total-users'));
+      // Get the stored token for authenticated device-scoped request
+      final prefs = await SharedPreferences.getInstance();
+      final String? userToken = prefs.getString('userToken');
+
+      if (userToken == null) {
+        print('No token found. Cannot fetch device-scoped total users.');
+        return null;
+      }
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/my/total-users'), // Device-scoped authenticated endpoint
+        headers: {
+          'Authorization': 'Bearer $userToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['totalUsers'];
@@ -30,7 +46,23 @@ class ApiService {
 
   Future<int?> fetchTotalSensors() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/total-sensors'));
+      // Get the stored token for authenticated device-scoped request
+      final prefs = await SharedPreferences.getInstance();
+      final String? userToken = prefs.getString('userToken');
+
+      if (userToken == null) {
+        print('No token found. Cannot fetch device-scoped total sensors.');
+        return null;
+      }
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/my/total-sensors'), // Device-scoped authenticated endpoint
+        headers: {
+          'Authorization': 'Bearer $userToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['totalSensors'];

@@ -590,6 +590,156 @@ app.get('/api/total-sensors', async (req, res) => {
   }
 });
 
+// --- Device-Scoped Endpoints for Admin Dashboard ---
+
+// Helper: derive device_id for a given user id
+async function getDeviceIdForUser(userId) {
+  try {
+    // Check if users table has device_id column
+    const [userDeviceCol] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
+      ['aquasense', 'users', 'device_id']
+    );
+    if (userDeviceCol[0].cnt > 0) {
+      const [rows] = await db.query('SELECT device_id FROM users WHERE id = ?', [userId]);
+      if (rows.length > 0 && rows[0].device_id) return rows[0].device_id;
+    }
+
+    // Otherwise, check if users has estab_id and estab has device_id
+    const [userEstabCol] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
+      ['aquasense', 'users', 'estab_id']
+    );
+    if (userEstabCol[0].cnt > 0) {
+      const [rows] = await db.query(
+        'SELECT e.device_id FROM users u JOIN estab e ON u.estab_id = e.id WHERE u.id = ?',
+        [userId]
+      );
+      if (rows.length > 0 && rows[0].device_id) return rows[0].device_id;
+    }
+
+    // Not found
+    return null;
+  } catch (err) {
+    console.error('Error deriving device id for user:', err);
+    return null;
+  }
+}
+
+// Authenticated endpoint: totals scoped to the authenticated user's device
+app.get('/api/my/total-users', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const deviceId = await getDeviceIdForUser(userId);
+    if (!deviceId) {
+      console.warn(`No device mapping found for user ${userId}; returning zero totalUsers.`);
+      return res.json({ totalUsers: 0 });
+    }
+
+    // Count users associated with this device
+    // Try users.estab_id -> estab.device_id first
+    try {
+      const querySql = `SELECT COUNT(*) AS totalUsers FROM users u JOIN estab e ON u.estab_id = e.id WHERE e.device_id = ?`;
+      const [rows] = await db.query(querySql, [deviceId]);
+      return res.json({ totalUsers: rows[0].totalUsers || 0 });
+    } catch (innerErr) {
+      // Fallback to users.device_id
+      try {
+        const [rows2] = await db.query('SELECT COUNT(*) AS totalUsers FROM users WHERE device_id = ?', [deviceId]);
+        return res.json({ totalUsers: rows2[0].totalUsers || 0 });
+      } catch (err) {
+        console.error('Error fetching my total users:', err);
+        return res.status(500).json({ error: 'Failed to fetch my total users' });
+      }
+    }
+  } catch (error) {
+    console.error('Error in /api/my/total-users:', error);
+    res.status(500).json({ error: 'Server error while fetching my total users' });
+  }
+});
+
+app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const deviceId = await getDeviceIdForUser(userId);
+    if (!deviceId) {
+      console.warn(`No device mapping found for user ${userId}; returning zero totalSensors.`);
+      return res.json({ totalSensors: 0 });
+    }
+
+    // Try sensors.device_id first
+    const [sensorsDeviceCol] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
+      ['aquasense', 'sensors', 'device_id']
+    );
+    if (sensorsDeviceCol[0].cnt > 0) {
+      const [rows] = await db.query('SELECT COUNT(*) AS totalSensors FROM sensors WHERE device_id = ?', [deviceId]);
+      return res.json({ totalSensors: rows[0].totalSensors || 0 });
+    }
+
+    // Fallback: sensors may reference estab_id
+    const [sensorsEstabCol] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
+      ['aquasense', 'sensors', 'estab_id']
+    );
+    if (sensorsEstabCol[0].cnt > 0) {
+      const [rows] = await db.query('SELECT COUNT(*) AS totalSensors FROM sensors s JOIN estab e ON s.estab_id = e.id WHERE e.device_id = ?', [deviceId]);
+      return res.json({ totalSensors: rows[0].totalSensors || 0 });
+    }
+
+    // If no mapping, return 0
+    return res.json({ totalSensors: 0 });
+  } catch (error) {
+    console.error('Error in /api/my/total-sensors:', error);
+    res.status(500).json({ error: 'Server error while fetching my total sensors' });
+  }
+});
+
+// GET device-scoped total users by deviceId (public endpoint)
+app.get('/api/total-users-by-device/:deviceId', async (req, res) => {
+  const { deviceId } = req.params;
+
+  if (!deviceId) {
+    return res.status(400).json({ error: 'deviceId parameter is required' });
+  }
+
+  try {
+    // Check for presence of columns in users table to determine mapping
+    const [estabIdColumn] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
+      ['aquasense', 'users', 'estab_id']
+    );
+
+    const [userDeviceIdColumn] = await db.query(
+      'SELECT COUNT(*) AS cnt FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?',
+      ['aquasense', 'users', 'device_id']
+    );
+
+    const hasEstabId = estabIdColumn[0].cnt > 0;
+    const hasUserDeviceId = userDeviceIdColumn[0].cnt > 0;
+
+    let querySql;
+    let params = [deviceId];
+
+    if (hasEstabId) {
+      // users.estab_id -> estab.id, filter estab.device_id = deviceId
+      querySql = `SELECT COUNT(*) AS totalUsers FROM users u JOIN estab e ON u.estab_id = e.id WHERE e.device_id = ?`;
+    } else if (hasUserDeviceId) {
+      // users.device_id directly references device
+      querySql = `SELECT COUNT(*) AS totalUsers FROM users WHERE device_id = ?`;
+    } else {
+      return res.status(400).json({ error: 'Unable to determine user-to-device mapping. Please ensure users table has either estab_id or device_id column.' });
+    }
+
+    const [rows] = await db.query(querySql, params);
+    const totalUsers = rows[0].totalUsers || 0;
+    res.json({ totalUsers });
+  } catch (error) {
+    console.error('Error fetching device-scoped total users:', error);
+    res.status(500).json({ error: 'Failed to fetch total users for device due to a server-side database error.' });
+  }
+});
+
 // GET route to fetch establishments
 app.get('/api/establishments', async (req, res) => {
   const sql = 'SELECT estab_name FROM estab';

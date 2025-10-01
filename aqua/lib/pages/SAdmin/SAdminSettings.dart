@@ -36,69 +36,61 @@ class SettingsApp extends StatelessWidget {
   }
 }
 
-//Profile Management UPDATE
-Future<void> updateUser(
+//Enhanced Profile Management UPDATE
+Future<bool> updateUser(
     BuildContext context, {
     required String username,
     required String email,
     required String phone,
 }) async {
   final prefs = await SharedPreferences.getInstance();
-  final int? userId = prefs.getInt('userId');
-  final String? userToken = prefs.getString('userToken'); // Get the token
+  final String? userToken = prefs.getString('userToken');
 
-  if (userId == null || userToken == null) { // Check for token too
+  if (userToken == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("User ID or token not found. Please log in again.")),
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white),
+            SizedBox(width: 8),
+            Text("Authentication token not found. Please log in again."),
+          ],
+        ),
+        backgroundColor: Colors.red,
+      ),
     );
-    return;
+    return false;
   }
 
   try {
-    // Show loading indicator
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Updating profile..."),
-        duration: Duration(seconds: 1),
-      ),
-    );
-
     final uri = Uri.parse(
-      'https://aquasense-p36u.onrender.com/api/super-admin/profile', // <--- CHANGED ENDPOINT
+      'https://aquasense-p36u.onrender.com/api/super-admin/profile',
     );
-    final response = await http.put( // <--- CHANGED TO PUT REQUEST
+    final response = await http.put(
       uri,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer $userToken", // <--- ADDED AUTHORIZATION HEADER
+        "Authorization": "Bearer $userToken",
       },
       body: jsonEncode({
-        // "id": userId, // Backend extracts userId from token, no need to send
         "username": username,
         "email": email,
-        "phone": phone, // Ensure 'phone' matches backend field name
+        "phone": phone,
       }),
     );
 
     final data = jsonDecode(response.body);
 
-    if (response.statusCode == 200 && data["message"] == 'Profile updated successfully!') { // <--- Adjusted success condition
+    if (response.statusCode == 200 && data["message"] == 'Profile updated successfully!') {
       // Update local storage with new values from the backend's response
-      // It's safer to update with data from the server after a successful update.
       await prefs.setString('loggedInUsername', data['user']['username']);
       await prefs.setString('loggedInEmail', data['user']['email']);
-      await prefs.setString('loggedInPhone', data['user']['phone'] ?? ''); // Handle null phone if applicable
+      await prefs.setString('loggedInPhone', data['user']['phone'] ?? '');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("User information updated successfully!")),
-      );
+      return true;
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Update failed: ${data['message'] ?? 'Unknown error'}"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Optionally collect message to show later
+      return false;
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -107,6 +99,7 @@ Future<void> updateUser(
         backgroundColor: Colors.red,
       ),
     );
+    return false;
   }
 }
 
@@ -120,12 +113,14 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
   bool AppearanceExpanded = false;
   bool SessionExpanded = false;
   bool FAQExpanded = false;
+  final _formKey = GlobalKey<FormState>();
+  final _passwordFormKey = GlobalKey<FormState>();
   final TextEditingController username = TextEditingController();
   final TextEditingController email = TextEditingController();
   final TextEditingController phone = TextEditingController();
-  final TextEditingController currentPassword = TextEditingController();
-  final TextEditingController newPassword = TextEditingController();
-  final TextEditingController confirm_password = TextEditingController();
+  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _obscurecurrentPassword = true;
   bool _obscurenewPassword = true;
   bool _obscureConfirmPassword = true;
@@ -136,14 +131,85 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
     _loadUserData();
   }
 
-  void _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    username.text = prefs.getString('loggedInUsername') ?? '';
-    email.text = prefs.getString('loggedInEmail') ?? '';
-    phone.text = prefs.getString('loggedInPhone') ?? '';
+  // Safely try to close any open dialog without throwing
+  Future<void> _closeDialogIfOpen(BuildContext ctx) async {
+    try {
+      // Try root navigator first
+      await Navigator.of(ctx, rootNavigator: true).maybePop();
+    } catch (_) {}
+    try {
+      // Then try the nearest navigator
+      await Navigator.of(ctx).maybePop();
+    } catch (_) {}
   }
 
-  // --- PASSWORD CHANGE FUNCTION ---
+  void _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      username.text = prefs.getString('loggedInUsername') ?? '';
+      email.text = prefs.getString('loggedInEmail') ?? '';
+      phone.text = prefs.getString('loggedInPhone') ?? '';
+    });
+    
+    // If no data in SharedPreferences, try to fetch from API
+    if (username.text.isEmpty || email.text.isEmpty) {
+      await _fetchUserProfile();
+    }
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userToken = prefs.getString('userToken');
+
+    if (userToken == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Authentication token not found. Please log in again.")),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://aquasense-p36u.onrender.com/api/super-admin/profile'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $userToken",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final user = data['user'];
+        
+        setState(() {
+          username.text = user['username'] ?? '';
+          email.text = user['email'] ?? '';
+          phone.text = user['phone'] ?? '';
+        });
+
+        // Save to SharedPreferences for future use
+        await prefs.setString('loggedInUsername', user['username'] ?? '');
+        await prefs.setString('loggedInEmail', user['email'] ?? '');
+        await prefs.setString('loggedInPhone', user['phone'] ?? '');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load profile data"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error loading profile: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // --- ENHANCED PASSWORD CHANGE FUNCTION ---
   Future<void> _changePassword() async {
     final prefs = await SharedPreferences.getInstance();
     final String? userToken = prefs.getString('userToken');
@@ -156,26 +222,76 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
     }
 
     // Frontend validation for passwords
-    if (currentPassword.text.isEmpty || newPassword.text.isEmpty || confirm_password.text.isEmpty) {
+    if (_currentPasswordController.text.isEmpty || _newPasswordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Please fill all password fields."), backgroundColor: Colors.red),
       );
       return;
     }
 
-    if (newPassword.text != confirm_password.text) {
+    if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("New password and confirm password do not match."), backgroundColor: Colors.red),
       );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Changing password..."),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    // Enhanced password validation
+    final pwd = _newPasswordController.text.trim();
+    List<String> errors = [];
+    if (pwd.length < 8) {
+      errors.add('• At least 8 characters');
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(pwd)) {
+      errors.add('• At least one capital letter (A-Z)');
+    }
+    if (!RegExp(r'[0-9]').hasMatch(pwd)) {
+      errors.add('• At least one number (0-9)');
+    }
+    if (!pwd.contains('@') && !pwd.contains('_')) {
+      errors.add('• At least one symbol: @ or _');
+    }
+    if (errors.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Password requirements:\n${errors.join('\n')}"),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    // Show loading dialog
+      // Show loading dialog and capture the dialog's context so it can be closed safely
+      BuildContext? dialogContext;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext ctx) {
+          dialogContext = ctx;
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: ASColor.getCardColor(ctx),
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(ASColor.buttonBackground(ctx)),
+                ),
+                SizedBox(width: 16),
+                Text(
+                  "Changing password...",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: ASColor.getTextColor(ctx),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
 
     try {
       final uri = Uri.parse(
@@ -188,21 +304,94 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           "Authorization": "Bearer $userToken",
         },
         body: jsonEncode({
-          "currentPassword": currentPassword.text,
-          "newPassword": newPassword.text,
+          "currentPassword": _currentPasswordController.text,
+          "newPassword": _newPasswordController.text,
         }),
       );
+
+        // Close loading dialog shown above using the dialog's own context
+        try {
+          if (dialogContext != null && Navigator.of(dialogContext!).canPop()) {
+            Navigator.of(dialogContext!).pop();
+          }
+        } catch (_) {}
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data["message"] == 'Password changed successfully!') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Password changed successfully!")),
-        );
         // Clear password fields on success
-        currentPassword.clear();
-        newPassword.clear();
-        confirm_password.clear();
+        if (mounted) {
+          setState(() {
+            _currentPasswordController.clear();
+            _newPasswordController.clear();
+            _confirmPasswordController.clear();
+          });
+        }
+
+        // Show success popup dialog after a short delay to avoid navigator lock
+        if (!mounted) return;
+        Future.delayed(Duration(milliseconds: 150), () {
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                backgroundColor: ASColor.getCardColor(context),
+                title: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.security, color: Colors.white, size: 24),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "Password Updated!",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        color: ASColor.getTextColor(context),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  "Your password has been changed successfully!",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: ASColor.getTextColor(context),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: ASColor.buttonBackground(context),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        "OK",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -212,6 +401,9 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
         );
       }
     } catch (e) {
+      // Close loading dialog if still open
+        await _closeDialogIfOpen(context);
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error changing password: ${e.toString()}"),
@@ -222,6 +414,171 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
   }
   // --- END OF PASSWORD CHANGE FUNCTION ---
 
+  // Enhanced profile update with validation
+  Future<void> _updateProfile() async {
+    // Frontend validation
+    if (username.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Username cannot be empty"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (email.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Email cannot be empty"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Email validation
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please enter a valid email address"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Phone validation
+    if (phone.text.trim().isNotEmpty && 
+        (!RegExp(r'^\d{11}$').hasMatch(phone.text.trim()))) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please enter a valid 11-digit phone number"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Show loading dialog and capture the dialog's context so it can be closed safely
+    BuildContext? dialogContext;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        dialogContext = ctx;
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: ASColor.getCardColor(ctx),
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(ASColor.buttonBackground(ctx)),
+              ),
+              SizedBox(width: 16),
+              Text(
+                "Updating profile...",
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: ASColor.getTextColor(ctx),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    try {
+      final success = await updateUser(
+        context,
+        username: username.text.trim(),
+        email: email.text.trim(),
+        phone: phone.text.trim(),
+      );
+
+      // Close the specific loading dialog that we opened above
+      try {
+        if (dialogContext != null && Navigator.of(dialogContext!).canPop()) {
+          Navigator.of(dialogContext!).pop();
+        }
+      } catch (_) {}
+
+      if (success) {
+        // Show success dialog after a short delay so navigator is ready
+        if (!mounted) return;
+        Future.delayed(Duration(milliseconds: 120), () {
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                backgroundColor: ASColor.getCardColor(context),
+                title: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.check, color: Colors.white, size: 24),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "Success!",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        color: ASColor.getTextColor(context),
+                      ),
+                    ),
+                  ],
+                ),
+                content: Text(
+                  "Your profile has been updated successfully!",
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    color: ASColor.getTextColor(context),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: ASColor.buttonBackground(context),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        "OK",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        });
+      }
+    } catch (e) {
+      // Ensure loading dialog is closed on error
+      try {
+        if (mounted && Navigator.of(context).canPop()) Navigator.of(context).pop();
+      } catch (_) {}
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,26 +600,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Text(
-                'Settings',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-              Text(
-                'Manage your account and preferences',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: ASColor.getTextColor(context).withOpacity(0.6),
-                  fontFamily: 'Poppins',
-                ),
-              ),
-              
-              const SizedBox(height: 24),
+
 
               // Enhanced Profile Management Section
               _buildEnhancedSettingsCard(
@@ -685,9 +1023,50 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Divider(),
+          
+          // Refresh button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Personal Information',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Montserrat',
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () async {
+                  await _fetchUserProfile();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Profile data refreshed"),
+                      backgroundColor: Colors.blue,
+                    ),
+                  );
+                },
+                icon: Icon(Icons.refresh, size: 18),
+                label: Text(
+                  'Refresh',
+                  style: TextStyle(fontSize: 12),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: ASColor.buttonBackground(context),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
 
-          //Username TextField
-          TextFormField(
+          Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                //Username TextField
+                TextFormField(
             controller: username,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -794,27 +1173,27 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           const SizedBox(height: 20),
 
-          ElevatedButton.icon(
-            onPressed: () {
-              updateUser(
-                context,
-                username: username.text.trim(),
-                email: email.text.trim(),
-                phone: phone.text.trim(),
-              );
-            },
-            icon: Icon(Icons.save, color: ASColor.txt1Color),
-            label: Text(
-              'Save Profile',
-              style: TextStyle(
-                color: ASColor.txt1Color,
-                fontFamily: 'Poppins',
-                fontSize: 14.sp.clamp(12, 16),
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size.fromHeight(50),
-              backgroundColor: ASColor.buttonBackground(context),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _updateProfile();
+                    }
+                  },
+                  icon: Icon(Icons.save, color: ASColor.txt1Color),
+                  label: Text(
+                    'Save Profile',
+                    style: TextStyle(
+                      color: ASColor.txt1Color,
+                      fontFamily: 'Poppins',
+                      fontSize: 14.sp.clamp(12, 16),
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size.fromHeight(50),
+                    backgroundColor: ASColor.buttonBackground(context),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -839,9 +1218,13 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           const SizedBox(height: 10),
 
-          // Current Password TextField
-          TextFormField(
-            controller: currentPassword,
+          Form(
+            key: _passwordFormKey,
+            child: Column(
+              children: [
+                // Current Password TextField
+                TextFormField(
+            controller: _currentPasswordController,
             obscureText: _obscurecurrentPassword,
             // For password validation, I've used the original logic,
             // but ensure it's appropriate for your backend's requirements.
@@ -894,7 +1277,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           // New Password TextField
           TextFormField(
-            controller: newPassword,
+            controller: _newPasswordController,
             obscureText: _obscurenewPassword,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -955,13 +1338,13 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           // Confirm New Password TextField
           TextFormField(
-            controller: confirm_password,
+            controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Confirm password is required.';
               }
-              if (value != newPassword.text) {
+              if (value != _newPasswordController.text) {
                 return 'Passwords do not match';
               }
               return null;
@@ -1002,23 +1385,28 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
           SizedBox(height: 20),
 
-          // Confirm New Password Button (calls _changePassword)
-          ElevatedButton.icon(
-            onPressed: () {
-              _changePassword(); // <--- This will now call your new password change logic
-            },
-            icon: Icon(Icons.new_label, color: ASColor.txt1Color),
-            label: Text(
-              'Confirm New Password',
-              style: TextStyle(
-                color: ASColor.txt1Color,
-                fontFamily: 'Poppins',
-                fontSize: 14.sp.clamp(12, 16),
-              ),
-            ),
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size.fromHeight(50),
-              backgroundColor: ASColor.buttonBackground(context),
+                // Confirm New Password Button (calls _changePassword)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (_passwordFormKey.currentState!.validate()) {
+                      _changePassword();
+                    }
+                  },
+                  icon: Icon(Icons.new_label, color: ASColor.txt1Color),
+                  label: Text(
+                    'Confirm New Password',
+                    style: TextStyle(
+                      color: ASColor.txt1Color,
+                      fontFamily: 'Poppins',
+                      fontSize: 14.sp.clamp(12, 16),
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size.fromHeight(50),
+                    backgroundColor: ASColor.buttonBackground(context),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
