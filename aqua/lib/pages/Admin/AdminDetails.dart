@@ -4,7 +4,7 @@ import 'dart:ui'; // Required for ImageFilter
 import 'dart:async'; // Required for Timer
 import 'dart:convert'; // For JSON encoding/decoding
 
-import 'package:aqua/water_quality_model.dart'; // Corrected import path
+
 import 'package:aqua/water_quality_service.dart'; // Corrected import path
 import 'package:aqua/components/colors.dart'; // Assuming you have this file for ASColor
 
@@ -111,18 +111,6 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   }
 
   // Helper to create a comparable payload from current data
-  Map<String, dynamic> _createCurrentDataPayload() {
-    return {
-      "temp": _latestTemp,
-      "tds": _latestTDS,
-      "ph": _latestPH,
-      "turbidity": _latestTurbidity,
-      "conductivity": _latestConductivity,
-      "salinity": _latestSalinity,
-      "ec_compensated": _latestECCompensated,
-    };
-  }
-
   // Fetches the latest data (raw value only) for all water quality parameters
   Future<void> _fetchLatestDataForAllStats({bool isInitialFetch = false}) async {
     // Only set to connecting if we don't have any initial data displayed yet.
@@ -341,31 +329,101 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     bool displayLiveValues = _connectionStatus == ConnectionStatus.connected ||
         _connectionStatus == ConnectionStatus.disconnectedNoData;
 
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'DETAILS',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-            letterSpacing: 1,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode 
+              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
           ),
         ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 15),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+        child: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Enhanced Header with Back Button
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.02),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? Colors.white12 : Colors.black12,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: ASColor.getTextColor(context),
+                          size: 20,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.analytics_rounded,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Water Quality Details',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Montserrat',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Real-time monitoring data',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ASColor.getTextColor(context).withOpacity(0.7),
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Content Area
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
               const Text(
                 'Home Water Tank',
                 style: TextStyle(
@@ -525,6 +583,10 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                     ],
                   ),
                 ],
+              ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

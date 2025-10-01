@@ -165,13 +165,82 @@ class _AdminNotification extends State<AdminNotification> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        backgroundColor: ASColor.getCardColor(context), // Dynamic background color
-        foregroundColor: ASColor.getTextColor(context), // Dynamic text color for app bar
-      ),
-      body: _isLoading
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDarkMode 
+              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Enhanced Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.02),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDarkMode ? Colors.white12 : Colors.black12,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.notifications_rounded,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Notifications',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Montserrat',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${notifications.length} notifications',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: ASColor.getTextColor(context).withOpacity(0.7),
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Content Area
+              Expanded(
+                child: _isLoading
           ? const Center(child: CircularProgressIndicator()) // Show loading indicator
           : _errorMessage != null
               ? Center(
@@ -211,8 +280,6 @@ class _AdminNotification extends State<AdminNotification> {
                           const SizedBox.shrink(), // Remove the default divider between list items
                       itemBuilder: (context, index) {
                         final notification = notifications[index];
-                        // `is_read` from backend isn't used for visual indicator here, but can be for future features
-                        final isRead = notification['is_read'] ?? false;
 
                         return GestureDetector(
                           onTap: () {
@@ -229,17 +296,29 @@ class _AdminNotification extends State<AdminNotification> {
                               ),
                             );
                           },
-                          child: Card(
-                            color: ASColor.getCardColor(context), // Dynamic card background
+                          child: Container(
                             margin: EdgeInsets.fromLTRB(
                               16.w,
-                              index == 0 ? 20.h : 0, // Top margin for the first card
+                              index == 0 ? 8.h : 0,
                               16.w,
-                              20.h,
+                              12.h,
                             ),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
+                            decoration: BoxDecoration(
+                              color: isDarkMode 
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.white.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(16.r),
+                              border: Border.all(
+                                color: isDarkMode ? Colors.white12 : Colors.black12,
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: ListTile(
                               contentPadding: EdgeInsets.all(16.w),
@@ -321,6 +400,11 @@ class _AdminNotification extends State<AdminNotification> {
                         );
                       },
                     ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
