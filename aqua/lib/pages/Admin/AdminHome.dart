@@ -16,11 +16,14 @@ class ApiService {
       // Get the stored token for authenticated device-scoped request
       final prefs = await SharedPreferences.getInstance();
       final String? userToken = prefs.getString('userToken');
+      final int? userId = prefs.getInt('userId');
 
       if (userToken == null) {
         print('No token found. Cannot fetch device-scoped total users.');
         return null;
       }
+
+      print('DEBUG: Fetching total users for userId: $userId with token');
 
       final response = await http.get(
         Uri.parse('$_baseUrl/my/total-users'), // Device-scoped authenticated endpoint
@@ -30,8 +33,12 @@ class ApiService {
         },
       );
 
+      print('DEBUG: Total users response status: ${response.statusCode}');
+      print('DEBUG: Total users response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('DEBUG: Parsed total users data: $data');
         return data['totalUsers'];
       } else {
         print('Failed to fetch total users: ${response.statusCode} - ${response.body}');
@@ -48,11 +55,14 @@ class ApiService {
       // Get the stored token for authenticated device-scoped request
       final prefs = await SharedPreferences.getInstance();
       final String? userToken = prefs.getString('userToken');
+      final int? userId = prefs.getInt('userId');
 
       if (userToken == null) {
         print('No token found. Cannot fetch device-scoped total sensors.');
         return null;
       }
+
+      print('DEBUG: Fetching total sensors for userId: $userId with token');
 
       final response = await http.get(
         Uri.parse('$_baseUrl/my/total-sensors'), // Device-scoped authenticated endpoint
@@ -62,8 +72,12 @@ class ApiService {
         },
       );
 
+      print('DEBUG: Total sensors response status: ${response.statusCode}');
+      print('DEBUG: Total sensors response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('DEBUG: Parsed total sensors data: $data');
         return data['totalSensors'];
       } else {
         print('Failed to fetch total sensors: ${response.statusCode} - ${response.body}');
