@@ -612,11 +612,33 @@ app.get('/api/total-establishments', async (req, res) => {
 });
 
 app.get('/api/total-sensors', async (req, res) => {
-  const querySql = 'SELECT COUNT(*) AS totalSensors FROM sensors';
   try {
-    const [results] = await db.query(querySql);
-    const total = results[0].totalSensors;
-    res.json({ totalSensors: total });
+    // Count total number of sensor types (7 sensor types in the system)
+    // Since there's no single 'sensors' table, we count by sensor types
+    const sensorTypes = [
+      'turbidity_readings',
+      'phlevel_readings', 
+      'tds_readings',
+      'salinity_readings',
+      'ec_readings',
+      'ec_compensated_readings',
+      'temperature_readings'
+    ];
+    
+    let totalSensors = 0;
+    for (const table of sensorTypes) {
+      try {
+        // Since sensor tables don't have device_id, just check if table has any data
+        const [result] = await db.query(`SELECT COUNT(*) AS count FROM ${table} LIMIT 1`);
+        if (result[0].count > 0) {
+          totalSensors++;
+        }
+      } catch (tableErr) {
+        console.warn(`Table ${table} might not exist or is empty:`, tableErr.message);
+      }
+    }
+    
+    res.json({ totalSensors: totalSensors });
   } catch (err) {
     console.error('Error fetching total sensors:', err);
     res.status(500).json({ error: 'Failed to fetch total sensors' });
@@ -740,9 +762,31 @@ app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
     const establishmentDeviceId = estabInfo[0].device_id;
     console.log(`🔍 DEBUG: Establishment device_id: ${establishmentDeviceId}`);
     
-    // Count sensors that belong to this establishment's device
-    const [rows] = await db.query('SELECT COUNT(*) AS totalSensors FROM sensors WHERE device_id = ?', [establishmentDeviceId]);
-    const totalSensors = rows[0].totalSensors || 0;
+    // Count sensors by counting distinct readings tables that have data for this device
+    // Since there's no single 'sensors' table, we'll count the sensor types (7 types)
+    const sensorTypes = [
+      'turbidity_readings',
+      'phlevel_readings',
+      'tds_readings', 
+      'salinity_readings',
+      'ec_readings',
+      'ec_compensated_readings',
+      'temperature_readings'
+    ];
+    
+    let totalSensors = 0;
+    for (const table of sensorTypes) {
+      try {
+        // Since sensor tables don't have device_id, just check if the table has any data
+        const [result] = await db.query(`SELECT COUNT(*) AS count FROM ${table} LIMIT 1`);
+        if (result[0].count > 0) {
+          totalSensors++;
+        }
+      } catch (error) {
+        console.error(`Error checking table ${table}:`, error);
+        // Continue with other tables
+      }
+    }
     
     console.log(`🔍 DEBUG: Found ${totalSensors} sensors for establishment device_id ${establishmentDeviceId}`);
     
@@ -911,9 +955,9 @@ createGetDataEndpoint('ec', 'ec_readings', 'timestamp');
 createGetDataEndpoint('ec_compensated', 'ec_compensated_readings', 'timestamp');
 createGetDataEndpoint('temperature', 'temperature_readings', 'timestamp');
 
-// Listen on the assigned port
-server.listen(port, () => {
-  console.log(`🚀 Backend running on port ${port}`);
+// Listen on the assigned port on all interfaces
+server.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Backend running on port ${port} (all interfaces)`);
 });
 
 // PUT /api/user/profile - Update user profile information

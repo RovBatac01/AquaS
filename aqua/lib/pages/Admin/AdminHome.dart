@@ -8,8 +8,8 @@ import 'package:aqua/pages/Login.dart'; // Import LoginScreen for redirection
 
 // --- NEW: Create a separate API service class (similar to SAdmin) ---
 class ApiService {
-  // IMPORTANT: Use 10.0.2.2 for Android emulator to connect to localhost:5000
-  final String _baseUrl = 'http://10.0.2.2:5000/api'; // Android emulator IP mapping to localhost:5000
+  // IMPORTANT: Use localhost:5000 for web emulator
+  final String _baseUrl = 'http://localhost:5000/api'; // Web emulator can access localhost directly
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -89,18 +89,19 @@ class ApiService {
     }
   }
 
-  // Check admin's device and establishment association
+  // Get admin's assigned establishment based on their device_id
   Future<Map<String, dynamic>?> checkDeviceAssociation() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? userToken = prefs.getString('userToken');
+      final int? userId = prefs.getInt('userId');
 
       if (userToken == null) {
         print('No token found. Cannot check device association.');
         return null;
       }
 
-      print('DEBUG: Checking admin device and establishment association');
+      print('DEBUG: Getting establishment for admin user ID: $userId based on device_id');
 
       final response = await http.get(
         Uri.parse('$_baseUrl/my/device-info'),
@@ -108,17 +109,39 @@ class ApiService {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',
         },
-      ).timeout(Duration(seconds: 10));
+      ).timeout(Duration(seconds: 15));
 
-      print('DEBUG: Device association response status: ${response.statusCode}');
-      print('DEBUG: Device association response body: ${response.body}');
+      print('DEBUG: Device info response status: ${response.statusCode}');
+      print('DEBUG: Device info response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('DEBUG: Parsed device association data: $data');
-        return data;
+        print('DEBUG: Admin device association data: $data');
+        
+        // Extract establishment information
+        final bool hasDevice = data['hasDevice'] ?? false;
+        final bool hasEstablishment = data['hasEstablishment'] ?? false;
+        final String? establishmentName = data['establishmentName'];
+        final String? deviceId = data['deviceId']?.toString();
+        final String? establishmentId = data['establishmentId']?.toString();
+        
+        print('DEBUG: Admin has device: $hasDevice, has establishment: $hasEstablishment');
+        print('DEBUG: Establishment name: $establishmentName');
+        
+        return {
+          'hasDevice': hasDevice,
+          'hasEstablishment': hasEstablishment,
+          'deviceId': deviceId,
+          'establishmentId': establishmentId,
+          'establishmentName': establishmentName,
+          'deviceMessage': hasEstablishment 
+            ? 'Assigned to establishment: $establishmentName'
+            : (hasDevice 
+              ? 'Device registered but no establishment assigned'
+              : 'No device or establishment assigned')
+        };
       } else {
-        print('Failed to check device association: ${response.statusCode}');
+        print('Failed to get device info: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
@@ -138,7 +161,7 @@ class ApiService {
       if (userToken != null) {
         try {
           final response = await http.post(
-            Uri.parse('http://10.0.2.2:5000/logout'),
+            Uri.parse('http://localhost:5000/logout'),
             headers: {
               'Authorization': 'Bearer $userToken',
               'Content-Type': 'application/json',
@@ -199,14 +222,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int? _totalUsers;
   int? _totalSensors;
 
-  // --- NEW: State variables for device and establishment association ---
+  // --- State variables for device and establishment association ---
   bool? _hasDeviceAssociation; // null = loading, true = has device, false = no device
   bool? _hasEstablishmentAssociation; // null = loading, true = has establishment, false = no establishment
-  String? _deviceId;
-  String? _establishmentId;
-  String? _establishmentName;
-  String? _deviceMessage;
-  // --- END NEW ---
+  String? _establishmentName; // The name of the establishment assigned to this admin
+  String? _deviceMessage; // Status message about device/establishment association
+  // --- END ---
 
   final ApiService _apiService = ApiService(); // Instance of your ApiService
 
@@ -248,7 +269,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/user/profile'), // Android emulator to localhost:5000
+        Uri.parse('http://localhost:5000/api/user/profile'), // Web emulator can access localhost directly
         headers: {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',
@@ -308,36 +329,48 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
   // --- END NEW ---
 
-  // --- NEW: Method to check device association ---
+  // --- Method to check device association and load establishment ---
   Future<void> _checkDeviceAssociation() async {
+    print('DEBUG: Starting device association check...');
+    
     try {
       final response = await _apiService.checkDeviceAssociation();
+      
       if (response != null) {
+        print('DEBUG: Device association response received successfully');
+        print('DEBUG: Has device: ${response['hasDevice']}');
+        print('DEBUG: Has establishment: ${response['hasEstablishment']}');
+        print('DEBUG: Establishment name: ${response['establishmentName']}');
+        
         setState(() {
           _hasDeviceAssociation = response['hasDevice'] ?? false;
           _hasEstablishmentAssociation = response['hasEstablishment'] ?? false;
-          _deviceId = response['deviceId'];
-          _establishmentId = response['establishmentId'];
           _establishmentName = response['establishmentName'];
           _deviceMessage = response['deviceMessage'] ?? 'No device association';
         });
+        
+        // Log the final state
+        print('DEBUG: Updated UI state - Establishment: $_establishmentName');
       } else {
+        print('ERROR: No response received from device association check');
         setState(() {
           _hasDeviceAssociation = false;
           _hasEstablishmentAssociation = false;
-          _deviceMessage = 'Failed to check device association';
+          _establishmentName = null;
+          _deviceMessage = 'Failed to load establishment information';
         });
       }
     } catch (e) {
-      print('Error checking device association: $e');
+      print('ERROR: Exception in device association check: $e');
       setState(() {
         _hasDeviceAssociation = false;
         _hasEstablishmentAssociation = false;
-        _deviceMessage = 'Error checking device association';
+        _establishmentName = null;
+        _deviceMessage = 'Error loading establishment information';
       });
     }
   }
-  // --- END NEW ---
+  // --- END ---
 
 
 
