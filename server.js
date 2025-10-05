@@ -678,28 +678,29 @@ async function getDeviceIdForUser(userId) {
 app.get('/api/my/total-users', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const deviceId = await getDeviceIdForUser(userId);
-    if (!deviceId) {
-      console.warn(`No device mapping found for user ${userId}; returning zero totalUsers.`);
+    console.log(`🔍 DEBUG: Counting users for admin ${userId} based on device_id`);
+    
+    // Get admin's device_id
+    const [adminInfo] = await db.query(
+      'SELECT device_id FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (adminInfo.length === 0 || !adminInfo[0].device_id) {
+      console.warn(`No device_id found for admin ${userId}; returning zero totalUsers.`);
       return res.json({ totalUsers: 0 });
     }
-
-    // Count users associated with this device
-    // Try users.establishment_id -> estab.device_id first
-    try {
-      const querySql = `SELECT COUNT(*) AS totalUsers FROM users u JOIN estab e ON u.establishment_id = e.id WHERE e.device_id = ?`;
-      const [rows] = await db.query(querySql, [deviceId]);
-      return res.json({ totalUsers: rows[0].totalUsers || 0 });
-    } catch (innerErr) {
-      // Fallback to users.device_id
-      try {
-        const [rows2] = await db.query('SELECT COUNT(*) AS totalUsers FROM users WHERE device_id = ?', [deviceId]);
-        return res.json({ totalUsers: rows2[0].totalUsers || 0 });
-      } catch (err) {
-        console.error('Error fetching my total users:', err);
-        return res.status(500).json({ error: 'Failed to fetch my total users' });
-      }
-    }
+    
+    const adminDeviceId = adminInfo[0].device_id;
+    console.log(`🔍 DEBUG: Admin device_id: ${adminDeviceId}`);
+    
+    // Count users that have the same device_id as the admin
+    const [rows] = await db.query('SELECT COUNT(*) AS totalUsers FROM users WHERE device_id = ?', [adminDeviceId]);
+    const totalUsers = rows[0].totalUsers || 0;
+    
+    console.log(`🔍 DEBUG: Found ${totalUsers} users with device_id ${adminDeviceId}`);
+    
+    return res.json({ totalUsers: totalUsers });
   } catch (error) {
     console.error('Error in /api/my/total-users:', error);
     res.status(500).json({ error: 'Server error while fetching my total users' });
@@ -709,20 +710,103 @@ app.get('/api/my/total-users', authenticateToken, async (req, res) => {
 app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const deviceId = await getDeviceIdForUser(userId);
-    if (!deviceId) {
-      console.warn(`No device mapping found for user ${userId}; returning zero totalSensors.`);
+    console.log(`🔍 DEBUG: Counting sensors for admin ${userId} based on establishment`);
+    
+    // Get admin's establishment_id
+    const [adminInfo] = await db.query(
+      'SELECT establishment_id FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (adminInfo.length === 0 || !adminInfo[0].establishment_id) {
+      console.warn(`No establishment_id found for admin ${userId}; returning zero totalSensors.`);
       return res.json({ totalSensors: 0 });
     }
-
-    // Since sensors table only has id and sensor_name columns,
-    // we'll return the total count of all sensors in the system
-    // (assuming all sensors are available to users with valid device access)
-    const [rows] = await db.query('SELECT COUNT(*) AS totalSensors FROM sensors');
-    return res.json({ totalSensors: rows[0].totalSensors || 0 });
+    
+    const establishmentId = adminInfo[0].establishment_id;
+    console.log(`🔍 DEBUG: Admin establishment_id: ${establishmentId}`);
+    
+    // Get the establishment's device_id
+    const [estabInfo] = await db.query(
+      'SELECT device_id FROM estab WHERE id = ?',
+      [establishmentId]
+    );
+    
+    if (estabInfo.length === 0 || !estabInfo[0].device_id) {
+      console.warn(`No device_id found for establishment ${establishmentId}; returning zero totalSensors.`);
+      return res.json({ totalSensors: 0 });
+    }
+    
+    const establishmentDeviceId = estabInfo[0].device_id;
+    console.log(`🔍 DEBUG: Establishment device_id: ${establishmentDeviceId}`);
+    
+    // Count sensors that belong to this establishment's device
+    const [rows] = await db.query('SELECT COUNT(*) AS totalSensors FROM sensors WHERE device_id = ?', [establishmentDeviceId]);
+    const totalSensors = rows[0].totalSensors || 0;
+    
+    console.log(`🔍 DEBUG: Found ${totalSensors} sensors for establishment device_id ${establishmentDeviceId}`);
+    
+    return res.json({ totalSensors: totalSensors });
   } catch (error) {
     console.error('Error in /api/my/total-sensors:', error);
     res.status(500).json({ error: 'Server error while fetching my total sensors' });
+  }
+});
+
+// New endpoint: Get admin's device and establishment association info
+app.get('/api/my/device-info', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log(`🔍 DEBUG: Getting device and establishment info for admin user ${userId}`);
+    
+    // Get admin's device_id and establishment_id
+    const [adminInfo] = await db.query(
+      'SELECT device_id, establishment_id FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (adminInfo.length === 0) {
+      return res.json({
+        hasDevice: false,
+        hasEstablishment: false,
+        deviceMessage: 'Admin user not found'
+      });
+    }
+    
+    const admin = adminInfo[0];
+    const hasDevice = admin.device_id != null;
+    const hasEstablishment = admin.establishment_id != null;
+    
+    let establishmentName = null;
+    
+    // If admin has establishment_id, get the establishment name
+    if (hasEstablishment) {
+      const [estabInfo] = await db.query(
+        'SELECT estab_name FROM estab WHERE id = ?',
+        [admin.establishment_id]
+      );
+      
+      if (estabInfo.length > 0) {
+        establishmentName = estabInfo[0].estab_name;
+      }
+    }
+    
+    console.log(`🔍 DEBUG: Admin ${userId} - Device: ${admin.device_id}, Establishment: ${admin.establishment_id} (${establishmentName})`);
+    
+    return res.json({
+      hasDevice: hasDevice,
+      hasEstablishment: hasEstablishment,
+      deviceId: admin.device_id,
+      establishmentId: admin.establishment_id,
+      establishmentName: establishmentName,
+      deviceMessage: hasEstablishment ? 
+        `Admin associated with establishment: ${establishmentName}` : 
+        (hasDevice ? 'Admin has device but no establishment' : 'Admin has no device or establishment')
+    });
+    
+  } catch (error) {
+    console.error('Error in /api/my/device-info:', error);
+    res.status(500).json({ error: 'Server error while fetching device info' });
   }
 });
 

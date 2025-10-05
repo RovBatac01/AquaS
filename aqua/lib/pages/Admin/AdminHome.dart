@@ -8,8 +8,8 @@ import 'package:aqua/pages/Login.dart'; // Import LoginScreen for redirection
 
 // --- NEW: Create a separate API service class (similar to SAdmin) ---
 class ApiService {
-  // IMPORTANT: Replace with your server's actual IP address or domain and port
-  final String _baseUrl = 'https://aquasense-p36u.onrender.com/api'; // Use 10.0.2.2 for emulator, or your PC's IP for physical device
+  // IMPORTANT: Use 10.0.2.2 for Android emulator to connect to localhost:5000
+  final String _baseUrl = 'http://10.0.2.2:5000/api'; // Android emulator IP mapping to localhost:5000
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -89,19 +89,40 @@ class ApiService {
     }
   }
 
-  // API endpoint to fetch establishment names (Admin also needs this to display their specific establishments)
-  Future<List<String>?> fetchEstablishmentNames() async {
+  // Check admin's device and establishment association
+  Future<Map<String, dynamic>?> checkDeviceAssociation() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/establishments'));
+      final prefs = await SharedPreferences.getInstance();
+      final String? userToken = prefs.getString('userToken');
+
+      if (userToken == null) {
+        print('No token found. Cannot check device association.');
+        return null;
+      }
+
+      print('DEBUG: Checking admin device and establishment association');
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/my/device-info'),
+        headers: {
+          'Authorization': 'Bearer $userToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 10));
+
+      print('DEBUG: Device association response status: ${response.statusCode}');
+      print('DEBUG: Device association response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((name) => name.toString()).toList();
+        final data = json.decode(response.body);
+        print('DEBUG: Parsed device association data: $data');
+        return data;
       } else {
-        print('Failed to fetch establishment names: ${response.statusCode} - ${response.body}');
+        print('Failed to check device association: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('Error fetching establishment names: $e');
+      print('Error checking device association: $e');
       return null;
     }
   }
@@ -117,7 +138,7 @@ class ApiService {
       if (userToken != null) {
         try {
           final response = await http.post(
-            Uri.parse('http://localhost:5000/logout'),
+            Uri.parse('http://10.0.2.2:5000/logout'),
             headers: {
               'Authorization': 'Bearer $userToken',
               'Content-Type': 'application/json',
@@ -178,10 +199,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int? _totalUsers;
   int? _totalSensors;
 
-  // --- NEW: State variables for fetched and filtered establishment names ---
-  List<String> _allEstablishmentNames = []; // Store all fetched names
-  List<String> _filteredEstablishmentNames = []; // Store names for display
-  TextEditingController _searchController = TextEditingController(); // Controller for the search bar
+  // --- NEW: State variables for device and establishment association ---
+  bool? _hasDeviceAssociation; // null = loading, true = has device, false = no device
+  bool? _hasEstablishmentAssociation; // null = loading, true = has establishment, false = no establishment
+  String? _deviceId;
+  String? _establishmentId;
+  String? _establishmentName;
+  String? _deviceMessage;
   // --- END NEW ---
 
   final ApiService _apiService = ApiService(); // Instance of your ApiService
@@ -191,12 +215,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     super.initState();
     _loadUsername(); // Call the function to load username when the widget initializes
     _fetchDashboardCounts(); // NEW: Fetch total users and sensors
-    _fetchEstablishments(); // NEW: Fetch establishment names
+    _checkDeviceAssociation(); // NEW: Check device association
   }
 
   @override
   void dispose() {
-    _searchController.dispose(); // Dispose the controller when the widget is removed
     super.dispose();
   }
 
@@ -225,7 +248,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('https://aquasense-p36u.onrender.com/api/user/profile'), // Adjust URL for physical device
+        Uri.parse('http://10.0.2.2:5000/api/user/profile'), // Android emulator to localhost:5000
         headers: {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',
@@ -285,37 +308,38 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
   // --- END NEW ---
 
-  // --- NEW: Method to fetch establishment names (similar to SAdmin) ---
-  Future<void> _fetchEstablishments() async {
-    setState(() {
-      _allEstablishmentNames = []; // Clear previous data
-      _filteredEstablishmentNames = []; // Clear filtered data
-    });
-    final names = await _apiService.fetchEstablishmentNames();
-    if (names != null) {
+  // --- NEW: Method to check device association ---
+  Future<void> _checkDeviceAssociation() async {
+    try {
+      final response = await _apiService.checkDeviceAssociation();
+      if (response != null) {
+        setState(() {
+          _hasDeviceAssociation = response['hasDevice'] ?? false;
+          _hasEstablishmentAssociation = response['hasEstablishment'] ?? false;
+          _deviceId = response['deviceId'];
+          _establishmentId = response['establishmentId'];
+          _establishmentName = response['establishmentName'];
+          _deviceMessage = response['deviceMessage'] ?? 'No device association';
+        });
+      } else {
+        setState(() {
+          _hasDeviceAssociation = false;
+          _hasEstablishmentAssociation = false;
+          _deviceMessage = 'Failed to check device association';
+        });
+      }
+    } catch (e) {
+      print('Error checking device association: $e');
       setState(() {
-        _allEstablishmentNames = names;
-        _filteredEstablishmentNames = names; // Initially, filtered list is the same as all
+        _hasDeviceAssociation = false;
+        _hasEstablishmentAssociation = false;
+        _deviceMessage = 'Error checking device association';
       });
     }
   }
   // --- END NEW ---
 
-  // --- NEW: Search filtering logic ---
-  void _filterEstablishments(String query) {
-    List<String> tempFilteredList = [];
-    if (query.isEmpty) {
-      tempFilteredList = _allEstablishmentNames; // Show all if query is empty
-    } else {
-      tempFilteredList = _allEstablishmentNames.where((name) {
-        return name.toLowerCase().contains(query.toLowerCase());
-      }).toList();
-    }
-    setState(() {
-      _filteredEstablishmentNames = tempFilteredList;
-    });
-  }
-  // --- END NEW ---
+
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +416,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         ),
                         onPressed: () {
                           _fetchDashboardCounts();
-                          _fetchEstablishments();
+                          _checkDeviceAssociation();
                         },
                       ),
                     ),
@@ -402,55 +426,68 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
               const SizedBox(height: 24),
 
-              // Enhanced Search Bar
-              Container(
-                height: 48,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: isDarkMode 
-                    ? Colors.white.withOpacity(0.08)
-                    : Colors.black.withOpacity(0.04),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDarkMode ? Colors.white12 : Colors.black12,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              // Device Association Status
+              if (_hasDeviceAssociation == null)
+                Container(
+                  height: 48,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDarkMode 
+                      ? Colors.white.withOpacity(0.08)
+                      : Colors.black.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDarkMode ? Colors.white12 : Colors.black12,
+                      width: 1,
                     ),
-                  ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Checking device association...',
+                      style: TextStyle(
+                        color: ASColor.getTextColor(context).withOpacity(0.6),
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: (_hasEstablishmentAssociation == true ? Colors.green : Colors.orange).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _hasEstablishmentAssociation == true ? Colors.green : Colors.orange,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _hasEstablishmentAssociation == true ? Icons.business : Icons.info_outline,
+                        color: _hasEstablishmentAssociation == true ? Colors.green : Colors.orange,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _hasEstablishmentAssociation == true 
+                            ? 'Assigned to: ${_establishmentName ?? 'Unknown'}'
+                            : _deviceMessage ?? 'No establishment assigned',
+                          style: TextStyle(
+                            color: _hasEstablishmentAssociation == true ? Colors.green : Colors.orange,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: TextField(
-                  controller: _searchController,
-                  style: TextStyle(
-                    color: ASColor.getTextColor(context),
-                    fontSize: 14,
-                    fontFamily: 'Poppins',
-                  ),
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.search_rounded,
-                      color: ASColor.getTextColor(context).withOpacity(0.6),
-                      size: 20,
-                    ),
-                    hintText: 'Search establishments...',
-                    hintStyle: TextStyle(
-                      color: ASColor.getTextColor(context).withOpacity(0.5),
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  onChanged: _filterEstablishments,
-                ),
-              ),
 
               const SizedBox(height: 30),
 
@@ -535,7 +572,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${_filteredEstablishmentNames.length} Active',
+                          _hasEstablishmentAssociation == true ? '1 Active' : '0 Active',
                           style: TextStyle(
                             color: Colors.green,
                             fontSize: 11,
@@ -551,8 +588,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
               const SizedBox(height: 16),
 
-              // Enhanced Establishments List
-              if (_allEstablishmentNames.isEmpty && _searchController.text.isEmpty)
+              // Admin's Establishment Display
+              if (_hasDeviceAssociation == null)
                 Container(
                   height: 100,
                   child: Center(
@@ -561,40 +598,26 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ),
                   ),
                 )
-              else if (_filteredEstablishmentNames.isEmpty && _searchController.text.isNotEmpty)
-                buildEmptyState(
-                  icon: Icons.search_off_rounded,
-                  title: 'No matches found',
-                  subtitle: 'Try adjusting your search terms',
-                )
-              else if (_filteredEstablishmentNames.isEmpty)
+              else if (_hasEstablishmentAssociation == false)
                 buildEmptyState(
                   icon: Icons.business_rounded,
-                  title: 'No establishments assigned',
-                  subtitle: 'Establishments will appear here once assigned to you',
+                  title: 'No establishment assigned',
+                  subtitle: 'Please contact administrator to assign an establishment to your account',
                 )
               else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: _filteredEstablishmentNames.length,
-                  itemBuilder: (context, index) {
-                    final name = _filteredEstablishmentNames[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: buildEnhancedDetailCard(
-                        name: name,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AdminDetailsScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: buildEnhancedDetailCard(
+                    name: _establishmentName ?? 'Unknown Establishment',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AdminDetailsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
             ],
           ),
