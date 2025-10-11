@@ -5,7 +5,8 @@ import 'dart:async'; // Required for Timer
 import 'dart:convert'; // For JSON encoding/decoding
 
 
-import 'package:aqua/water_quality_service.dart';
+import '../../device_aware_service.dart'; // New device-aware service
+import '../../water_quality_model.dart'; // For WaterQualityData type
 
 void main() {
   runApp(const MyApp());
@@ -44,13 +45,13 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
 
   // State variables to hold the latest fetched RAW data for each parameter
-  double _latestTemp = 0.0;
-  double _latestTDS = 0.0;
-  double _latestPH = 0.0;
-  double _latestTurbidity = 0.0;
-  double _latestConductivity = 0.0; // Corresponds to 'ec_value_mS'
-  double _latestSalinity = 0.0;
-  double _latestECCompensated = 0.0; // Corresponds to 'ec_compensated_mS'
+  double? _latestTemp;
+  double? _latestTDS;
+  double? _latestPH;
+  double? _latestTurbidity;
+  double? _latestConductivity; // Corresponds to 'ec_value_mS'
+  double? _latestSalinity;
+  double? _latestECCompensated; // Corresponds to 'ec_compensated_mS'
 
   // Connection and Error State
   ConnectionStatus _connectionStatus = ConnectionStatus.connecting;
@@ -61,7 +62,14 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
 
   Timer? _timer; // Timer for auto-refresh
 
-  final WaterQualityService _waterQualityService = WaterQualityService();
+  final DeviceAwareService _deviceService = DeviceAwareService();
+
+  // Device management fields
+  List<Map<String, dynamic>> _accessibleDevices = [];
+  String? _currentDeviceId;
+  String? _currentDeviceName;
+  bool _hasMultipleDevices = false;
+  List<String> _availableSensors = []; // Track which sensors are available for current device
 
   // Current values for the circular indicator (derived from _latestX values)
   // Initialize with sensible defaults or placeholders if no data yet.
@@ -95,11 +103,7 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         });
       });
 
-    _fetchLatestDataForAllStats(isInitialFetch: true); // Initial fetch
-    // Set up a timer to fetch data every 1.5 seconds
-    _timer = Timer.periodic(const Duration(milliseconds: 1500), (Timer t) {
-      _fetchLatestDataForAllStats();
-    });
+    _initializeDeviceData(); // Initialize device data and set up timer
   }
 
   @override
@@ -109,7 +113,56 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     super.dispose();
   }
 
-  // Helper to create a comparable payload from current data
+  /// Initialize device data and start fetching sensor data
+  Future<void> _initializeDeviceData() async {
+    try {
+      // Get accessible devices
+      _accessibleDevices = await _deviceService.getAccessibleDevices();
+      _hasMultipleDevices = _accessibleDevices.length > 1;
+      
+      if (_accessibleDevices.isNotEmpty) {
+        // Set the first device as current
+        _currentDeviceId = _accessibleDevices.first['device_id'];
+        _currentDeviceName = _accessibleDevices.first['device_name'];
+        
+        print('DEBUG: Admin has access to ${_accessibleDevices.length} device(s)');
+        print('DEBUG: Current device: $_currentDeviceId ($_currentDeviceName)');
+        
+        // Start fetching data for the current device
+        _fetchLatestDataForAllStats(isInitialFetch: true);
+        
+        // Set up timer for auto-refresh
+        _timer = Timer.periodic(const Duration(milliseconds: 1500), (Timer t) {
+          _fetchLatestDataForAllStats();
+        });
+      } else {
+        // No accessible devices - show error state
+        setState(() {
+          _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+          _errorMessage = 'No accessible devices found. Please request device access.';
+        });
+      }
+    } catch (e) {
+      print('Error initializing device data: $e');
+      setState(() {
+        _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+        _errorMessage = 'Failed to load device information: $e';
+      });
+    }
+  }
+
+  /// Switch to a different device
+  Future<void> _switchDevice(String deviceId, String deviceName) async {
+    setState(() {
+      _currentDeviceId = deviceId;
+      _currentDeviceName = deviceName;
+      _connectionStatus = ConnectionStatus.connecting;
+    });
+    
+    // Fetch data for the new device
+    _fetchLatestDataForAllStats(isInitialFetch: true);
+  }
+
   // Fetches the latest data (raw value only) for all water quality parameters
   Future<void> _fetchLatestDataForAllStats({bool isInitialFetch = false}) async {
     // Only set to connecting if we don't have any initial data displayed yet.
@@ -122,38 +175,85 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     }
 
     try {
-      final temp = await _waterQualityService.fetchHistoricalData("Temp", "Daily");
-      final tds = await _waterQualityService.fetchHistoricalData("TDS", "Daily");
-      final ph = await _waterQualityService.fetchHistoricalData("pH Level", "Daily");
-      final turbidity = await _waterQualityService.fetchHistoricalData("Turbidity", "Daily");
-      final conductivity = await _waterQualityService.fetchHistoricalData("Conductivity", "Daily");
-      final salinity = await _waterQualityService.fetchHistoricalData("Salinity", "Daily");
-      final ecCompensated = await _waterQualityService.fetchHistoricalData("EC", "Daily");
-
-      // Check if any data was actually received (all lists should be non-empty)
-      if (temp.isEmpty ||
-          tds.isEmpty ||
-          ph.isEmpty ||
-          turbidity.isEmpty ||
-          conductivity.isEmpty ||
-          salinity.isEmpty ||
-          ecCompensated.isEmpty) {
+      // Check if we have a current device selected
+      if (_currentDeviceId == null) {
         setState(() {
-          _connectionStatus = ConnectionStatus.disconnectedNoData;
-          _errorMessage = "No data received from one or more sensors.";
-          _hasInitialDataLoaded = true; // Mark as loaded even if no data
+          _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+          _errorMessage = "No device selected.";
+          _hasInitialDataLoaded = true;
         });
-        return; // Exit if no data
+        return;
       }
 
-      // Update latest values from the fetched data
-      final newTemp = temp.first.value;
-      final newTDS = tds.first.value;
-      final newPH = ph.first.value;
-      final newTurbidity = turbidity.first.value;
-      final newConductivity = conductivity.first.value;
-      final newSalinity = salinity.first.value;
-      final newECCompensated = ecCompensated.first.value;
+      // Get available sensors for this device
+      List<Map<String, dynamic>> availableSensorsData = await _deviceService.getAvailableSensors(_currentDeviceId!);
+      List<String> availableSensors = availableSensorsData.map((sensor) => sensor['type'] as String).toList();
+      
+      // Store available sensors for UI rendering
+      _availableSensors = availableSensors;
+      
+      print('DEBUG: Admin device $_currentDeviceId has sensors: ${availableSensors.join(", ")}');
+
+      // Initialize variables for sensor data
+      List<WaterQualityData> temp = [];
+      List<WaterQualityData> tds = [];
+      List<WaterQualityData> ph = [];
+      List<WaterQualityData> turbidity = [];
+      List<WaterQualityData> conductivity = [];
+      List<WaterQualityData> salinity = [];
+      List<WaterQualityData> ecCompensated = [];
+
+      // Fetch data for available sensors only
+      if (availableSensors.contains('temperature')) {
+        temp = await _deviceService.fetchDeviceData('Temp', 'Daily', _currentDeviceId!);
+      }
+      
+      if (availableSensors.contains('tds')) {
+        tds = await _deviceService.fetchDeviceData('TDS', 'Daily', _currentDeviceId!);
+      }
+      
+      if (availableSensors.contains('ph')) {
+        ph = await _deviceService.fetchDeviceData('pH Level', 'Daily', _currentDeviceId!);
+      }
+      
+      if (availableSensors.contains('turbidity')) {
+        turbidity = await _deviceService.fetchDeviceData('Turbidity', 'Daily', _currentDeviceId!);
+      }
+      
+      if (availableSensors.contains('ec')) {
+        conductivity = await _deviceService.fetchDeviceData('Conductivity', 'Daily', _currentDeviceId!);
+      }
+      
+      if (availableSensors.contains('salinity')) {
+        salinity = await _deviceService.fetchDeviceData('Salinity', 'Daily', _currentDeviceId!);
+      }
+      
+      if (availableSensors.contains('ec_compensated')) {
+        ecCompensated = await _deviceService.fetchDeviceData('EC', 'Daily', _currentDeviceId!);
+      }
+
+      // Check if we have at least one sensor with data
+      bool hasAnyData = temp.isNotEmpty || tds.isNotEmpty || ph.isNotEmpty || 
+                       turbidity.isNotEmpty || conductivity.isNotEmpty || 
+                       salinity.isNotEmpty || ecCompensated.isNotEmpty;
+
+      if (!hasAnyData) {
+        setState(() {
+          _connectionStatus = ConnectionStatus.disconnectedNoData;
+          _errorMessage = "No data received from device $_currentDeviceId sensors.";
+          _hasInitialDataLoaded = true;
+        });
+        return;
+      }
+
+      // Update latest values from the fetched data (use null for unavailable sensors)
+      final newTemp = temp.isNotEmpty ? temp.first.value : null;
+      final newTDS = tds.isNotEmpty ? tds.first.value : null;
+      final newPH = ph.isNotEmpty ? ph.first.value : null;
+      final newTurbidity = turbidity.isNotEmpty ? turbidity.first.value : null;
+      final newConductivity = conductivity.isNotEmpty ? conductivity.first.value : null;
+      final newSalinity = salinity.isNotEmpty ? salinity.first.value : null;
+      final newECCompensated = ecCompensated.isNotEmpty ? ecCompensated.first.value : null;
 
       // Create a payload from the newly fetched data for comparison
       final newPayload = {
@@ -221,39 +321,74 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
 
     switch (selectedStat) {
       case "Temp":
-        targetProgress = _latestTemp / maxTemp;
-        currentLabel = "${_latestTemp.toStringAsFixed(1)}°C";
-        currentColor = Colors.blue;
+        if (_latestTemp != null) {
+          targetProgress = _latestTemp! / maxTemp;
+          currentLabel = "${_latestTemp!.toStringAsFixed(1)}°C";
+          currentColor = Colors.blue;
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
       case "TDS":
-        targetProgress = _latestTDS / maxTDS;
-        currentLabel = "${_latestTDS.toStringAsFixed(1)} %";
-        currentColor = _getIndicatorColor(selectedStat, _latestTDS);
+        if (_latestTDS != null) {
+          targetProgress = _latestTDS! / maxTDS;
+          currentLabel = "${_latestTDS!.toStringAsFixed(1)} %";
+          currentColor = _getIndicatorColor(selectedStat, _latestTDS!);
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
       case "pH":
-        targetProgress = _latestPH / maxPH;
-        currentLabel = "pH ${_latestPH.toStringAsFixed(1)}";
-        currentColor = Colors.purple;
+        if (_latestPH != null) {
+          targetProgress = _latestPH! / maxPH;
+          currentLabel = "pH ${_latestPH!.toStringAsFixed(1)}";
+          currentColor = Colors.purple;
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
       case "Turbidity":
-        targetProgress = _latestTurbidity / maxTurbidity;
-        currentLabel = "${_latestTurbidity.toStringAsFixed(1)} %";
-        currentColor = _getIndicatorColor(selectedStat, _latestTurbidity);
+        if (_latestTurbidity != null) {
+          targetProgress = _latestTurbidity! / maxTurbidity;
+          currentLabel = "${_latestTurbidity!.toStringAsFixed(1)} %";
+          currentColor = _getIndicatorColor(selectedStat, _latestTurbidity!);
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
       case "Conductivity":
-        targetProgress = _latestConductivity / maxConductivity;
-        currentLabel = "${_latestConductivity.toStringAsFixed(1)} %";
-        currentColor = _getIndicatorColor(selectedStat, _latestConductivity);
+        if (_latestConductivity != null) {
+          targetProgress = _latestConductivity! / maxConductivity;
+          currentLabel = "${_latestConductivity!.toStringAsFixed(1)} %";
+          currentColor = _getIndicatorColor(selectedStat, _latestConductivity!);
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
       case "Salinity":
-        targetProgress = _latestSalinity / maxSalinity;
-        currentLabel = "${_latestSalinity.toStringAsFixed(1)} %";
-        currentColor = _getIndicatorColor(selectedStat, _latestSalinity);
+        if (_latestSalinity != null) {
+          targetProgress = _latestSalinity! / maxSalinity;
+          currentLabel = "${_latestSalinity!.toStringAsFixed(1)} %";
+          currentColor = _getIndicatorColor(selectedStat, _latestSalinity!);
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
       case "Electrical Conductivity (Condensed)":
-        targetProgress = _latestECCompensated / maxECCompensated;
-        currentLabel = "${_latestECCompensated.toStringAsFixed(1)} %";
-        currentColor = _getIndicatorColor(selectedStat, _latestECCompensated);
+        if (_latestECCompensated != null) {
+          targetProgress = _latestECCompensated! / maxECCompensated;
+          currentLabel = "${_latestECCompensated!.toStringAsFixed(1)} %";
+          currentColor = _getIndicatorColor(selectedStat, _latestECCompensated!);
+        } else {
+          currentLabel = "No Data";
+          currentColor = Colors.grey;
+        }
         break;
     }
 
@@ -320,6 +455,184 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         // Temp and pH use a different logic
         return Colors.green;
     }
+  }
+
+  // Helper methods to check if sensors are available for current device
+  bool _isTemperatureAvailable() => _availableSensors.contains('temperature');
+  bool _isTDSAvailable() => _availableSensors.contains('tds');
+  bool _isPHAvailable() => _availableSensors.contains('ph');
+  bool _isTurbidityAvailable() => _availableSensors.contains('turbidity');
+  bool _isConductivityAvailable() => _availableSensors.contains('ec');
+  bool _isSalinityAvailable() => _availableSensors.contains('salinity');
+  bool _isECCompensatedAvailable() => _availableSensors.contains('ec_compensated');
+
+  // Build available sensor cards dynamically
+  List<Widget> _buildAvailableSensorCards(bool isDarkMode, bool displayLiveValues) {
+    List<Widget> availableCards = [];
+    
+    if (_isTemperatureAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.thermostat_rounded,
+          label: "Temperature",
+          value: displayLiveValues && _latestTemp != null ? "${_latestTemp!.toStringAsFixed(1)}" : "---",
+          unit: "°C",
+          isSelected: selectedStat == "Temp",
+          onTap: () => _onStatCardTap("Temp"),
+          color: Colors.orange,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    if (_isTDSAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.water_drop_rounded,
+          label: "TDS",
+          value: displayLiveValues && _latestTDS != null ? "${_latestTDS!.toStringAsFixed(1)}" : "---",
+          unit: "PPM",
+          isSelected: selectedStat == "TDS",
+          onTap: () => _onStatCardTap("TDS"),
+          color: Colors.blue,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    if (_isPHAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.science_rounded,
+          label: "pH Level",
+          value: displayLiveValues && _latestPH != null ? "${_latestPH!.toStringAsFixed(1)}" : "---",
+          unit: "pH",
+          isSelected: selectedStat == "pH",
+          onTap: () => _onStatCardTap("pH"),
+          color: Colors.purple,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    if (_isTurbidityAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.blur_on_rounded,
+          label: "Turbidity",
+          value: displayLiveValues && _latestTurbidity != null ? "${_latestTurbidity!.toStringAsFixed(1)}" : "---",
+          unit: "NTU",
+          isSelected: selectedStat == "Turbidity",
+          onTap: () => _onStatCardTap("Turbidity"),
+          color: Colors.brown,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    if (_isConductivityAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.electrical_services_rounded,
+          label: "Conductivity",
+          value: displayLiveValues && _latestConductivity != null ? "${_latestConductivity!.toStringAsFixed(1)}" : "---",
+          unit: "mS/cm",
+          isSelected: selectedStat == "Conductivity",
+          onTap: () => _onStatCardTap("Conductivity"),
+          color: Colors.amber,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    if (_isSalinityAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.grain_rounded,
+          label: "Salinity",
+          value: displayLiveValues && _latestSalinity != null ? "${_latestSalinity!.toStringAsFixed(1)}" : "---",
+          unit: "ppt",
+          isSelected: selectedStat == "Salinity",
+          onTap: () => _onStatCardTap("Salinity"),
+          color: Colors.teal,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    if (_isECCompensatedAvailable()) {
+      availableCards.add(
+        EnhancedStatCard(
+          icon: Icons.settings_input_component_rounded,
+          label: "EC Compensated",
+          value: displayLiveValues && _latestECCompensated != null ? "${_latestECCompensated!.toStringAsFixed(1)}" : "---",
+          unit: "mS/cm",
+          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
+          color: Colors.indigo,
+          isDarkMode: isDarkMode,
+        ),
+      );
+    }
+    
+    return availableCards;
+  }
+
+  // Build dynamic grid layout for available sensors
+  Widget _buildSensorGrid(bool isDarkMode, bool displayLiveValues) {
+    List<Widget> availableCards = _buildAvailableSensorCards(isDarkMode, displayLiveValues);
+    
+    if (availableCards.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.sensors_off,
+              size: 48,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No sensors available for this device',
+              style: TextStyle(
+                fontSize: 16,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Build grid with 2 columns
+    List<Widget> rows = [];
+    for (int i = 0; i < availableCards.length; i += 2) {
+      List<Widget> rowChildren = [
+        Expanded(child: availableCards[i]),
+      ];
+      
+      if (i + 1 < availableCards.length) {
+        rowChildren.addAll([
+          const SizedBox(width: 12),
+          Expanded(child: availableCards[i + 1]),
+        ]);
+      } else {
+        rowChildren.add(const Expanded(child: SizedBox())); // Empty space for odd number
+      }
+      
+      rows.add(Row(children: rowChildren));
+      if (i + 2 < availableCards.length) {
+        rows.add(const SizedBox(height: 12));
+      }
+    }
+    
+    return Column(children: rows);
   }
 
   // Helper to get connection status color
@@ -501,6 +814,65 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                   ),
                 ),
                 
+                // Device Selector (shown when admin has multiple devices)
+                if (_hasMultipleDevices && _accessibleDevices.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[800] : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.device_hub,
+                          color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButton<String>(
+                            value: _currentDeviceId,
+                            hint: Text(
+                              'Select Device',
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                            isExpanded: true,
+                            underline: const SizedBox(),
+                            dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              fontSize: 16,
+                            ),
+                            items: _accessibleDevices.map((device) {
+                              return DropdownMenuItem<String>(
+                                value: device['device_id'],
+                                child: Text('Device ${device['device_id']} - ${device['device_name']}'),
+                              );
+                            }).toList(),
+                            onChanged: (String? newDeviceId) {
+                              if (newDeviceId != null && newDeviceId != _currentDeviceId) {
+                                final selectedDevice = _accessibleDevices.firstWhere(
+                                  (device) => device['device_id'] == newDeviceId,
+                                );
+                                _switchDevice(newDeviceId, selectedDevice['device_name']);
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                
                 const SizedBox(height: 24),
                 
                 // Enhanced Circular Indicator
@@ -630,114 +1002,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                 ),
                 const SizedBox(height: 16),
                 
-                // Enhanced Stats Grid
-                Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.thermostat_rounded,
-                            label: "Temperature",
-                            value: displayLiveValues ? "${_latestTemp.toStringAsFixed(1)}" : "---",
-                            unit: "°C",
-                            isSelected: selectedStat == "Temp",
-                            onTap: () => _onStatCardTap("Temp"),
-                            color: Colors.orange,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.water_drop_rounded,
-                            label: "TDS",
-                            value: displayLiveValues ? "${_latestTDS.toStringAsFixed(1)}" : "---",
-                            unit: "PPM",
-                            isSelected: selectedStat == "TDS",
-                            onTap: () => _onStatCardTap("TDS"),
-                            color: Colors.blue,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.science_rounded,
-                            label: "pH Level",
-                            value: displayLiveValues ? "${_latestPH.toStringAsFixed(1)}" : "---",
-                            unit: "pH",
-                            isSelected: selectedStat == "pH",
-                            onTap: () => _onStatCardTap("pH"),
-                            color: Colors.purple,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.visibility_rounded,
-                            label: "Turbidity",
-                            value: displayLiveValues ? "${_latestTurbidity.toStringAsFixed(1)}" : "---",
-                            unit: "%",
-                            isSelected: selectedStat == "Turbidity",
-                            onTap: () => _onStatCardTap("Turbidity"),
-                            color: Colors.brown,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.flash_on_rounded,
-                            label: "Conductivity",
-                            value: displayLiveValues ? "${_latestConductivity.toStringAsFixed(1)}" : "---",
-                            unit: "mS/cm",
-                            isSelected: selectedStat == "Conductivity",
-                            onTap: () => _onStatCardTap("Conductivity"),
-                            color: Colors.amber,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.grain_rounded,
-                            label: "Salinity",
-                            value: displayLiveValues ? "${_latestSalinity.toStringAsFixed(1)}" : "---",
-                            unit: "ppt",
-                            isSelected: selectedStat == "Salinity",
-                            onTap: () => _onStatCardTap("Salinity"),
-                            color: Colors.teal,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: EnhancedStatCard(
-                        icon: Icons.electrical_services_rounded,
-                        label: "EC Compensated",
-                        value: displayLiveValues ? "${_latestECCompensated.toStringAsFixed(1)}" : "---",
-                        unit: "mS/cm",
-                        isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                        onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
-                        color: Colors.indigo,
-                        isDarkMode: isDarkMode,
-                      ),
-                    ),
-                  ],
-                ),
+                // Dynamic Stats Grid - Only shows sensors available for current device
+                _buildSensorGrid(isDarkMode, displayLiveValues),
                 
                 const SizedBox(height: 24),
               ],

@@ -177,6 +177,56 @@ async function initializeDeviceAccessTables() {
 // Initialize tables on startup
 initializeDeviceAccessTables();
 
+// Add device_id columns to sensor tables for device-specific filtering
+async function initializeSensorDeviceColumns() {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    
+    const sensorTables = [
+      'turbidity_readings',
+      'phlevel_readings',
+      'tds_readings',
+      'salinity_readings',
+      'ec_readings',
+      'ec_compensated_readings',
+      'temperature_readings'
+    ];
+    
+    for (const table of sensorTables) {
+      try {
+        // Check if device_id column exists
+        const [columns] = await connection.query(`SHOW COLUMNS FROM ${table} LIKE 'device_id'`);
+        
+        if (columns.length === 0) {
+          // Add device_id column if it doesn't exist
+          await connection.query(`ALTER TABLE ${table} ADD COLUMN device_id VARCHAR(100) DEFAULT NULL`);
+          console.log(`✅ Added device_id column to ${table}`);
+          
+          // Add index for better performance
+          await connection.query(`ALTER TABLE ${table} ADD INDEX idx_device_id (device_id)`);
+        }
+        
+        // Update existing records to have device_id (for demonstration, let's assign some to device 31767)
+        if (table === 'turbidity_readings' || table === 'temperature_readings') {
+          await connection.query(`UPDATE ${table} SET device_id = '31767' WHERE device_id IS NULL LIMIT 100`);
+        }
+        
+      } catch (tableError) {
+        console.log(`Error updating ${table}:`, tableError.message);
+      }
+    }
+    
+    console.log('✅ Sensor device columns initialized');
+  } catch (error) {
+    console.log('Failed to initialize sensor device columns:', error);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+initializeSensorDeviceColumns();
+
 // Fix: Change admin 429 back to regular Admin and assign device request to them
 async function fixAdminAndDeviceRequest() {
   let connection;
@@ -1096,8 +1146,7 @@ app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
     const establishmentDeviceId = estabInfo[0].device_id;
     console.log(`🔍 DEBUG: Establishment device_id: ${establishmentDeviceId}`);
     
-    // Count sensors by counting distinct readings tables that have data for this device
-    // Since there's no single 'sensors' table, we'll count the sensor types (7 types)
+    // Count sensors by checking which sensor types have data for this specific device
     const sensorTypes = [
       'turbidity_readings',
       'phlevel_readings',
@@ -1111,10 +1160,11 @@ app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
     let totalSensors = 0;
     for (const table of sensorTypes) {
       try {
-        // Since sensor tables don't have device_id, just check if the table has any data
-        const [result] = await db.query(`SELECT COUNT(*) AS count FROM ${table} LIMIT 1`);
+        // Check if this sensor type has data for this specific device
+        const [result] = await db.query(`SELECT COUNT(*) AS count FROM ${table} WHERE device_id = ?`, [establishmentDeviceId]);
         if (result[0].count > 0) {
           totalSensors++;
+          console.log(`🔍 DEBUG: Found ${result[0].count} records in ${table} for device ${establishmentDeviceId}`);
         }
       } catch (error) {
         console.error(`Error checking table ${table}:`, error);
@@ -1281,6 +1331,7 @@ const createGetDataEndpoint = (endpoint, tableName, timestampColumn) => {
   });
 };
 
+// Original endpoints (backward compatibility)
 createGetDataEndpoint('turbidity', 'turbidity_readings', 'timestamp');
 createGetDataEndpoint('ph', 'phlevel_readings', 'timestamp');
 createGetDataEndpoint('tds', 'tds_readings', 'timestamp');
@@ -1288,6 +1339,238 @@ createGetDataEndpoint('salinity', 'salinity_readings', 'timestamp');
 createGetDataEndpoint('ec', 'ec_readings', 'timestamp');
 createGetDataEndpoint('ec_compensated', 'ec_compensated_readings', 'timestamp');
 createGetDataEndpoint('temperature', 'temperature_readings', 'timestamp');
+
+// Device-specific sensor data endpoints with access control
+const createDeviceSpecificEndpoint = (endpoint, tableName, timestampColumn) => {
+  app.get(`/api/device/${endpoint}`, authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const userRole = req.user.role;
+      const requestedDeviceId = req.query.device_id;
+      const period = req.query.period || '24h';
+      
+      console.log(`🔍 DEBUG: User ${userId} (${userRole}) requesting ${endpoint} data for device ${requestedDeviceId}`);
+      
+      let deviceIds = [];
+      
+      if (userRole === 'Super Admin') {
+        // Super Admin can access all devices
+        if (requestedDeviceId) {
+          deviceIds = [requestedDeviceId];
+        } else {
+          // Get all device IDs if none specified
+          const [allDevices] = await db.query('SELECT DISTINCT device_id FROM estab WHERE device_id IS NOT NULL');
+          deviceIds = allDevices.map(d => d.device_id);
+        }
+      } else {
+        // Regular users and admins need to check access
+        let userDeviceAccess = [];
+        
+        if (userRole === 'Admin') {
+          // Admin - get devices they manage
+          const [adminDevices] = await db.query(
+            'SELECT e.device_id FROM estab e JOIN users u ON e.id = u.establishment_id WHERE u.id = ?',
+            [userId]
+          );
+          userDeviceAccess = adminDevices.map(d => d.device_id);
+        } else {
+          // Regular user - get devices they have access to
+          const [accessibleDevices] = await db.query(
+            'SELECT device_id FROM user_device_access WHERE user_id = ?',
+            [userId]
+          );
+          userDeviceAccess = accessibleDevices.map(d => d.device_id);
+        }
+        
+        console.log(`🔍 DEBUG: User ${userId} has access to devices:`, userDeviceAccess);
+        
+        if (requestedDeviceId) {
+          // Check if user has access to the requested device
+          if (userDeviceAccess.includes(requestedDeviceId)) {
+            deviceIds = [requestedDeviceId];
+          } else {
+            return res.status(403).json({ 
+              error: 'Access denied to requested device',
+              availableDevices: userDeviceAccess 
+            });
+          }
+        } else {
+          deviceIds = userDeviceAccess;
+        }
+      }
+      
+      if (deviceIds.length === 0) {
+        return res.json({ 
+          data: [], 
+          message: 'No accessible devices found',
+          availableDevices: deviceIds 
+        });
+      }
+      
+      // Build query with device filtering
+      const timeFilter = getTimeFilterClause(period);
+      const deviceFilter = deviceIds.length === 1 
+        ? `AND device_id = '${deviceIds[0]}'`
+        : `AND device_id IN (${deviceIds.map(id => `'${id}'`).join(',')})`;
+      
+      const query = `SELECT * FROM ${tableName} WHERE 1=1 ${deviceFilter} ${timeFilter} ORDER BY ${timestampColumn} ASC`;
+      
+      console.log(`🔍 DEBUG: Executing query: ${query}`);
+      
+      const [rows] = await db.query(query);
+      
+      res.json({ 
+        success: true,
+        data: rows, 
+        deviceIds: deviceIds,
+        totalRecords: rows.length 
+      });
+      
+    } catch (err) {
+      console.error(`❌ Device-specific ${endpoint} Query Error:`, err);
+      return res.status(500).json({ error: "Database Query Error" });
+    }
+  });
+};
+
+// Create device-specific endpoints for all sensor types
+createDeviceSpecificEndpoint('turbidity', 'turbidity_readings', 'timestamp');
+createDeviceSpecificEndpoint('ph', 'phlevel_readings', 'timestamp');
+createDeviceSpecificEndpoint('tds', 'tds_readings', 'timestamp');
+createDeviceSpecificEndpoint('salinity', 'salinity_readings', 'timestamp');
+createDeviceSpecificEndpoint('ec', 'ec_readings', 'timestamp');
+createDeviceSpecificEndpoint('ec_compensated', 'ec_compensated_readings', 'timestamp');
+createDeviceSpecificEndpoint('temperature', 'temperature_readings', 'timestamp');
+
+// Endpoint to get available sensors for a specific device
+app.get('/api/device/available-sensors', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const requestedDeviceId = req.query.device_id;
+    
+    if (!requestedDeviceId) {
+      return res.status(400).json({ error: 'device_id parameter is required' });
+    }
+    
+    // Check if user has access to this device
+    let hasAccess = false;
+    
+    if (userRole === 'Super Admin') {
+      hasAccess = true;
+    } else if (userRole === 'Admin') {
+      const [adminDevices] = await db.query(
+        'SELECT e.device_id FROM estab e JOIN users u ON e.id = u.establishment_id WHERE u.id = ? AND e.device_id = ?',
+        [userId, requestedDeviceId]
+      );
+      hasAccess = adminDevices.length > 0;
+    } else {
+      const [userAccess] = await db.query(
+        'SELECT device_id FROM user_device_access WHERE user_id = ? AND device_id = ?',
+        [userId, requestedDeviceId]
+      );
+      hasAccess = userAccess.length > 0;
+    }
+    
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied to requested device' });
+    }
+    
+    // Check which sensor types have data for this device
+    const sensorTypes = [
+      { name: 'turbidity', table: 'turbidity_readings', unit: 'NTU' },
+      { name: 'ph', table: 'phlevel_readings', unit: 'pH' },
+      { name: 'tds', table: 'tds_readings', unit: 'ppm' },
+      { name: 'salinity', table: 'salinity_readings', unit: 'ppt' },
+      { name: 'ec', table: 'ec_readings', unit: 'μS/cm' },
+      { name: 'ec_compensated', table: 'ec_compensated_readings', unit: 'μS/cm' },
+      { name: 'temperature', table: 'temperature_readings', unit: '°C' }
+    ];
+    
+    const availableSensors = [];
+    
+    for (const sensor of sensorTypes) {
+      try {
+        const [result] = await db.query(
+          `SELECT COUNT(*) as count FROM ${sensor.table} WHERE device_id = ?`,
+          [requestedDeviceId]
+        );
+        
+        if (result[0].count > 0) {
+          availableSensors.push({
+            type: sensor.name,
+            name: sensor.name.charAt(0).toUpperCase() + sensor.name.slice(1),
+            unit: sensor.unit,
+            recordCount: result[0].count
+          });
+        }
+      } catch (tableError) {
+        console.log(`Error checking ${sensor.table}:`, tableError.message);
+      }
+    }
+    
+    res.json({
+      success: true,
+      deviceId: requestedDeviceId,
+      availableSensors: availableSensors,
+      totalSensorTypes: availableSensors.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching available sensors:', error);
+    res.status(500).json({ error: 'Failed to fetch available sensors' });
+  }
+});
+
+// Get all devices accessible to the current user
+app.get('/api/user/accessible-devices', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    let devices = [];
+    
+    if (userRole === 'Super Admin') {
+      // Super Admin can access all devices
+      const [allDevices] = await db.query(
+        'SELECT e.device_id, e.estab_name as device_name, e.id as estab_id FROM estab e WHERE e.device_id IS NOT NULL'
+      );
+      devices = allDevices;
+    } else if (userRole === 'Admin') {
+      // Admin can access devices they manage
+      const [adminDevices] = await db.query(
+        `SELECT e.device_id, e.estab_name as device_name, e.id as estab_id 
+         FROM estab e 
+         JOIN users u ON e.id = u.establishment_id 
+         WHERE u.id = ? AND e.device_id IS NOT NULL`,
+        [userId]
+      );
+      devices = adminDevices;
+    } else {
+      // Regular user can access devices they have been granted access to
+      const [userDevices] = await db.query(
+        `SELECT e.device_id, e.estab_name as device_name, e.id as estab_id, uda.access_granted_at
+         FROM user_device_access uda
+         JOIN estab e ON uda.device_id = e.device_id
+         WHERE uda.user_id = ?`,
+        [userId]
+      );
+      devices = userDevices;
+    }
+    
+    res.json({
+      success: true,
+      userId: userId,
+      userRole: userRole,
+      devices: devices,
+      totalDevices: devices.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching accessible devices:', error);
+    res.status(500).json({ error: 'Failed to fetch accessible devices' });
+  }
+});
 
 // Listen on the assigned port on all interfaces
 server.listen(port, '0.0.0.0', () => {
