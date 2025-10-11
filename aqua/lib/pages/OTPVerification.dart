@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +44,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
-      final url = Uri.parse('https://aquasense-p36u.onrender.com/api/verify-signup-otp');
+      final url = Uri.parse(ApiConfig.verifyOtpEndpoint);
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -80,7 +81,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
-      final url = Uri.parse('https://aquasense-p36u.onrender.com/api/resend-signup-otp');
+      final url = Uri.parse(ApiConfig.resendOtpEndpoint);
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

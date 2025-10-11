@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart'; // Ensure this points to SuperAdminHomeScreen
 import 'package:aqua/pages/Signup.dart';
@@ -93,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       var response = await http.post(
-        Uri.parse("https://aquasense-p36u.onrender.com/login"),
+        Uri.parse(ApiConfig.loginEndpoint),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "username": enteredUsername,

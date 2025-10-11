@@ -1,4 +1,5 @@
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; // Import http package for API calls
@@ -9,7 +10,7 @@ import 'package:aqua/pages/Login.dart'; // Import LoginScreen for redirection
 // --- NEW: Create a separate API service class (similar to SAdmin) ---
 class ApiService {
   // IMPORTANT: Use localhost:5000 for web emulator
-  final String _baseUrl = 'https://aquasense-p36u.onrender.com/api'; // Web emulator can access localhost directly
+  final String _baseUrl = ApiConfig.apiBase;
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -161,7 +162,7 @@ class ApiService {
       if (userToken != null) {
         try {
           final response = await http.post(
-            Uri.parse('https://aquasense-p36u.onrender.com/logout'),
+            Uri.parse(ApiConfig.logoutEndpoint),
             headers: {
               'Authorization': 'Bearer $userToken',
               'Content-Type': 'application/json',
@@ -269,7 +270,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('https://aquasense-p36u.onrender.com/api/user/profile'), // Web emulator can access localhost directly
+        Uri.parse(ApiConfig.userProfileEndpoint),
         headers: {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',

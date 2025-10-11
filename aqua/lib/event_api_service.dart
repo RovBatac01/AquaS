@@ -2,11 +2,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import '../event.dart';
+import 'config/api_config.dart';
+import 'event.dart';
 
 class EventApiService {
   // Replace with your actual backend URL
-  static const String _baseUrl = 'https://aquasense-p36u.onrender.com/api'; // Use 10.0.2.2 for Android emulator to access localhost
+  static final String _baseUrl = ApiConfig.apiBase;
 
   // Fetch all events
   Future<List<Event>> fetchAllEvents() async {

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/OTPVerification.dart';
 import 'package:aqua/components/colors.dart';
@@ -45,7 +46,7 @@ class _SignupState extends State<Signup> {
     );
 
     try {
-      final url = Uri.parse('https://aquasense-p36u.onrender.com/api/signup-otp');
+      final url = Uri.parse(ApiConfig.signupEndpoint);
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

@@ -1,5 +1,6 @@
 import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/SAdmin/SAdminDetails.dart'; // Import SAdminDetails
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,8 +15,7 @@ class ApiService {
   // If running on Android emulator, 10.0.2.2 usually maps to your host machine's localhost.
   // If running on a physical device, use your host machine's actual local IP address (e.g., 192.168.1.X).
   // Make sure this matches the port your server.js is listening on (e.g., 5000 if your server.js uses app.listen(5000))
-  final String _baseUrl =
-      'https://aquasense-p36u.onrender.com/api'; // Changed to 10.0.2.2 for emulator compatibility
+  final String _baseUrl = ApiConfig.apiBase;
 
   Future<int?> fetchTotalUsers() async {
     try {
@@ -185,7 +185,7 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
 
       final response = await http.get(
         Uri.parse(
-          'https://aquasense-p36u.onrender.com/api/user/profile',
+          ApiConfig.userProfileEndpoint,
         ), // Changed to 10.0.2.2 for emulator compatibility
         headers: {
           'Authorization':
