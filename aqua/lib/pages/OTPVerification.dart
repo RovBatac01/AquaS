@@ -43,7 +43,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
-      final url = Uri.parse('http://localhost:5000/api/verify-signup-otp');
+      final url = Uri.parse('https://aquasense-p36u.onrender.com/api/verify-signup-otp');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -80,7 +80,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
-      final url = Uri.parse('http://localhost:5000/api/resend-signup-otp');
+      final url = Uri.parse('https://aquasense-p36u.onrender.com/api/resend-signup-otp');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
