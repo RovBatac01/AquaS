@@ -36,4 +36,11 @@ class ApiConfig {
   
   // Helper method to get notification endpoint by ID
   static String getSuperAdminNotificationEndpoint(int id) => "$baseUrl/api/notifications/superadmin/$id";
+  
+  // Device request endpoints
+  static String get deviceRequestEndpoint => "$baseUrl/api/device-request";
+  static String get pendingDeviceRequestsEndpoint => "$baseUrl/api/device-requests/pending";
+  static String deviceRequestResponseEndpoint(String requestId) => "$baseUrl/api/device-requests/$requestId/respond";
+  static String get userDeviceAccessEndpoint => "$baseUrl/api/user/device-access";
+  static String get userDeviceRequestsEndpoint => "$baseUrl/api/user/device-requests";
 }

@@ -77,6 +77,128 @@ const db = mysql.createPool({
   queueLimit: 0,
 });
 
+// Initialize database tables for device access system
+async function initializeDeviceAccessTables() {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    
+    // Create devices table if it doesn't exist
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS devices (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        device_id VARCHAR(100) UNIQUE NOT NULL,
+        device_name VARCHAR(255),
+        admin_id INT NOT NULL,
+        location VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create device_access_requests table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS device_access_requests (
+        id VARCHAR(36) PRIMARY KEY,
+        user_id INT NOT NULL,
+        device_id VARCHAR(100) NOT NULL,
+        admin_id INT NOT NULL,
+        message TEXT,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        response_message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        responded_at TIMESTAMP NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_admin_status (admin_id, status),
+        INDEX idx_user_device (user_id, device_id)
+      )
+    `);
+
+    // Create user_device_access table (matching existing structure)
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS user_device_access (
+        user_id INT NOT NULL,
+        device_id VARCHAR(100) NOT NULL,
+        access_granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, device_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create notifications table if it doesn't exist
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id VARCHAR(36) PRIMARY KEY,
+        user_id INT NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_read (user_id, is_read),
+        INDEX idx_created (created_at DESC)
+      )
+    `);
+
+    console.log('✅ Device access tables initialized successfully');
+    
+    // Add some sample devices for testing (only if devices table is empty)
+    const [deviceCount] = await connection.query('SELECT COUNT(*) as count FROM devices');
+    if (deviceCount[0].count === 0) {
+      // Get admin users (role = 'Admin')
+      const [adminUsers] = await connection.query('SELECT id FROM users WHERE role = "Admin" LIMIT 3');
+      
+      if (adminUsers.length > 0) {
+        const sampleDevices = [
+          { device_id: 'AQS001', device_name: 'Main Water Tank Sensor', location: 'Building A - Rooftop' },
+          { device_id: 'AQS002', device_name: 'Pool Water Monitor', location: 'Swimming Pool Area' },
+          { device_id: 'AQS003', device_name: 'Laboratory Water Tester', location: 'Research Lab 1' }
+        ];
+
+        for (let i = 0; i < sampleDevices.length && i < adminUsers.length; i++) {
+          await connection.query(
+            'INSERT INTO devices (device_id, device_name, admin_id, location) VALUES (?, ?, ?, ?)',
+            [sampleDevices[i].device_id, sampleDevices[i].device_name, adminUsers[i].id, sampleDevices[i].location]
+          );
+        }
+        console.log('✅ Sample devices added for testing');
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Error initializing device access tables:', error);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+// Initialize tables on startup
+initializeDeviceAccessTables();
+
+// Fix: Change admin 429 back to regular Admin and assign device request to them
+async function fixAdminAndDeviceRequest() {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    
+    // Change admin 429 back to regular Admin
+    await connection.query('UPDATE users SET role = "Admin" WHERE id = 429');
+    console.log('✅ Changed admin 429 back to regular Admin');
+    
+    // Update the device request to be assigned to admin 429 (who manages device 31767)
+    await connection.query('UPDATE device_access_requests SET admin_id = 429 WHERE device_id = "31767"');
+    console.log('✅ Assigned device 31767 request to admin 429');
+    
+  } catch (error) {
+    console.log('Failed to fix admin and device request:', error);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+fixAdminAndDeviceRequest();
+
 // Function to send OTP via email
 async function sendOTP(email, otp) {
   const mailOptions = {
@@ -379,7 +501,7 @@ app.post("/api/verify-otp", async (req, res) => {
         return res.status(410).json({ success: false, message: "OTP expired. Please request a new one." });
       }
 
-      await db.query('UPDATE users SET is_verified = 1 WHERE email = ?', [email]);
+      await db.query('UPDATE users SET email_verified = 1 WHERE email = ?', [email]);
       res.json({ success: true, message: "OTP verified successfully. You can now change your password." });
     } else {
       return res.status(400).json({ success: false, message: "Invalid OTP." });
@@ -405,7 +527,7 @@ app.post("/api/change-password", async (req, res) => {
       return res.status(404).json({ success: false, message: "Email not found." });
     }
 
-    if (user.is_verified !== 1) {
+    if (user.email_verified !== 1) {
       return res.status(403).json({ success: false, message: "Password change request is not valid. Verify OTP first." });
     }
 
@@ -514,7 +636,7 @@ app.post("/api/verify-signup-otp", async (req, res) => {
     if (storedData.otp === otp) {
       // OTP verified, now create the user account
       const hashedPassword = await bcrypt.hash(storedData.password, saltRounds);
-      const sql = "INSERT INTO users (username, email, phone, password_hash, role, is_verified) VALUES (?, ?, ?, ?, 'user', 1)";
+      const sql = "INSERT INTO users (username, email, phone, password_hash, role, email_verified) VALUES (?, ?, ?, ?, 'user', 1)";
       
       const [result] = await db.query(sql, [
         storedData.username, 
@@ -709,10 +831,10 @@ app.get('/api/notifications/admin', async (req, res) => {
       createdAt: notif.createdAt,
       read: notif.read
     }));
-    res.json(formattedNotifications);
+    res.json({ success: true, notifications: formattedNotifications });
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    res.status(500).json({ message: 'Error fetching notifications', error: error.message });
+    res.status(500).json({ success: false, message: 'Error fetching notifications', error: error.message });
   }
 });
 
@@ -1296,3 +1418,348 @@ app.post('/api/super-admin/change-password', authenticateToken, async (req, res)
         if (connection) connection.release();
     }
 });
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ status: 'Server is running', timestamp: new Date().toISOString() });
+});
+
+// Test endpoint to verify API is working
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working', timestamp: new Date().toISOString() });
+});
+
+// ============= DEVICE ACCESS REQUEST ENDPOINTS =============
+
+// 1. Submit device access request
+app.post('/api/device-request', authenticateToken, async (req, res) => {
+    console.log('DEBUG: Device request endpoint hit');
+    console.log('DEBUG: Request body:', req.body);
+    console.log('DEBUG: User ID:', req.user?.id);
+    
+    let connection;
+    try {
+        const userId = req.user.id;
+        const { deviceId, message } = req.body;
+
+        if (!deviceId || deviceId.trim() === '') {
+            return res.status(400).json({ error: 'Device ID is required.' });
+        }
+
+        connection = await db.getConnection();
+
+        // Debug: Show all available devices from estab table
+        const [allDevices] = await connection.query('SELECT device_id, estab_name FROM estab');
+        console.log('DEBUG: Available devices from estab:', allDevices);
+        console.log('DEBUG: Looking for device ID:', deviceId.trim());
+
+        // Check if device exists in estab table
+        const [deviceRows] = await connection.query(
+            'SELECT * FROM estab WHERE device_id = ?',
+            [deviceId.trim()]
+        );
+
+        if (deviceRows.length === 0) {
+            console.log('DEBUG: Device not found in estab table');
+            return res.status(404).json({ 
+                error: 'Device not found. Please check the Device ID.',
+                availableDevices: allDevices.map(d => d.device_id)
+            });
+        }
+
+        const device = deviceRows[0];
+        
+        // Find the admin who manages this device by checking users table with establishment_id
+        const establishmentId = device.id; // The estab table ID
+        const [adminRows] = await connection.query(
+            'SELECT id FROM users WHERE establishment_id = ? AND role = "Admin" LIMIT 1',
+            [establishmentId]
+        );
+        
+        let adminId;
+        if (adminRows.length > 0) {
+            adminId = adminRows[0].id;
+            console.log('DEBUG: Found admin', adminId, 'for establishment', establishmentId);
+        } else {
+            // Fallback to Super Admin if no specific admin found
+            const [superAdmins] = await connection.query(
+                'SELECT id FROM users WHERE role = "Super Admin" LIMIT 1'
+            );
+            
+            if (superAdmins.length === 0) {
+                return res.status(500).json({ error: 'No admin found to process the request.' });
+            }
+            
+            adminId = superAdmins[0].id;
+            console.log('DEBUG: Using Super Admin', adminId, 'as fallback');
+        }
+
+        // Check if user already has access to this device
+        const [accessRows] = await connection.query(
+            'SELECT * FROM user_device_access WHERE user_id = ? AND device_id = ?',
+            [userId, deviceId]
+        );
+
+        if (accessRows.length > 0) {
+            return res.status(400).json({ error: 'You already have access to this device.' });
+        }
+
+        // Check if there's already a pending request
+        const [pendingRows] = await connection.query(
+            'SELECT * FROM device_access_requests WHERE user_id = ? AND device_id = ? AND status = "pending"',
+            [userId, deviceId]
+        );
+
+        if (pendingRows.length > 0) {
+            return res.status(400).json({ error: 'You already have a pending request for this device.' });
+        }
+
+        // Get user details for notification
+        const [userRows] = await connection.query(
+            'SELECT username, email FROM users WHERE id = ?',
+            [userId]
+        );
+
+        const user = userRows[0];
+
+        // Create the request
+        const requestId = uuidv4();
+        await connection.query(
+            'INSERT INTO device_access_requests (id, user_id, device_id, admin_id, message, status, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+            [requestId, userId, deviceId, adminId, message || '', 'pending']
+        );
+
+        // Create notification for admin
+        const notificationId = uuidv4();
+        const notificationMessage = `User "${user.username}" has requested access to device "${deviceId}". ${message ? 'Message: ' + message : ''}`;
+        
+        await connection.query(
+            'INSERT INTO notifications (id, user_id, type, title, message, created_at, is_read) VALUES (?, ?, ?, ?, ?, NOW(), false)',
+            [notificationId, adminId, 'device_request', 'Device Access Request', notificationMessage]
+        );
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Device access request submitted successfully!',
+            requestId: requestId
+        });
+
+    } catch (error) {
+        console.error('Error submitting device request:', error);
+        res.status(500).json({ error: 'Failed to submit device request.' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// 2. Get pending device requests for admin
+app.get('/api/device-requests/pending', authenticateToken, async (req, res) => {
+    let connection;
+    try {
+        const adminId = req.user.id;
+        const adminRole = req.user.role;
+        console.log('DEBUG: Admin requesting pending device requests, Admin ID:', adminId, 'Role:', adminRole);
+
+        connection = await db.getConnection();
+        
+        // If Super Admin, show all pending requests. Otherwise, show only requests assigned to this admin
+        let query, params;
+        if (adminRole === 'Super Admin') {
+            query = `SELECT 
+                dar.id, dar.device_id, dar.message, dar.created_at, dar.admin_id,
+                u.username, u.email,
+                e.estab_name as device_name
+            FROM device_access_requests dar
+            JOIN users u ON dar.user_id = u.id
+            LEFT JOIN estab e ON dar.device_id = e.device_id
+            WHERE dar.status = 'pending'
+            ORDER BY dar.created_at DESC`;
+            params = [];
+        } else {
+            query = `SELECT 
+                dar.id, dar.device_id, dar.message, dar.created_at, dar.admin_id,
+                u.username, u.email,
+                e.estab_name as device_name
+            FROM device_access_requests dar
+            JOIN users u ON dar.user_id = u.id
+            LEFT JOIN estab e ON dar.device_id = e.device_id
+            WHERE dar.admin_id = ? AND dar.status = 'pending'
+            ORDER BY dar.created_at DESC`;
+            params = [adminId];
+        }
+
+        const [rows] = await connection.query(query, params);
+
+        console.log('DEBUG: Found device requests for admin', adminId, ':', rows.length);
+        console.log('DEBUG: Device requests:', rows);
+        res.status(200).json({ success: true, requests: rows });
+
+    } catch (error) {
+        console.error('Error fetching pending requests:', error);
+        res.status(500).json({ error: 'Failed to fetch pending requests.' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// 3. Approve or reject device access request
+app.post('/api/device-requests/:requestId/respond', authenticateToken, async (req, res) => {
+    let connection;
+    try {
+        const adminId = req.user.id;
+        const { requestId } = req.params;
+        const { action, response_message } = req.body; // action: 'approve' or 'reject'
+
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid action. Must be "approve" or "reject".' });
+        }
+
+        connection = await db.getConnection();
+
+        // Get the request details
+        const [requestRows] = await connection.query(
+            'SELECT * FROM device_access_requests WHERE id = ? AND admin_id = ? AND status = "pending"',
+            [requestId, adminId]
+        );
+
+        if (requestRows.length === 0) {
+            return res.status(404).json({ error: 'Request not found or already processed.' });
+        }
+
+        const request = requestRows[0];
+
+        // Update request status
+        await connection.query(
+            'UPDATE device_access_requests SET status = ?, response_message = ?, responded_at = NOW() WHERE id = ?',
+            [action === 'approve' ? 'approved' : 'rejected', response_message || '', requestId]
+        );
+
+        // If approved, grant access to user
+        if (action === 'approve') {
+            await connection.query(
+                'INSERT INTO user_device_access (user_id, device_id, access_granted_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE access_granted_at = NOW()',
+                [request.user_id, request.device_id]
+            );
+        }
+
+        // Create notification for user
+        const notificationId = uuidv4();
+        const notificationTitle = action === 'approve' ? 'Device Access Approved' : 'Device Access Rejected';
+        const notificationMessage = action === 'approve' 
+            ? `Your request for device "${request.device_id}" has been approved! ${response_message ? 'Admin message: ' + response_message : ''}`
+            : `Your request for device "${request.device_id}" has been rejected. ${response_message ? 'Admin message: ' + response_message : ''}`;
+        
+        await connection.query(
+            'INSERT INTO notifications (id, user_id, type, title, message, created_at, is_read) VALUES (?, ?, ?, ?, ?, NOW(), false)',
+            [notificationId, request.user_id, 'device_response', notificationTitle, notificationMessage]
+        );
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Request ${action === 'approve' ? 'approved' : 'rejected'} successfully!` 
+        });
+
+    } catch (error) {
+        console.error('Error responding to request:', error);
+        res.status(500).json({ error: 'Failed to respond to request.' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// 4. Check user's device access
+app.get('/api/user/device-access', authenticateToken, async (req, res) => {
+    let connection;
+    try {
+        const userId = req.user.id;
+        console.log('Checking device access for user ID:', userId);
+
+        connection = await db.getConnection();
+
+        // First, let's check if the user_device_access table exists and get its structure
+        const [tableCheck] = await connection.query(
+            `SHOW COLUMNS FROM user_device_access`
+        );
+        console.log('user_device_access table columns:', tableCheck.map(col => col.Field));
+
+        const [rows] = await connection.query(
+            `SELECT 
+                uda.device_id, uda.access_granted_at,
+                e.estab_name as device_name, e.id
+            FROM user_device_access uda
+            LEFT JOIN estab e ON uda.device_id = e.device_id
+            WHERE uda.user_id = ?`,
+            [userId]
+        );
+
+        console.log('Found device access rows:', rows);
+        res.status(200).json({ success: true, devices: rows });
+
+    } catch (error) {
+        console.error('Error fetching user device access:', error);
+        console.error('Error details:', error.message);
+        res.status(500).json({ error: 'Failed to fetch device access.', details: error.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// Debug endpoint to check database structure
+app.get('/api/debug/tables', authenticateToken, async (req, res) => {
+    let connection;
+    try {
+        connection = await db.getConnection();
+        
+        // Check user_device_access structure
+        try {
+            const [columns] = await connection.query(`DESCRIBE user_device_access`);
+            console.log('user_device_access columns:', columns);
+            res.json({ 
+                success: true, 
+                columns: columns,
+                message: 'Table structure retrieved successfully'
+            });
+        } catch (err) {
+            console.log('user_device_access table error:', err.message);
+            res.status(500).json({ error: 'Table does not exist: ' + err.message });
+        }
+        
+    } catch (error) {
+        console.error('Debug endpoint error:', error);
+        res.status(500).json({ error: error.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// 5. Get user's request history
+app.get('/api/user/device-requests', authenticateToken, async (req, res) => {
+    let connection;
+    try {
+        const userId = req.user.id;
+
+        connection = await db.getConnection();
+
+        const [rows] = await connection.query(
+            `SELECT 
+                dar.id, dar.device_id, dar.message, dar.status, 
+                dar.response_message, dar.created_at, dar.responded_at,
+                d.device_name
+            FROM device_access_requests dar
+            LEFT JOIN devices d ON dar.device_id = d.device_id
+            WHERE dar.user_id = ?
+            ORDER BY dar.created_at DESC`,
+            [userId]
+        );
+
+        res.status(200).json({ success: true, requests: rows });
+
+    } catch (error) {
+        console.error('Error fetching user requests:', error);
+        res.status(500).json({ error: 'Failed to fetch user requests.' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// ============= END DEVICE ACCESS REQUEST ENDPOINTS =============

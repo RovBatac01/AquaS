@@ -1,16 +1,11 @@
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/NavBar/NotificationDetailPage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:iconsax/iconsax.dart';
-import 'package:aqua/components/colors.dart'; // Assuming this file defines ASColor
-import 'package:http/http.dart' as http; // Import for making HTTP requests
-import 'dart:convert'; // Import for JSON encoding/decoding
-
-void main() {
-  runApp(
-    MaterialApp(home: AdminNotification(), debugShowCheckedModeBanner: false),
-  );
-}
+import 'package:aqua/components/colors.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class AdminNotification extends StatefulWidget {
   const AdminNotification({super.key});
@@ -20,93 +15,290 @@ class AdminNotification extends StatefulWidget {
 }
 
 class _AdminNotification extends State<AdminNotification> {
-  // Use a List of Map<String, dynamic> to accommodate various data types from backend
   List<Map<String, dynamic>> notifications = [];
-  bool _isLoading = true; // To show a loading indicator
-  String? _errorMessage; // To display any fetch errors
+  List<Map<String, dynamic>> deviceRequests = [];
+  bool _isLoading = true;
+  bool _isDeviceRequestsLoading = false;
+  String? _errorMessage;
+  int _selectedIndex = 0; // 0 for notifications, 1 for device requests
 
   @override
   void initState() {
     super.initState();
-    _fetchNotifications(); // Call the fetch function when the widget initializes
+    _fetchNotifications();
+    _fetchDeviceRequests();
   }
 
-  /// Fetches notifications from the backend API.
+  /// Fetches notifications from the backend
   Future<void> _fetchNotifications() async {
     setState(() {
-      _isLoading = true; // Set loading state to true
-      _errorMessage = null; // Clear any previous error messages
+      _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
-      // The endpoint for Super Admin notifications (unauthenticated)
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        setState(() {
+          _errorMessage = 'Authentication token not found';
+        });
+        return;
+      }
+
       final response = await http.get(
-        Uri.parse('https://aquasense-p36u.onrender.com/api/notifications/admin'), // <-- Adjust your backend URL if different
+        Uri.parse('${ApiConfig.apiBase}/notifications/admin'),
         headers: {
           'Content-Type': 'application/json',
-          // No 'Authorization' header needed for this unauthenticated endpoint
+          'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
-        // Decode the JSON response. The backend is expected to return a list directly.
-        final List<dynamic> fetchedNotifications = json.decode(response.body);
-
+        final data = json.decode(response.body);
         setState(() {
-          notifications = fetchedNotifications.map((notif) {
-            // Map backend fields to your local notification structure.
-            // Ensure the keys match what your backend returns (e.g., 'id', 'type', 'title', 'message', 'createdAt', 'read').
+          notifications = (data['notifications'] as List).map((notif) {
             return {
-              'id': notif['id'].toString(), // Convert ID to string for consistency
-              'title': notif['title'] ?? 'No Title', // Use 'title' from backend
-              'subtitle': notif['message'] ?? 'No Message', // Use 'message' from backend as 'subtitle'
-              'time': _formatTimestamp(notif['createdAt']), // Format 'createdAt' from backend
-              'type': notif['type'] ?? 'default', // Use 'type' for icon mapping
-              'is_read': notif['read'] == 1 || notif['read'] == true, // Handle boolean from DB (int 1/0 or actual boolean)
+              'id': notif['id'].toString(),
+              'title': notif['title'] ?? 'No Title',
+              'subtitle': notif['message'] ?? 'No Message',
+              'time': _formatTimestamp(notif['createdAt']),
+              'type': notif['type'] ?? 'default',
+              'is_read': notif['read'] == 1 || notif['read'] == true,
             };
           }).toList();
         });
       } else {
-        // Handle non-200 responses (e.g., 404, 500)
         setState(() {
           _errorMessage = 'Failed to load notifications: ${response.statusCode} ${response.reasonPhrase}';
         });
-        print('Failed to load notifications: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
-      // Handle network errors or other exceptions during the HTTP request
       setState(() {
         _errorMessage = 'Error connecting to the server: $e';
       });
-      print('Error fetching notifications: $e');
     } finally {
       setState(() {
-        _isLoading = false; // Always set loading to false when done
+        _isLoading = false;
       });
     }
   }
 
-  /// Deletes a notification from the backend and updates the UI.
-  Future<void> _deleteNotification(String notificationId, int index) async {
+  /// Fetches pending device requests for the admin
+  Future<void> _fetchDeviceRequests() async {
+    print('DEBUG: Starting to fetch device requests...');
+    setState(() {
+      _isDeviceRequestsLoading = true;
+    });
+
     try {
-      final response = await http.delete(
-        Uri.parse('https://aquasense-p36u.onrender.com/api/notifications/superadmin/$notificationId'), // <-- Adjust your backend URL if different
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        print('DEBUG: No authentication token found');
+        setState(() {
+          _errorMessage = 'Authentication token not found';
+          _isDeviceRequestsLoading = false;
+        });
+        return;
+      }
+
+      print('DEBUG: Making API call to fetch device requests...');
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBase}/device-requests/pending'),
         headers: {
           'Content-Type': 'application/json',
-          // No 'Authorization' header needed for this unauthenticated endpoint
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      print('DEBUG: API response status: ${response.statusCode}');
+      print('DEBUG: API response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('DEBUG: Parsed device requests data: $data');
+        setState(() {
+          deviceRequests = (data['requests'] as List).map((request) {
+            return {
+              'id': request['id'],
+              'username': request['username'],
+              'email': request['email'],
+              'device_id': request['device_id'],
+              'device_name': request['device_name'] ?? 'Unknown Device',
+              'message': request['message'] ?? '',
+              'created_at': request['created_at'],
+            };
+          }).toList();
+          _isDeviceRequestsLoading = false;
+        });
+        print('DEBUG: Set ${deviceRequests.length} device requests in state');
+      } else {
+        print('DEBUG: API call failed with status: ${response.statusCode}');
+        setState(() {
+          _errorMessage = 'Failed to load device requests: ${response.statusCode} ${response.reasonPhrase}';
+          _isDeviceRequestsLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error fetching device requests: $e';
+        _isDeviceRequestsLoading = false;
+      });
+    }
+  }
+
+  /// Handle device request approval or rejection
+  Future<void> _handleDeviceRequest(String requestId, String action, {String? message}) async {
+    print('DEBUG: Handling device request - ID: $requestId, Action: $action');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        print('DEBUG: No authentication token for device request action');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Authentication token not found')),
+        );
+        return;
+      }
+
+      print('DEBUG: Sending ${action} request for device request $requestId');
+      final response = await http.post(
+        Uri.parse('${ApiConfig.apiBase}/device-requests/$requestId/respond'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'action': action,
+          'response_message': message ?? '',
+        }),
+      );
+      
+      print('DEBUG: Device request response status: ${response.statusCode}');
+      print('DEBUG: Device request response body: ${response.body}');
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Request ${action}d successfully!'),
+            backgroundColor: action == 'approve' ? Colors.green : Colors.orange,
+          ),
+        );
+        
+        _fetchDeviceRequests();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['error'] ?? 'Failed to process request'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing request: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Show device request action dialog
+  void _showDeviceRequestDialog(Map<String, dynamic> request) {
+    final TextEditingController messageController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Device Access Request'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('User: ${request['username']}', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Email: ${request['email']}'),
+            Text('Device ID: ${request['device_id']}', style: TextStyle(fontWeight: FontWeight.bold)),
+            if (request['device_name'] != 'Unknown Device') 
+              Text('Device: ${request['device_name']}'),
+            SizedBox(height: 8),
+            if (request['message'].isNotEmpty) ...[
+              Text('User Message:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(request['message']),
+              SizedBox(height: 8),
+            ],
+            Text('Admin Response (Optional):'),
+            TextField(
+              controller: messageController,
+              decoration: InputDecoration(
+                hintText: 'Enter response message...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _handleDeviceRequest(request['id'], 'reject', message: messageController.text);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('Reject', style: TextStyle(color: Colors.white)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _handleDeviceRequest(request['id'], 'approve', message: messageController.text);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: Text('Approve', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Delete a notification
+  Future<void> _deleteNotification(String notificationId, int index) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Authentication token not found')),
+        );
+        return;
+      }
+
+      final response = await http.delete(
+        Uri.parse('${ApiConfig.apiBase}/notifications/admin/$notificationId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
-        // If deletion is successful, remove the item from the local list
         setState(() {
           notifications.removeAt(index);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Notification deleted successfully!')),
+          SnackBar(content: Text('Notification deleted successfully')),
         );
       } else {
-        // Parse error message from backend if available
         final errorData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to delete notification: ${errorData['message'] ?? response.reasonPhrase}')),
@@ -119,12 +311,11 @@ class _AdminNotification extends State<AdminNotification> {
     }
   }
 
-  /// Helper function to format a timestamp string into a human-readable relative time.
+  /// Format timestamp for display
   String _formatTimestamp(String? timestamp) {
     if (timestamp == null) return 'N/A';
     try {
-      // Parse the timestamp string received from the backend
-      final dateTime = DateTime.parse(timestamp).toLocal(); // Convert to local time zone
+      final dateTime = DateTime.parse(timestamp).toLocal();
       final now = DateTime.now();
       final difference = now.difference(dateTime);
 
@@ -137,30 +328,294 @@ class _AdminNotification extends State<AdminNotification> {
       } else if (difference.inDays == 1) {
         return 'Yesterday';
       } else {
-        // For older notifications, display the date
         return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
       }
     } catch (e) {
-      // If parsing fails, return the original timestamp string
-      print('Error formatting timestamp: $e');
       return timestamp;
     }
   }
 
-  /// Returns an appropriate icon based on the notification type from the backend.
+  /// Get notification icon based on type
   Icon _getNotificationIcon(String type) {
     switch (type.toLowerCase()) {
+      case 'device_request':
+        return Icon(Icons.devices, color: Colors.orange);
+      case 'device_response':
+        return Icon(Icons.check_circle, color: Colors.green);
       case 'sensor':
-        return Icon(Icons.sensors, color: Colors.red); // For sensor alerts
+        return Icon(Icons.sensors, color: Colors.red);
       case 'schedule':
-        return Icon(Icons.calendar_month, color: Colors.blue); // For scheduled events
+        return Icon(Icons.calendar_month, color: Colors.blue);
       case 'request':
-        return Icon(Icons.pending_actions, color: Colors.orange); // For access requests
-      case 'new_user':
-        return Icon(Icons.person_add, color: Colors.green); // For new user registrations
+        return Icon(Icons.help, color: Colors.purple);
       default:
-        return Icon(Icons.notifications, color: Colors.grey); // Default icon
+        return Icon(Icons.notifications, color: Colors.grey);
     }
+  }
+
+  /// Build notifications list
+  Widget _buildNotificationsList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.red, fontSize: 16.sp),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchNotifications,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    if (notifications.isEmpty) {
+      return Center(
+        child: Text(
+          'No notifications to display.',
+          style: TextStyle(fontSize: 16.sp, color: ASColor.getTextColor(context)),
+        ),
+      );
+    }
+    
+    return ListView.separated(
+      itemCount: notifications.length,
+      separatorBuilder: (context, index) => const SizedBox.shrink(),
+      itemBuilder: (context, index) {
+        final notification = notifications[index];
+        return _buildNotificationItem(notification, index);
+      },
+    );
+  }
+
+  /// Build device requests list
+  Widget _buildDeviceRequestsList() {
+    if (_isDeviceRequestsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (deviceRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.devices, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No device access requests',
+              style: TextStyle(fontSize: 18, color: ASColor.getTextColor(context)),
+            ),
+            Text(
+              'Requests from users will appear here',
+              style: TextStyle(fontSize: 14, color: ASColor.getTextColor(context).withOpacity(0.6)),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return ListView.separated(
+      itemCount: deviceRequests.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final request = deviceRequests[index];
+        return _buildDeviceRequestItem(request);
+      },
+    );
+  }
+
+  /// Build individual device request item
+  Widget _buildDeviceRequestItem(Map<String, dynamic> request) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.orange.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.all(16),
+        leading: Container(
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(Icons.devices, color: Colors.orange),
+        ),
+        title: Text(
+          'Device: ${request['device_id']}',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: ASColor.getTextColor(context),
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'User: ${request['username']} (${request['email']})',
+              style: TextStyle(color: ASColor.getTextColor(context).withOpacity(0.7)),
+            ),
+            if (request['message'].isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Message: ${request['message']}',
+                  style: TextStyle(
+                    color: ASColor.getTextColor(context).withOpacity(0.6),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            SizedBox(height: 8),
+            Text(
+              _formatTimestamp(request['created_at']),
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () => _handleDeviceRequest(request['id'], 'reject'),
+              icon: Icon(Icons.close, color: Colors.red),
+              tooltip: 'Reject',
+            ),
+            IconButton(
+              onPressed: () => _handleDeviceRequest(request['id'], 'approve'),
+              icon: Icon(Icons.check, color: Colors.green),
+              tooltip: 'Approve',
+            ),
+            IconButton(
+              onPressed: () => _showDeviceRequestDialog(request),
+              icon: Icon(Icons.more_vert, color: ASColor.getTextColor(context)),
+              tooltip: 'More options',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build individual notification item
+  Widget _buildNotificationItem(Map<String, dynamic> notification, int index) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NotificationDetailPage(
+              title: notification['title']!,
+              subtitle: notification['subtitle']!,
+              time: notification['time']!,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
+        decoration: BoxDecoration(
+          color: notification['is_read'] == true
+              ? ASColor.Background(context)
+              : ASColor.Background(context).withOpacity(0.7),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: notification['is_read'] == true
+                ? Colors.grey.withOpacity(0.3)
+                : Colors.blue.withOpacity(0.5),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: ListTile(
+          contentPadding: EdgeInsets.all(16.w),
+          leading: _getNotificationIcon(notification['type']),
+          title: Text(
+            notification['title']!,
+            style: TextStyle(
+              fontWeight: notification['is_read'] == true ? FontWeight.normal : FontWeight.bold,
+              fontSize: 16.sp,
+              color: ASColor.getTextColor(context),
+              fontFamily: 'Poppins',
+            ),
+          ),
+          subtitle: Text(
+            notification['subtitle']!,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: ASColor.getTextColor(context).withOpacity(0.7),
+              fontFamily: 'Poppins',
+            ),
+          ),
+          trailing: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                notification['time']!,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: ASColor.getTextColor(context).withOpacity(0.5),
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              if (notification['is_read'] == false)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  width: 8.w,
+                  height: 8.h,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _deleteNotification(notification['id'], index),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -180,7 +635,7 @@ class _AdminNotification extends State<AdminNotification> {
         child: SafeArea(
           child: Column(
             children: [
-              // Enhanced Header
+              // Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -215,7 +670,7 @@ class _AdminNotification extends State<AdminNotification> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Notifications',
+                            'Admin Center',
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -225,7 +680,7 @@ class _AdminNotification extends State<AdminNotification> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${notifications.length} notifications',
+                            'Notifications & Device Requests',
                             style: TextStyle(
                               fontSize: 14,
                               color: ASColor.getTextColor(context).withOpacity(0.7),
@@ -238,168 +693,66 @@ class _AdminNotification extends State<AdminNotification> {
                   ],
                 ),
               ),
-              // Content Area
-              Expanded(
-                child: _isLoading
-          ? const Center(child: CircularProgressIndicator()) // Show loading indicator
-          : _errorMessage != null
-              ? Center(
-                  // Show error message if fetch failed
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                        const SizedBox(height: 16),
-                        Text(
-                          _errorMessage!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.red, fontSize: 16.sp),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _fetchNotifications, // Retry button
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              : notifications.isEmpty
-                  ? Center(
-                      // Show message if no notifications are found
-                      child: Text(
-                        'No notifications to display.',
-                        style: TextStyle(fontSize: 16.sp, color: ASColor.getTextColor(context)),
-                      ),
-                    )
-                  : ListView.separated(
-                      itemCount: notifications.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox.shrink(), // Remove the default divider between list items
-                      itemBuilder: (context, index) {
-                        final notification = notifications[index];
-
-                        return GestureDetector(
-                          onTap: () {
-                            // Navigate to detail page
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NotificationDetailPage(
-                                  title: notification['title']!,
-                                  subtitle: notification['subtitle']!,
-                                  time: notification['time']!,
-                                  // You might pass other details to the detail page if needed
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            margin: EdgeInsets.fromLTRB(
-                              16.w,
-                              index == 0 ? 8.h : 0,
-                              16.w,
-                              12.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isDarkMode 
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.white.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(16.r),
-                              border: Border.all(
-                                color: isDarkMode ? Colors.white12 : Colors.black12,
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.all(16.w),
-                              leading: _getNotificationIcon(notification['type']!), // Use 'type' for icon
-                              title: Text(
-                                notification['title']!,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.sp,
-                                  color: ASColor.getTextColor(context),
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    notification['subtitle']!,
-                                    style: TextStyle(fontSize: 14.sp),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    notification['time']!,
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
-                                  ),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Iconsax.trash, size: 16, color: Colors.red),
-                                onPressed: () async {
-                                  // Show confirmation dialog before deleting
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(
-                                        'Delete Notification',
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
-                                          fontSize: 18.sp,
-                                        ),
-                                      ),
-                                      content: const Text(
-                                        'Are you sure you want to delete this notification?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(false),
-                                          child: Text(
-                                            'Cancel',
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 16.sp,
-                                              color: ASColor.getTextColor(context),
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(true),
-                                          child: Text(
-                                            'Delete',
-                                            style: TextStyle(
-                                              fontFamily: 'Poppins',
-                                              fontSize: 16.sp,
-                                              color: ASColor.getTextColor(context),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                  if (confirm == true && notification['id'] != null) {
-                                    // Call delete function if confirmed
-                                    _deleteNotification(notification['id'], index);
-                                  }
-                                },
-                                tooltip: 'Delete notification',
+              
+              // Tab Bar
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = 0),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedIndex == 0 ? Colors.blue : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Notifications (${notifications.length})',
+                              style: TextStyle(
+                                color: _selectedIndex == 0 ? Colors.white : ASColor.getTextColor(context),
+                                fontWeight: _selectedIndex == 0 ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = 1),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: _selectedIndex == 1 ? Colors.orange : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Device Requests (${deviceRequests.length})',
+                              style: TextStyle(
+                                color: _selectedIndex == 1 ? Colors.white : ASColor.getTextColor(context),
+                                fontWeight: _selectedIndex == 1 ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16),
+              
+              // Content Area
+              Expanded(
+                child: _selectedIndex == 0 ? _buildNotificationsList() : _buildDeviceRequestsList(),
               ),
             ],
           ),

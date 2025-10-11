@@ -1,3 +1,4 @@
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
@@ -13,6 +14,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dart:ui';
 import '../../components/colors.dart'; // Ensure this file contains your custom colors
 
@@ -45,6 +49,9 @@ class Userdashboard extends StatefulWidget {
 class _MainScreenState extends State<Userdashboard> {
   int _currentIndex = 0;
   final TextEditingController _deviceIdController = TextEditingController();
+  List<Map<String, dynamic>> userDevices = [];
+  bool _hasDeviceAccess = false;
+  bool _isCheckingAccess = true;
 
   final List<Widget> _screens = [
     Center(child: DetailsScreen(key: ValueKey('Home'))),
@@ -62,6 +69,56 @@ class _MainScreenState extends State<Userdashboard> {
     'Settings',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _checkDeviceAccess();
+  }
+
+  /// Check if user has access to any devices
+  Future<void> _checkDeviceAccess() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        setState(() {
+          _isCheckingAccess = false;
+          _hasDeviceAccess = false;
+        });
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.userDeviceAccessEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          userDevices = (data['devices'] as List).map((device) => device as Map<String, dynamic>).toList();
+          _hasDeviceAccess = userDevices.isNotEmpty;
+          _isCheckingAccess = false;
+        });
+      } else {
+        setState(() {
+          _hasDeviceAccess = false;
+          _isCheckingAccess = false;
+        });
+      }
+    } catch (e) {
+      print('Error checking device access: $e');
+      setState(() {
+        _hasDeviceAccess = false;
+        _isCheckingAccess = false;
+      });
+    }
+  }
+
   //Code for the bottom navigation bar
   void _onItemTapped(int index) {
     setState(() {
@@ -69,52 +126,114 @@ class _MainScreenState extends State<Userdashboard> {
     });
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Logout"),
-          content: Text("Are you sure you want to log out?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-              },
-              child: Text(
-                "Cancel",
-                style: TextStyle(
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog first
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ASColor.BGSecond,
-              ),
-              child: Text(
-                "Confirm",
-                style: TextStyle(
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w300,
-                ),
-              ),
-            ),
-          ],
+  // Method to submit device access request
+  Future<void> _submitDeviceRequest(BuildContext context) async {
+    final deviceId = _deviceIdController.text.trim();
+    
+    if (deviceId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter a Device ID'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(color: Colors.blue),
+        ),
+      );
+
+      // Get user token from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        Navigator.pop(context); // Remove loading
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
         );
-      },
-    );
+        return;
+      }
+
+      // Make API request
+      final response = await http.post(
+        Uri.parse('${ApiConfig.apiBase}/device-request'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'deviceId': deviceId,
+          'message': 'Requesting access to monitor water quality data from this device.',
+        }),
+      );
+
+      Navigator.pop(context); // Remove loading
+      Navigator.pop(context); // Remove device dialog
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        // Show success message
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 8),
+                Text('Request Sent'),
+              ],
+            ),
+            content: Text(
+              'Your device access request has been sent successfully! The admin will be notified and you will receive a notification once it\'s processed.',
+              style: TextStyle(fontFamily: 'Poppins'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+        
+        // Clear the device ID field
+        _deviceIdController.clear();
+        
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['error'] ?? 'Failed to submit request'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+    } catch (error) {
+      Navigator.pop(context); // Remove loading if still showing
+      Navigator.pop(context); // Remove device dialog if still showing
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Network error: Please check your connection'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      print('Device request error: $error');
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -122,8 +241,9 @@ class _MainScreenState extends State<Userdashboard> {
     final bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     
 
-    // Show popup dialog when the dashboard is first built (user just logged in)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Show popup dialog when the dashboard is first built (user just logged in) and has no device access
+    if (!_isCheckingAccess && !_hasDeviceAccess) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -163,9 +283,35 @@ class _MainScreenState extends State<Userdashboard> {
                           ),
                         ),
                         SizedBox(height: 16),
-                        Container(
-                          height: 50, // Adjust this value to change the height
-                          child: TextField(
+                        if (_hasDeviceAccess) 
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'You now have access to ${userDevices.length} device(s)! Refresh to continue.',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontFamily: 'Poppins',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (!_hasDeviceAccess) ...[
+                          Container(
+                            height: 50,
+                            child: TextField(
                             controller: _deviceIdController,
                             decoration: InputDecoration(
                               filled: true,
@@ -186,24 +332,39 @@ class _MainScreenState extends State<Userdashboard> {
                             ),
                           ),
                         ),
+                      ], // End of if (!_hasDeviceAccess)
                       ],
                     ),
                     actions: [
-                      TextButton(
-                        onPressed: () {
-                          // Send request logic here
-                          Navigator.of(context).pop();
-                          // Optionally show a confirmation dialog or snackbar
-                        },
-                        child: Text(
-                          'Send Request',
-                          style: TextStyle(
-                            color: ASColor.getTextColor(context),
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
+                      if (_hasDeviceAccess)
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _checkDeviceAccess(); // Refresh device access
+                            setState(() {}); // Trigger rebuild
+                          },
+                          child: Text(
+                            'Refresh Dashboard',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      else
+                        TextButton(
+                          onPressed: () => _submitDeviceRequest(context),
+                          child: Text(
+                            'Send Request',
+                            style: TextStyle(
+                              color: ASColor.getTextColor(context),
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                            ),
                           ),
                         ),
-                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pop();
@@ -230,13 +391,33 @@ class _MainScreenState extends State<Userdashboard> {
             ),
       );
     });
+    }
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode,
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
-      home: Scaffold(
+      home: _isCheckingAccess 
+        ? Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Colors.blue),
+                  SizedBox(height: 16),
+                  Text(
+                    'Checking device access...',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: ASColor.getTextColor(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : Scaffold(
         body: Stack(
           children: [
             // Add spacing at the top (e.g., status bar height or more)

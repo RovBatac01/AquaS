@@ -1,7 +1,7 @@
 import 'package:aqua/pages/Admin/AdminHome.dart';
 import 'package:aqua/pages/Admin/AdminSettings.dart';
+import 'package:aqua/pages/Admin/AdminNotification.dart';
 import 'package:aqua/pages/Calendar.dart';
-import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +42,7 @@ class _MainScreenState extends State<Admindashboard> {
   final List<Widget> _screens = [
     Center(child: AdminHomeScreen()),
     Center(child: Statistics()),
-    Center(child: NotificationPage()),
+    Center(child: AdminNotification()),
     Center(child: CalendarPage()),
     Center(child: AdminSettingsScreen()),
   ];
