@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:aqua/pages/Login.dart';
+import 'package:aqua/pages/OTPVerification.dart';
 import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -32,24 +33,78 @@ class _SignupState extends State<Signup> {
   Future<void> registerUser() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final url = Uri.parse('https://aquasense-p36u.onrender.com/register'); // Backend URL
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username.text.trim(),
-        'email': email.text.trim(),
-        'password': password.text,
-        "confirm_password": password.text,
-      }),
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(
+          color: ASColor.buttonBackground(context),
+        ),
+      ),
     );
 
-    if (response.statusCode == 201) {
+    try {
+      final url = Uri.parse('http://localhost:5000/api/signup-otp');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'username': username.text.trim(),
+          'email': email.text.trim(),
+          'phone': phoneNumber.text.trim(),
+          'password': password.text,
+          'confirm_password': confirm_password.text,
+        }),
+      );
+
+      Navigator.pop(context); // Remove loading dialog
+
       final responseData = jsonDecode(response.body);
-      print(responseData['message']); // Success message
-    } else {
-      print('Error: ${response.body}');
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        // Navigate to OTP verification screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OTPVerificationScreen(
+              email: email.text.trim(),
+              username: username.text.trim(),
+              phoneNumber: phoneNumber.text.trim(),
+              password: password.text,
+            ),
+          ),
+        );
+      } else {
+        _showErrorDialog(responseData['message'] ?? 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      Navigator.pop(context); // Remove loading dialog
+      _showErrorDialog('Network error. Please check your connection and try again.');
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: ASColor.Background(context),
+        title: Text(
+          'Error',
+          style: TextStyle(color: ASColor.getTextColor(context)),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(color: ASColor.getTextColor(context)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   bool termsAccepted = false; // Variable to track if terms are accepted
@@ -156,7 +211,7 @@ class _SignupState extends State<Signup> {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Fill all the text field';
                                 }
-                                if (!value.trim().endsWith('@')) {
+                                if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value.trim())) {
                                   return 'Enter a valid email address';
                                 }
                                 return null;
@@ -195,7 +250,7 @@ class _SignupState extends State<Signup> {
                                 }
                                 final phone = value.trim();
                                 if (phone.length != 11 ||
-                                    !RegExp(r'^\d{11}[0m').hasMatch(phone)) {
+                                    !RegExp(r'^\d{11}$').hasMatch(phone)) {
                                   return 'Enter a valid phone number';
                                 }
                                 return null;

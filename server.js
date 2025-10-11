@@ -96,6 +96,58 @@ async function sendOTP(email, otp) {
   }
 }
 
+// Function to send signup OTP via email
+async function sendSignupOTP(email, otp) {
+  const mailOptions = {
+    from: 'aquasense35@gmail.com',
+    to: email,
+    subject: 'AquaSense - Verify Your Email',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #2563eb; margin: 0;">AquaSense</h1>
+            <p style="color: #666; margin: 5px 0;">Water Quality Monitoring System</p>
+          </div>
+          
+          <h2 style="color: #333; text-align: center;">Verify Your Email Address</h2>
+          
+          <p style="color: #666; font-size: 16px; line-height: 1.5;">
+            Welcome to AquaSense! To complete your account setup, please verify your email address using the verification code below:
+          </p>
+          
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <p style="color: #666; margin: 0 0 10px 0;">Your verification code is:</p>
+            <h1 style="color: #2563eb; font-size: 32px; letter-spacing: 4px; margin: 0; font-family: monospace;">${otp}</h1>
+          </div>
+          
+          <p style="color: #666; font-size: 14px; margin-top: 20px;">
+            <strong>Important:</strong> This code will expire in 5 minutes for your security.
+          </p>
+          
+          <p style="color: #666; font-size: 14px;">
+            If you didn't create an account with AquaSense, please ignore this email.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            This is an automated message from AquaSense. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Signup OTP sent to ${email}: ${otp}`);
+  } catch (error) {
+    console.error('Error sending signup OTP email:', error);
+    throw new Error('Failed to send verification email. Please check your email configuration. Original error: ' + error.message);
+  }
+}
+
 // Routes
 app.post("/register", async (req, res) => {
   const { username, email, phone, password, confirm_password } = req.body;
@@ -374,6 +426,166 @@ app.post("/api/change-password", async (req, res) => {
   } catch (error) {
     console.error("Error changing password:", error);
     return res.status(500).json({ success: false, message: "Internal server error: " + error.message });
+  }
+});
+
+// Signup OTP endpoints
+app.post("/api/signup-otp", async (req, res) => {
+  const { username, email, phone, password, confirm_password } = req.body;
+
+  if (!username || !email || !password || !confirm_password) {
+    return res.status(400).json({ success: false, message: "All fields are required" });
+  }
+
+  if (password !== confirm_password) {
+    return res.status(400).json({ success: false, message: "Passwords do not match" });
+  }
+
+  try {
+    // Check if email already exists
+    const [existingUsers] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (existingUsers.length > 0) {
+      return res.status(400).json({ success: false, message: "Email already registered" });
+    }
+
+    // Check if username already exists
+    const [existingUsernames] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
+    if (existingUsernames.length > 0) {
+      return res.status(400).json({ success: false, message: "Username already taken" });
+    }
+
+    // Generate and store OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 300000; // 5 minutes
+    
+    // Store signup data temporarily with OTP
+    const signupKey = `signup_${email}`;
+    otpStorage[signupKey] = { 
+      otp, 
+      expiry, 
+      username, 
+      email, 
+      phone, 
+      password 
+    };
+
+    // Send OTP email
+    await sendSignupOTP(email, otp);
+    
+    res.json({ 
+      success: true, 
+      message: "Verification code sent to your email. Please check your inbox." 
+    });
+  } catch (error) {
+    console.error("Error during signup OTP process:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error: " + error.message 
+    });
+  }
+});
+
+app.post("/api/verify-signup-otp", async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    return res.status(400).json({ success: false, message: "Email and OTP are required" });
+  }
+
+  try {
+    const signupKey = `signup_${email}`;
+    const storedData = otpStorage[signupKey];
+    
+    if (!storedData) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "OTP not found or expired. Please request a new one." 
+      });
+    }
+
+    if (storedData.expiry < Date.now()) {
+      delete otpStorage[signupKey];
+      return res.status(410).json({ 
+        success: false, 
+        message: "OTP expired. Please request a new one." 
+      });
+    }
+
+    if (storedData.otp === otp) {
+      // OTP verified, now create the user account
+      const hashedPassword = await bcrypt.hash(storedData.password, saltRounds);
+      const sql = "INSERT INTO users (username, email, phone, password_hash, role, is_verified) VALUES (?, ?, ?, ?, 'user', 1)";
+      
+      const [result] = await db.query(sql, [
+        storedData.username, 
+        storedData.email, 
+        storedData.phone || null, 
+        hashedPassword
+      ]);
+
+      // Clean up stored data
+      delete otpStorage[signupKey];
+      
+      res.json({ 
+        success: true, 
+        message: "Account created successfully! You can now log in.",
+        userId: result.insertId 
+      });
+    } else {
+      res.status(400).json({ success: false, message: "Invalid OTP. Please try again." });
+    }
+  } catch (error) {
+    console.error("Error verifying signup OTP:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal Server Error", 
+      error: error.message 
+    });
+  }
+});
+
+app.post("/api/resend-signup-otp", async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email is required" });
+  }
+
+  try {
+    const signupKey = `signup_${email}`;
+    const storedData = otpStorage[signupKey];
+    
+    if (!storedData) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "No pending signup found for this email." 
+      });
+    }
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 300000; // 5 minutes
+    
+    // Update stored data with new OTP
+    otpStorage[signupKey] = { 
+      ...storedData,
+      otp, 
+      expiry 
+    };
+
+    // Send new OTP
+    await sendSignupOTP(email, otp);
+    
+    res.json({ 
+      success: true, 
+      message: "New verification code sent to your email." 
+    });
+  } catch (error) {
+    console.error("Error resending signup OTP:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error: " + error.message 
+    });
   }
 });
 
