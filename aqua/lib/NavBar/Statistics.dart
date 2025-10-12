@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:aqua/water_quality_model.dart'; // Import your data model
-import 'package:aqua/water_quality_service.dart'; // Import your service
+import '../device_aware_service.dart'; // Import device-aware service instead
 
 void main() {
   runApp(const MyApp());
@@ -36,38 +36,97 @@ class _StatisticsState extends State<Statistics> {
   List<WaterQualityData> _currentData = [];
   bool _isLoading = true;
   String? _errorMessage;
+  bool _hasApprovedAccess = false;
+  String? _approvalMessage;
+  String? _currentDeviceId;
 
-  final WaterQualityService _waterQualityService = WaterQualityService();
+  final DeviceAwareService _deviceService = DeviceAwareService();
 
   @override
   void initState() {
     super.initState();
-    _fetchData(); // Initial fetch with default period
+    _checkAccessAndFetchData(); // Check access first, then fetch data
   }
 
-  // Modified to accept a 'period' parameter
+  // Check device access approval before fetching data
+  Future<void> _checkAccessAndFetchData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Check if user has any approved device access
+      _hasApprovedAccess = await _deviceService.hasApprovedDeviceAccess();
+      
+      if (_hasApprovedAccess) {
+        // User has approved access, get the first accessible device
+        final devices = await _deviceService.getAccessibleDevices();
+        if (devices.isNotEmpty) {
+          _currentDeviceId = devices.first['device_id'];
+          await _fetchData(); // Fetch data for the accessible device
+        } else {
+          setState(() {
+            _hasApprovedAccess = false;
+            _approvalMessage = 'No accessible devices found.';
+            _isLoading = false;
+          });
+        }
+      } else {
+        // No approved access - check for pending requests
+        List<Map<String, dynamic>> pendingRequests = await _deviceService.getPendingDeviceRequests();
+        List<Map<String, dynamic>> allRequests = await _deviceService.getUserDeviceRequests();
+        
+        setState(() {
+          _isLoading = false;
+          
+          if (pendingRequests.isNotEmpty) {
+            _approvalMessage = 'Your device access request is pending approval. Statistics will be available once approved.';
+          } else if (allRequests.any((req) => req['status'] == 'rejected')) {
+            _approvalMessage = 'Your device access request was rejected. Please contact your administrator to view statistics.';
+          } else {
+            _approvalMessage = 'No device access found. Please request access from your administrator to view statistics.';
+          }
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to check device access: $e';
+      });
+    }
+  }
+
+  // Modified to use device-aware service
   Future<void> _fetchData() async {
+    if (!_hasApprovedAccess || _currentDeviceId == null) return;
+    
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _currentData = []; // Clear previous data
     });
+
     try {
-      // Pass both selectedStat and selectedPeriod to the service
-      final data = await _waterQualityService.fetchHistoricalData(
+      final data = await _deviceService.fetchDeviceData(
         selectedStat,
         selectedPeriod,
+        _currentDeviceId!,
       );
-      setState(() {
-        _currentData =
-            data.reversed.toList(); // Reverse to show oldest first on chart
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to load data: ${e.toString()}';
-        _isLoading = false;
-      });
+
+      if (mounted) {
+        setState(() {
+          _currentData = data.reversed.toList(); // Reverse to show oldest first on chart
+          _isLoading = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error fetching data: $error';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -124,9 +183,91 @@ class _StatisticsState extends State<Statistics> {
         .value; // Assuming _currentData is sorted oldest to newest
   }
 
-  @override
+  /// Build approval pending UI for statistics
+  Widget _buildApprovalPendingUI(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Scaffold(
+      backgroundColor: ASColor.Background(context),
+      body: Center(
+        child: Container(
+          margin: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(30),
+          decoration: BoxDecoration(
+            color: isDarkMode ? Colors.grey[800] : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Icon(
+                  Icons.bar_chart_rounded,
+                  size: 60,
+                  color: Colors.orange[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Title
+              Text(
+                'Statistics Unavailable',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: ASColor.getTextColor(context),
+                  fontFamily: 'Montserrat',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              
+              // Message
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.orange.withOpacity(0.3),
+                  ),
+                ),
+                child: Text(
+                  _approvalMessage ?? 'Device access required to view statistics.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.orange[700],
+                    fontFamily: 'Poppins',
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget build(BuildContext context) {
-    Color lineColor = getStatColor();
+    // If no approved access, show approval pending UI
+    if (!_hasApprovedAccess && !_isLoading) {
+      return _buildApprovalPendingUI(context);
+    }
 
     // Helper function to create a highlight card structure
     Widget buildHighlightCard(String label, String value, Color color) {

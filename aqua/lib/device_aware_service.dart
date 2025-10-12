@@ -179,4 +179,59 @@ class DeviceAwareService {
       return false;
     }
   }
+
+  /// Get user's device access requests with their status
+  Future<List<Map<String, dynamic>>> getUserDeviceRequests() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBase}/user/device-requests'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return List<Map<String, dynamic>>.from(data['requests']);
+        } else {
+          throw Exception('Failed to fetch device requests');
+        }
+      } else {
+        throw Exception('Failed to fetch device requests: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching device requests: $e');
+      rethrow;
+    }
+  }
+
+  /// Check if user has any approved device access
+  Future<bool> hasApprovedDeviceAccess() async {
+    try {
+      final devices = await getAccessibleDevices();
+      return devices.isNotEmpty;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get pending device requests for the user
+  Future<List<Map<String, dynamic>>> getPendingDeviceRequests() async {
+    try {
+      final requests = await getUserDeviceRequests();
+      return requests.where((request) => request['status'] == 'pending').toList();
+    } catch (e) {
+      print('Error fetching pending requests: $e');
+      return [];
+    }
+  }
 }

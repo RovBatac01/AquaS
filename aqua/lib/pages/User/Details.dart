@@ -7,7 +7,6 @@ import 'dart:convert'; // For JSON encoding/decoding
 import 'package:aqua/water_quality_model.dart'; // Corrected import path
 
 import '../../device_aware_service.dart'; // New device-aware service
-import 'package:aqua/components/colors.dart'; // Assuming you have this file for ASColor
 
 void main() {
   runApp(const MyApp());
@@ -89,11 +88,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
   /// Initialize device data and start fetching sensor data
   Future<void> _initializeDeviceData() async {
     try {
-      // Get accessible devices
-      _accessibleDevices = await _deviceService.getAccessibleDevices();
-      _hasMultipleDevices = _accessibleDevices.length > 1;
+      // Check if user has any approved device access first
+      bool hasApprovedAccess = await _deviceService.hasApprovedDeviceAccess();
       
-      if (_accessibleDevices.isNotEmpty) {
+      if (hasApprovedAccess) {
+        // User has approved access, proceed normally
+        _accessibleDevices = await _deviceService.getAccessibleDevices();
+        _hasMultipleDevices = _accessibleDevices.length > 1;
+        
         // Set the first device as current
         _currentDeviceId = _accessibleDevices.first['device_id'];
         _currentDeviceName = _accessibleDevices.first['device_name'];
@@ -109,10 +111,20 @@ class _DetailsScreenState extends State<DetailsScreen> {
           _fetchLatestDataForAllStats();
         });
       } else {
-        // No accessible devices - show error state
+        // No approved access - check for pending requests
+        List<Map<String, dynamic>> pendingRequests = await _deviceService.getPendingDeviceRequests();
+        List<Map<String, dynamic>> allRequests = await _deviceService.getUserDeviceRequests();
+        
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNetworkError;
-          _errorMessage = 'No accessible devices found. Please request device access.';
+          
+          if (pendingRequests.isNotEmpty) {
+            _errorMessage = 'Your device access request is pending approval. Please wait for admin approval.';
+          } else if (allRequests.any((req) => req['status'] == 'rejected')) {
+            _errorMessage = 'Your device access request was rejected. Please contact your administrator.';
+          } else {
+            _errorMessage = 'No device access found. Please request access from your administrator.';
+          }
         });
       }
     } catch (e) {
@@ -391,105 +403,105 @@ class _DetailsScreenState extends State<DetailsScreen> {
     
     if (_isTemperatureAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.thermostat,
-          label: "Temp",
-          value: _connectionStatus == ConnectionStatus.connected && _latestTemp != null
-              ? "${_latestTemp!.toStringAsFixed(1)}°C"
-              : "...",
+        EnhancedStatCard(
+          icon: Icons.thermostat_rounded,
+          label: "Temperature",
+          value: _connectionStatus == ConnectionStatus.connected && _latestTemp != null ? "${_latestTemp!.toStringAsFixed(1)}" : "---",
+          unit: "°C",
           isSelected: selectedStat == "Temp",
           onTap: () => _onStatCardTap("Temp"),
+          color: Colors.orange,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
     
     if (_isTDSAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.water,
+        EnhancedStatCard(
+          icon: Icons.water_drop_rounded,
           label: "TDS",
-          value: _connectionStatus == ConnectionStatus.connected && _latestTDS != null
-              ? "${_latestTDS!.toStringAsFixed(1)} %"
-              : "...",
+          value: _connectionStatus == ConnectionStatus.connected && _latestTDS != null ? "${_latestTDS!.toStringAsFixed(1)}" : "---",
+          unit: "PPM",
           isSelected: selectedStat == "TDS",
           onTap: () => _onStatCardTap("TDS"),
-          labelFontSize: 16,
-          valueFontSize: 20,
+          color: Colors.blue,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
     
     if (_isPHAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.opacity,
-          label: "pH",
-          value: _connectionStatus == ConnectionStatus.connected && _latestPH != null
-              ? "${_latestPH!.toStringAsFixed(1)}"
-              : "...",
+        EnhancedStatCard(
+          icon: Icons.science_rounded,
+          label: "pH Level",
+          value: _connectionStatus == ConnectionStatus.connected && _latestPH != null ? "${_latestPH!.toStringAsFixed(1)}" : "---",
+          unit: "pH",
           isSelected: selectedStat == "pH",
           onTap: () => _onStatCardTap("pH"),
+          color: Colors.purple,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
     
     if (_isTurbidityAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.water_damage,
+        EnhancedStatCard(
+          icon: Icons.blur_on_rounded,
           label: "Turbidity",
-          value: _connectionStatus == ConnectionStatus.connected && _latestTurbidity != null
-              ? "${_latestTurbidity!.toStringAsFixed(1)}%"
-              : "...",
+          value: _connectionStatus == ConnectionStatus.connected && _latestTurbidity != null ? "${_latestTurbidity!.toStringAsFixed(1)}" : "---",
+          unit: "NTU",
           isSelected: selectedStat == "Turbidity",
           onTap: () => _onStatCardTap("Turbidity"),
-          labelFontSize: 10,
-          valueFontSize: 10,
+          color: Colors.brown,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
     
     if (_isConductivityAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.flash_on,
+        EnhancedStatCard(
+          icon: Icons.electrical_services_rounded,
           label: "Conductivity",
-          value: _connectionStatus == ConnectionStatus.connected && _latestConductivity != null
-              ? "${_latestConductivity!.toStringAsFixed(1)} %"
-              : "...",
+          value: _connectionStatus == ConnectionStatus.connected && _latestConductivity != null ? "${_latestConductivity!.toStringAsFixed(1)}" : "---",
+          unit: "mS/cm",
           isSelected: selectedStat == "Conductivity",
           onTap: () => _onStatCardTap("Conductivity"),
-          labelFontSize: 10,
-          valueFontSize: 10,
+          color: Colors.amber,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
     
     if (_isSalinityAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.bubble_chart,
+        EnhancedStatCard(
+          icon: Icons.grain_rounded,
           label: "Salinity",
-          value: _connectionStatus == ConnectionStatus.connected && _latestSalinity != null
-              ? "${_latestSalinity!.toStringAsFixed(1)} %"
-              : "...",
+          value: _connectionStatus == ConnectionStatus.connected && _latestSalinity != null ? "${_latestSalinity!.toStringAsFixed(1)}" : "---",
+          unit: "ppt",
           isSelected: selectedStat == "Salinity",
           onTap: () => _onStatCardTap("Salinity"),
+          color: Colors.teal,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
     
     if (_isECCompensatedAvailable()) {
       availableCards.add(
-        StatCard(
-          icon: Icons.battery_charging_full,
-          label: "Electrical Conductivity (Condensed)",
-          value: _connectionStatus == ConnectionStatus.connected && _latestECCompensated != null
-              ? "${_latestECCompensated!.toStringAsFixed(1)} %"
-              : "...",
+        EnhancedStatCard(
+          icon: Icons.settings_input_component_rounded,
+          label: "EC Compensated",
+          value: _connectionStatus == ConnectionStatus.connected && _latestECCompensated != null ? "${_latestECCompensated!.toStringAsFixed(1)}" : "---",
+          unit: "mS/cm",
           isSelected: selectedStat == "Electrical Conductivity (Condensed)",
           onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
-          width: double.infinity,
+          color: Colors.indigo,
+          isDarkMode: Theme.of(context).brightness == Brightness.dark,
         ),
       );
     }
@@ -529,62 +541,29 @@ class _DetailsScreenState extends State<DetailsScreen> {
       );
     }
     
-    // Separate full-width cards (EC Compensated) from regular cards
-    List<Widget> regularCards = [];
-    List<Widget> fullWidthCards = [];
-    
-    for (Widget card in availableCards) {
-      if (card is StatCard && card.width == double.infinity) {
-        fullWidthCards.add(card);
-      } else {
-        regularCards.add(card);
-      }
-    }
-    
+    // Build grid with 2 columns
     List<Widget> rows = [];
-    
-    // Build regular cards in rows of 3
-    for (int i = 0; i < regularCards.length; i += 3) {
-      List<Widget> rowChildren = [];
-      for (int j = 0; j < 3 && i + j < regularCards.length; j++) {
-        if (j > 0) rowChildren.add(const SizedBox(width: 12));
-        rowChildren.add(Expanded(child: regularCards[i + j]));
-      }
-      // Fill remaining slots with empty spaces
-      while (rowChildren.length < 5) { // 3 cards + 2 spacers = 5 widgets
-        if (rowChildren.length % 2 == 1) rowChildren.add(const SizedBox(width: 12));
-        rowChildren.add(const Expanded(child: SizedBox()));
+    for (int i = 0; i < availableCards.length; i += 2) {
+      List<Widget> rowChildren = [
+        Expanded(child: availableCards[i]),
+      ];
+      
+      if (i + 1 < availableCards.length) {
+        rowChildren.addAll([
+          const SizedBox(width: 12),
+          Expanded(child: availableCards[i + 1]),
+        ]);
+      } else {
+        rowChildren.add(const Expanded(child: SizedBox())); // Empty space for odd number
       }
       
       rows.add(Row(children: rowChildren));
-      if (i + 3 < regularCards.length) {
+      if (i + 2 < availableCards.length) {
         rows.add(const SizedBox(height: 12));
       }
-    }
-    
-    // Add full-width cards
-    for (Widget card in fullWidthCards) {
-      if (rows.isNotEmpty) {
-        rows.add(const SizedBox(height: 12));
-      }
-      rows.add(card);
     }
     
     return Column(children: rows);
-  }
-
-  // Helper to get connection status message
-  String _getConnectionStatusText() {
-    switch (_connectionStatus) {
-      case ConnectionStatus.connecting:
-        return "Device Status: Connecting...";
-      case ConnectionStatus.connected:
-        return "Device Status: Connected";
-      case ConnectionStatus.disconnectedNoData:
-        return "Device Status: Disconnected (No New Data)";
-      case ConnectionStatus.disconnectedNetworkError:
-        return "Device Status: Disconnected (Network Error)";
-    }
   }
 
   // Helper to get connection status color
@@ -601,115 +580,498 @@ class _DetailsScreenState extends State<DetailsScreen> {
     }
   }
 
+  /// Build approval pending UI when user has no approved access
+  Widget _buildApprovalPendingUI(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Main container with approval message
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Icon(
+                    Icons.pending_actions_rounded,
+                    size: 60,
+                    color: Colors.orange[600],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Title
+                Text(
+                  'Device Access Required',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    fontFamily: 'Montserrat',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                
+                // Message
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.orange.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    _errorMessage ?? 'Your device access request is pending approval.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.orange[700],
+                      fontFamily: 'Poppins',
+                      height: 1.4,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                
+                // Info text
+                Text(
+                  'You will receive a notification once your request is processed.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    fontFamily: 'Poppins',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    // If no approved access, show approval pending UI instead of data
+    if (_accessibleDevices.isEmpty && _connectionStatus == ConnectionStatus.disconnectedNetworkError) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+          elevation: 0,
+          title: Text(
+            'Water Quality Monitor',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Montserrat',
+            ),
+          ),
+          actions: [
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.orange.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Pending',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode 
+                ? [Colors.grey[900]!, Colors.grey[850]!]
+                : [Colors.grey[50]!, Colors.white],
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: _buildApprovalPendingUI(isDarkMode),
+            ),
+          ),
+        ),
+      );
+    }
+    
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Home Water Tank',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Montserrat',
-                ),
+      appBar: AppBar(
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        elevation: 0,
+        title: Text(
+          'Water Quality Monitor',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Montserrat',
+          ),
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _getConnectionStatusColor().withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _getConnectionStatusColor().withOpacity(0.3),
               ),
-              Text(
-                _getConnectionStatusText(),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: _getConnectionStatusColor(),
-                ),
-              ),
-              
-              // Device Selector (shown when user has multiple devices)
-              if (_hasMultipleDevices && _accessibleDevices.isNotEmpty)
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Container(
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  width: 8,
+                  height: 8,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButton<String>(
-                    value: _currentDeviceId,
-                    hint: const Text('Select Device'),
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    items: _accessibleDevices.map((device) {
-                      return DropdownMenuItem<String>(
-                        value: device['device_id'],
-                        child: Text('Device ${device['device_id']} - ${device['device_name']}'),
-                      );
-                    }).toList(),
-                    onChanged: (String? newDeviceId) {
-                      if (newDeviceId != null && newDeviceId != _currentDeviceId) {
-                        final selectedDevice = _accessibleDevices.firstWhere(
-                          (device) => device['device_id'] == newDeviceId,
-                        );
-                        _switchDevice(newDeviceId, selectedDevice['device_name']);
-                      }
-                    },
+                    color: _getConnectionStatusColor(),
+                    shape: BoxShape.circle,
                   ),
                 ),
-              
-              const SizedBox(height: 20),
-
-              // Circular Indicator
-              Center(
-                child:
-                    _connectionStatus == ConnectionStatus.connecting
-                        ? const CircularProgressIndicator() // Show loading for indicator
-                        : CustomPaint(
-                          size: const Size(250, 250),
-                          painter: CircularIndicator(
-                            progress: progress,
-                            label: label,
-                            color: indicatorColor,
-                            brightness: Theme.of(context).brightness,
-                            // If disconnected, show a specific message in the indicator
-                            disconnectedMessage:
-                                _connectionStatus != ConnectionStatus.connected
-                                    ? (_errorMessage ?? "Disconnected")
-                                    : null,
+                const SizedBox(width: 6),
+                Text(
+                  _connectionStatus == ConnectionStatus.connected
+                      ? 'Live'
+                      : _connectionStatus == ConnectionStatus.connecting
+                          ? 'Connecting'
+                          : 'Offline',
+                  style: TextStyle(
+                    color: _getConnectionStatusColor(),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode 
+              ? [Colors.grey[900]!, Colors.grey[850]!]
+              : [Colors.grey[50]!, Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Enhanced Header Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.home_rounded,
+                              color: Colors.blue,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Home Water Tank',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDarkMode ? Colors.white : Colors.black87,
+                                    fontFamily: 'Montserrat',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Real-time water quality monitoring',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Device Selector (shown when user has multiple devices)
+                if (_hasMultipleDevices && _accessibleDevices.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[800] : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.device_hub,
+                          color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Device Selection',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                              DropdownButton<String>(
+                                value: _currentDeviceId,
+                                hint: const Text('Select Device'),
+                                isExpanded: true,
+                                underline: const SizedBox(),
+                                items: _accessibleDevices.map((device) {
+                                  return DropdownMenuItem<String>(
+                                    value: device['device_id'],
+                                    child: Text(
+                                      'Device ${device['device_id']} - ${device['device_name']}',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newDeviceId) {
+                                  if (newDeviceId != null && newDeviceId != _currentDeviceId) {
+                                    final selectedDevice = _accessibleDevices.firstWhere(
+                                      (device) => device['device_id'] == newDeviceId,
+                                    );
+                                    _switchDevice(newDeviceId, selectedDevice['device_name']);
+                                  }
+                                },
+                              ),
+                            ],
                           ),
                         ),
-              ),
+                      ],
+                    ),
+                  ),
+              
               const SizedBox(height: 20),
 
-              // Water Quality Status text
-              Text(
-                _connectionStatus == ConnectionStatus.connected
-                    ? "Water quality: Live Reading"
-                    : "Water quality: Not Live",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color:
-                      _connectionStatus == ConnectionStatus.connected
-                          ? Colors.black
-                          : Colors.red,
-                  fontFamily: 'Poppins',
+              // Enhanced Circular Indicator Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Water Quality Monitor',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontFamily: 'Montserrat',
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: _connectionStatus == ConnectionStatus.connecting
+                          ? const CircularProgressIndicator()
+                          : Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: indicatorColor.withOpacity(0.3),
+                                    blurRadius: 20,
+                                    spreadRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: CustomPaint(
+                                size: const Size(280, 280),
+                                painter: CircularIndicator(
+                                  progress: progress,
+                                  label: label,
+                                  color: indicatorColor,
+                                  brightness: Theme.of(context).brightness,
+                                  disconnectedMessage:
+                                      _connectionStatus != ConnectionStatus.connected
+                                          ? (_errorMessage ?? "Disconnected")
+                                          : null,
+                                ),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _connectionStatus == ConnectionStatus.connected
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _connectionStatus == ConnectionStatus.connected
+                              ? Colors.green.withOpacity(0.3)
+                              : Colors.red.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        _connectionStatus == ConnectionStatus.connected
+                            ? "🟢 Live monitoring active"
+                            : "🔴 Connection lost",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: _connectionStatus == ConnectionStatus.connected
+                              ? Colors.green
+                              : Colors.red,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.red[700],
+                              fontFamily: 'Poppins',
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    'Error: $_errorMessage',
-                    style: const TextStyle(fontSize: 14, color: Colors.red),
+              // Sensor Cards Section Header
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+                child: Text(
+                  'Water Quality Sensors',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    fontFamily: 'Montserrat',
                   ),
                 ),
-              const SizedBox(height: 20),
+              ),
 
               // Cards - Dynamic grid based on available sensors
               _buildSensorGrid(),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -717,92 +1079,122 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 }
 
-class StatCard extends StatelessWidget {
+class EnhancedStatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final String unit;
   final VoidCallback onTap;
   final bool isSelected;
-  final double? width;
-  final double? height;
-  final double? labelFontSize;
-  final double? valueFontSize;
+  final Color color;
+  final bool isDarkMode;
 
-  const StatCard({
+  const EnhancedStatCard({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
+    required this.unit,
     required this.onTap,
     required this.isSelected,
-    this.width,
-    this.height,
-    this.labelFontSize,
-    this.valueFontSize,
+    required this.color,
+    required this.isDarkMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    // Determine container dimensions
-    double cardWidth = width ?? 0.0; // If no width provided, let parent decide
-    double cardHeight = height ?? 140.0; // Default height of 120
-
-    Color bgColor =
-        isSelected
-            ? Colors.greenAccent.withOpacity(0.8)
-            : isDarkMode
-            ? Colors.grey[800]!
-            : Colors.white;
-
-    Color textColor = isDarkMode ? Colors.white : Colors.black;
-
-    return SizedBox(
-      width: cardWidth,
-      height: cardHeight,
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          width: cardWidth,
-          height: cardHeight,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              BoxShadow(color: Colors.black12, blurRadius: 10, spreadRadius: 2),
-            ],
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? color.withOpacity(0.1)
+              : isDarkMode
+                  ? Colors.grey[800]
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : isDarkMode
+                    ? Colors.grey[700]!
+                    : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? color.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: isSelected ? 15 : 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Icon(icon, size: 30, color: textColor),
-                const SizedBox(height: 10),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: labelFontSize ?? 14,
-                    color: textColor,
-                    fontFamily: 'Poppins',
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: color,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const Spacer(),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: color,
+                    size: 16,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: valueFontSize ?? 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: textColor,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    fontFamily: 'Montserrat',
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  unit,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontFamily: 'Poppins',
                   ),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );

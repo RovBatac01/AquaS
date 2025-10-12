@@ -1572,6 +1572,38 @@ app.get('/api/user/accessible-devices', authenticateToken, async (req, res) => {
   }
 });
 
+// Get user's device access requests with status
+app.get('/api/user/device-requests', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log('DEBUG: User requesting device access status, User ID:', userId);
+    
+    const [requests] = await db.query(
+      `SELECT dar.id, dar.device_id, e.estab_name as device_name, dar.status, 
+              dar.message as user_message, dar.response_message, dar.created_at, dar.updated_at,
+              u_admin.username as admin_name
+       FROM device_access_requests dar
+       LEFT JOIN estab e ON dar.device_id = e.device_id  
+       LEFT JOIN users u_admin ON dar.admin_id = u_admin.id
+       WHERE dar.user_id = ?
+       ORDER BY dar.created_at DESC`,
+      [userId]
+    );
+    
+    console.log('DEBUG: Found', requests.length, 'device requests for user', userId);
+    
+    res.json({
+      success: true,
+      requests: requests
+    });
+    
+  } catch (error) {
+    console.error('Error fetching user device requests:', error);
+    res.status(500).json({ error: 'Failed to fetch device requests' });
+  }
+});
+
 // Listen on the assigned port on all interfaces
 server.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Backend running on port ${port} (all interfaces)`);
