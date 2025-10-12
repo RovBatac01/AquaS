@@ -32,6 +32,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     _fetchEventsForSelectedDay(_selectedDay); // Fetch initial events
+    _fetchEventsForMonth(_selectedDay); // Fetch events for the current month
     _startMidnightTimer();
   }
 
@@ -52,6 +53,30 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
+  // Function to fetch events for the entire month
+  Future<void> _fetchEventsForMonth(DateTime focusedDay) async {
+    try {
+      final firstDay = DateTime(focusedDay.year, focusedDay.month, 1);
+      final lastDay = DateTime(focusedDay.year, focusedDay.month + 1, 0);
+      
+      for (DateTime day = firstDay; day.isBefore(lastDay.add(Duration(days: 1))); day = day.add(Duration(days: 1))) {
+        final events = await _eventApiService.fetchEventsForDate(day);
+        if (events.isNotEmpty) {
+          setState(() {
+            _events[DateTime(day.year, day.month, day.day)] = events;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching monthly events: $e');
+    }
+  }
+
+  // Function to get events for a specific day (for calendar markers)
+  List<Event> _getEventsForDay(DateTime day) {
+    return _events[DateTime(day.year, day.month, day.day)] ?? [];
+  }
+
   void _startMidnightTimer() {
     final now = DateTime.now();
     final nextMidnight = DateTime(now.year, now.month, now.day + 1);
@@ -60,7 +85,9 @@ class _CalendarPageState extends State<CalendarPage> {
     _midnightTimer = Timer(durationUntilMidnight, () {
       setState(() {
         _focusedDay = DateTime.now();
-        if (isSameDay(_selectedDay, now)) {
+        if (_selectedDay.year == now.year &&
+            _selectedDay.month == now.month &&
+            _selectedDay.day == now.day) {
           _selectedDay = _focusedDay;
         }
       });
@@ -79,6 +106,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final selectedEvents =
         _events[DateTime(
           _selectedDay.year,
@@ -88,17 +116,50 @@ class _CalendarPageState extends State<CalendarPage> {
         [];
 
     return Scaffold(
-      backgroundColor: ASColor.Background(context),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              TableCalendar(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode 
+              ? [Colors.grey[900]!, Colors.grey[850]!]
+              : [Colors.grey[50]!, Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                
+                // Enhanced Calendar Container
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        TableCalendar<Event>(
                 firstDay: DateTime.utc(2000, 1, 1),
                 lastDay: DateTime.utc(2100, 12, 31),
                 focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                eventLoader: _getEventsForDay,
+                selectedDayPredicate: (day) {
+                  return _selectedDay.year == day.year &&
+                         _selectedDay.month == day.month &&
+                         _selectedDay.day == day.day;
+                },
                 onDaySelected: (selectedDay, focusedDay) {
                   setState(() {
                     _selectedDay = selectedDay;
@@ -108,84 +169,164 @@ class _CalendarPageState extends State<CalendarPage> {
                     selectedDay,
                   ); // Fetch events for the newly selected day
                 },
+                onPageChanged: (focusedDay) {
+                  _focusedDay = focusedDay;
+                  _fetchEventsForMonth(focusedDay); // Fetch events when month changes
+                },
                 calendarStyle: CalendarStyle(
-                  todayDecoration: BoxDecoration(), // No background
-                  selectedDecoration: BoxDecoration(), // No background
+                  // Enhanced Today decoration
+                  todayDecoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.blue, width: 2),
+                  ),
+                  // Enhanced Selected decoration
+                  selectedDecoration: BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
                   // Style for TODAY's date
                   todayTextStyle: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: Colors.blue,
+                    fontFamily: 'Montserrat',
                   ),
-
                   // Style for SELECTED
                   selectedTextStyle: TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color:
-                        Colors
-                            .green, // Changed the selected date color to green
+                    color: Colors.white,
+                    fontFamily: 'Montserrat',
                   ),
-
-                  // Style for the current day when it's not selected
+                  // Style for regular days
                   defaultTextStyle: TextStyle(
-                    fontSize: 14.sp.clamp(12, 16), // Normal size
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  // Weekend styling
+                  weekendTextStyle: TextStyle(
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                  ),
+                  // Outside month styling
+                  outsideTextStyle: TextStyle(
+                    fontSize: 14,
+                    fontFamily: 'Poppins',
+                    color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
                   ),
                 ),
                 daysOfWeekStyle: DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(fontWeight: FontWeight.w600),
-                  weekendStyle: TextStyle(fontWeight: FontWeight.w600),
+                  weekdayStyle: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                    color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  ),
+                  weekendStyle: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+                  ),
                 ),
                 headerStyle: HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
+                  titleTextStyle: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: 'Montserrat',
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  leftChevronIcon: Icon(
+                    Icons.chevron_left_rounded,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  rightChevronIcon: Icon(
+                    Icons.chevron_right_rounded,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders<Event>(
+                  markerBuilder: (context, date, events) {
+                    if (events.isNotEmpty) {
+                      return Positioned(
+                        bottom: 1,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      );
+                    }
+                    return null;
+                  },
                 ),
               ),
-              const SizedBox(height: 20),
-
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[850]
-                          : Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: ASColor.getTextColor(
-                      context,
-                    ), // Set your desired border color here
-                    width: 1, // Set the thickness of the border
+                      ],
+                    ),
                   ),
+                ),
+                const SizedBox(height: 20),
+
+              // Enhanced Selected Date Container
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Selected Date:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.event_rounded,
+                            color: Colors.blue,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Selected Date',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w600,
+                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 12),
                     Text(
                       DateFormat.yMMMMEEEEd().format(_selectedDay),
                       style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        color:
-                            Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Montserrat',
+                        color: isDarkMode ? Colors.white : Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -473,6 +614,9 @@ class _CalendarPageState extends State<CalendarPage> {
                                                   _fetchEventsForSelectedDay(
                                                     date,
                                                   ); // Re-fetch events after adding
+                                                  _fetchEventsForMonth(
+                                                    _focusedDay,
+                                                  ); // Re-fetch monthly events to update markers
                                                 } catch (e) {
                                                   print(
                                                     'Error adding event: $e',
@@ -521,17 +665,23 @@ class _CalendarPageState extends State<CalendarPage> {
                                 ),
                           );
                         },
-                        icon: Icon(Icons.add, size: 18),
+                        icon: Icon(Icons.add_rounded, size: 20),
                         label: Text(
                           'Add Schedule',
-                          style: TextStyle(fontFamily: 'Poppins', fontSize: 12),
+                          style: TextStyle(
+                            fontFamily: 'Poppins', 
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: ASColor.buttonBackground(context),
+                          backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          elevation: 2,
+                          shadowColor: Colors.blue.withOpacity(0.3),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
@@ -541,127 +691,227 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
 
               const SizedBox(height: 20),
-              SizedBox(
-                height: 300, // Fixed height for the events container
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Colors.grey[850]
-                            : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: ASColor.getTextColor(context)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Events for ${DateFormat.yMMMMEEEEd().format(_selectedDay)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              fontFamily: 'Poppins',
-                              color: ASColor.getTextColor(context),
-                            ),
+              // Enhanced Events Container
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey[800] : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      if (selectedEvents.isEmpty)
-                        Center(
-                          child: Text(
-                            'No events for this date',
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
-                              color: ASColor.getTextColor(
-                                context,
-                              ).withOpacity(0.6),
-                            ),
-                          ),
-                        )
-                      else
-                        // Use ListView.builder for potentially long lists of events
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: selectedEvents.length,
-                            itemBuilder: (context, index) {
-                              final event = selectedEvents[index];
-                              return ListTile(
-                                title: Text(
-                                  event.title,
-                                  style: TextStyle(
-                                    color: ASColor.getTextColor(context),
-                                    fontFamily: 'Poppins',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (event.time != null &&
-                                        event.time!.isNotEmpty)
-                                      Text(
-                                        'Time: ${event.time}',
-                                        style: TextStyle(
-                                          color: ASColor.getTextColor(
-                                            context,
-                                          ).withOpacity(0.8),
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                    if (event.description != null &&
-                                        event.description!.isNotEmpty)
-                                      Text(
-                                        event.description!,
-                                        style: TextStyle(
-                                          color: ASColor.getTextColor(
-                                            context,
-                                          ).withOpacity(0.8),
-                                          fontFamily: 'Poppins',
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () async {
-                                    if (event.id != null) {
-                                      try {
-                                        await _eventApiService.deleteEvent(
-                                          event.id!,
-                                        );
-                                        _fetchEventsForSelectedDay(
-                                          _selectedDay,
-                                        ); // Re-fetch events after deleting
-                                      } catch (e) {
-                                        print('Error deleting event: $e');
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Failed to delete event: $e',
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
-                                ),
-                              );
-                            },
+                          child: Icon(
+                            Icons.event_note_rounded,
+                            color: Colors.green,
+                            size: 16,
                           ),
                         ),
-                    ],
-                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Scheduled Events',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  fontFamily: 'Montserrat',
+                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              Text(
+                                DateFormat.MMMMEEEEd().format(_selectedDay),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'Poppins',
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Enhanced Events List
+                    if (selectedEvents.isEmpty)
+                      SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.event_available_rounded,
+                                size: 48,
+                                color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No events scheduled',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Montserrat',
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tap "Add Schedule" to create your first event',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'Poppins',
+                                  color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        height: 200,
+                        child: ListView.separated(
+                          itemCount: selectedEvents.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final event = selectedEvents[index];
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: isDarkMode 
+                                    ? Colors.grey[700]?.withOpacity(0.5)
+                                    : Colors.grey[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isDarkMode 
+                                      ? Colors.grey[600]!.withOpacity(0.3)
+                                      : Colors.grey[200]!,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Event indicator
+                                  Container(
+                                    width: 4,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Event details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          event.title,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: 'Montserrat',
+                                            color: isDarkMode ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                        if (event.time != null && event.time!.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.access_time_rounded,
+                                                size: 12,
+                                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                event.time!,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontFamily: 'Poppins',
+                                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        if (event.description != null && event.description!.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            event.description!,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontFamily: 'Poppins',
+                                              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                  // Delete button
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.delete_rounded,
+                                        color: Colors.red,
+                                        size: 18,
+                                      ),
+                                      onPressed: () async {
+                                        if (event.id != null) {
+                                          try {
+                                            await _eventApiService.deleteEvent(event.id!);
+                                            _fetchEventsForSelectedDay(_selectedDay);
+                                            _fetchEventsForMonth(_focusedDay); // Refresh markers
+                                          } catch (e) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed to delete event: $e'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
