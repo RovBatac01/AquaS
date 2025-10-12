@@ -42,141 +42,281 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            //List Tile for Profile Management Drop Down
-            ListTile(
-              leading: Icon(Icons.person),
-              title: Text(
-                'Profile Management',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
-              ),
-              subtitle: Text(
-                'Manage your personal information and account security.',
-                style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',)
-              ),
-              trailing: Icon(
-                ProfileExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onTap: () {
-                setState(() {
-                  ProfileExpanded = !ProfileExpanded;
-                });
-              },
-            ),
-            if (ProfileExpanded) buildProfileForm(),
-
-            SizedBox(height: 20),
-
-            //List Tile for Dark Mode and Light Mode Drop Down
-            ListTile(
-              leading: Icon(Icons.dark_mode),
-              title: Text(
-                'App Appearance',
-                style: TextStyle(fontWeight: FontWeight.bold,
-                fontFamily: 'Montserrat',
-                color: ASColor.getTextColor(context)),
-              ),
-              subtitle: Text('Switch between dark and light themes.',
-              style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',)),
-              trailing: Icon(
-                AppearanceExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onTap: () {
-                setState(() {
-                  AppearanceExpanded = !AppearanceExpanded;
-                });
-              },
-            ),
-            if (AppearanceExpanded) Appearance(),
-
-            SizedBox(height: 20),
-
-            //List Tile for Help and Support Dropdown
-            ListTile(
-              leading: Icon(Icons.question_answer_outlined),
-              title: Text(
-                'Help and Support',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
-              ),
-              subtitle: Text('Any Questions or Concerns?',
-              style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',)),
-              trailing: Icon(
-                FAQExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onTap: () {
-                setState(() {
-                  FAQExpanded = !FAQExpanded;
-                });
-              },
-            ),
-            if (FAQExpanded) Question(),
-
-            SizedBox(height: 20),
-
-            ListTile(
-              leading: Icon(Icons.history_rounded),
-              title: Text(
-                'Session History',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
-              ),
-              subtitle: Text('You can monitor your account activity',
-              style: TextStyle(
-                color: ASColor.getTextColor(context),
-                fontFamily: 'Poppins',)),
-              trailing: Icon(
-                SessionExpanded ? Icons.expand_less : Icons.expand_more,
-              ),
-              onTap: () {
-                setState(() {
-                  SessionExpanded = !SessionExpanded;
-                });
-              },
-            ),
-            if (SessionExpanded) AccountActivityLog(),
-
-            //List tile for LogOut
-            ListTile(
-              leading: Icon(Icons.logout), // Use logout icon for clarity
-              title: Text(
-                'Log Out',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Montserrat',
-                  color: ASColor.getTextColor(context)),
-              ),
-              trailing: Icon(
-                Icons.arrow_forward_ios, // Optional: more intuitive logout indicator
-                size: 15,
-              ),
-              onTap: () {
-                // Navigate to LoginScreen and remove all previous routes
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
-            ),
-          ],
+      appBar: AppBar(
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        elevation: 0,
+        title: Text(
+          'Settings',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Montserrat',
+          ),
         ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_rounded,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode 
+              ? [Colors.grey[900]!, Colors.grey[850]!]
+              : [Colors.grey[50]!, Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Enhanced Header Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.settings_rounded,
+                          color: Colors.blue,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Account Settings',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: isDarkMode ? Colors.white : Colors.black87,
+                                fontFamily: 'Montserrat',
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Manage your profile and preferences',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Profile Management Card
+                _buildSettingsCard(
+                  context,
+                  icon: Icons.person_rounded,
+                  title: 'Profile Management',
+                  subtitle: 'Manage your personal information and account security',
+                  isExpanded: ProfileExpanded,
+                  onTap: () => setState(() => ProfileExpanded = !ProfileExpanded),
+                  child: ProfileExpanded ? buildProfileForm() : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // App Appearance Card
+                _buildSettingsCard(
+                  context,
+                  icon: Icons.palette_rounded,
+                  title: 'App Appearance',
+                  subtitle: 'Switch between dark and light themes',
+                  isExpanded: AppearanceExpanded,
+                  onTap: () => setState(() => AppearanceExpanded = !AppearanceExpanded),
+                  child: AppearanceExpanded ? Appearance() : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // Help and Support Card
+                _buildSettingsCard(
+                  context,
+                  icon: Icons.help_rounded,
+                  title: 'Help and Support',
+                  subtitle: 'Any questions or concerns?',
+                  isExpanded: FAQExpanded,
+                  onTap: () => setState(() => FAQExpanded = !FAQExpanded),
+                  child: FAQExpanded ? Question() : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // Session History Card
+                _buildSettingsCard(
+                  context,
+                  icon: Icons.history_rounded,
+                  title: 'Session History',
+                  subtitle: 'Monitor your account activity',
+                  isExpanded: SessionExpanded,
+                  onTap: () => setState(() => SessionExpanded = !SessionExpanded),
+                  child: SessionExpanded ? AccountActivityLog() : null,
+                ),
+                const SizedBox(height: 16),
+                
+                // Logout Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.logout_rounded,
+                        color: Colors.red[600],
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      'Log Out',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Montserrat',
+                        color: Colors.red[600],
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: Colors.red[400],
+                      size: 16,
+                    ),
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Enhanced settings card widget
+  Widget _buildSettingsCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isExpanded,
+    required VoidCallback onTap,
+    Widget? child,
+  }) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: Colors.blue,
+                size: 20,
+              ),
+            ),
+            title: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Montserrat',
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                fontFamily: 'Poppins',
+                fontSize: 12,
+              ),
+            ),
+            trailing: AnimatedRotation(
+              turns: isExpanded ? 0.5 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                Icons.expand_more_rounded,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+            onTap: onTap,
+          ),
+          if (child != null)
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                child: child,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -184,30 +324,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
   //Light Mode and Dark Mode Design
   Widget Appearance() {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    return Padding(
-      padding: EdgeInsets.only(left: 20, top: 10),
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[700]?.withOpacity(0.3) : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode', 
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
-                  color: Theme.of(context).colorScheme.onBackground,
-                ),
-              ),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: themeProvider.isDarkMode ? Colors.amber.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              themeProvider.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              color: themeProvider.isDarkMode ? Colors.amber[600] : Colors.blue[600],
+              size: 20,
             ),
           ),
-          Switch(
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  themeProvider.isDarkMode ? 'Dark Mode' : 'Light Mode',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Montserrat',
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  themeProvider.isDarkMode ? 'Using dark theme' : 'Using light theme',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'Poppins',
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
             value: themeProvider.isDarkMode,
-            onChanged: themeProvider.toggleTheme,
-            activeColor: ASColor.buttonBackground(context), // Thumb color when ON
-            activeTrackColor: ASColor.BGFourth, // Track color when ON
-            inactiveThumbColor: ASColor.BGFourth, // Thumb color when OFF
-            inactiveTrackColor: ASColor.buttonBackground(context), // Track color when OFF
+            onChanged: (value) {
+              themeProvider.toggleTheme(value);
+            },
+            activeColor: Colors.blue,
           ),
         ],
       ),
