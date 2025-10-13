@@ -39,8 +39,54 @@ class _StatisticsState extends State<AdminStatistics> {
   bool _hasApprovedAccess = false;
   String? _approvalMessage;
   String? _currentDeviceId;
+  List<Map<String, dynamic>> _availableSensors = [];
+  List<String> _availableSensorNames = [];
 
   final DeviceAwareService _deviceService = DeviceAwareService();
+
+  // Map backend sensor type to frontend display name
+  String _mapSensorTypeToDisplayName(String backendType) {
+    switch (backendType.toLowerCase()) {
+      case 'temperature':
+        return 'Temp';
+      case 'tds':
+        return 'TDS';
+      case 'ph':
+        return 'pH Level';
+      case 'turbidity':
+        return 'Turbidity';
+      case 'ec':
+        return 'Conductivity';
+      case 'salinity':
+        return 'Salinity';
+      case 'ec_compensated':
+        return 'EC';
+      default:
+        return backendType;
+    }
+  }
+
+  // Map frontend display name back to backend type for API calls
+  String _mapDisplayNameToBackendType(String displayName) {
+    switch (displayName) {
+      case 'Temp':
+        return 'temperature';
+      case 'TDS':
+        return 'tds';
+      case 'pH Level':
+        return 'ph';
+      case 'Turbidity':
+        return 'turbidity';
+      case 'Conductivity':
+        return 'ec';
+      case 'Salinity':
+        return 'salinity';
+      case 'EC':
+        return 'ec_compensated';
+      default:
+        return displayName.toLowerCase();
+    }
+  }
 
   @override
   void initState() {
@@ -64,10 +110,29 @@ class _StatisticsState extends State<AdminStatistics> {
         final devices = await _deviceService.getAccessibleDevices();
         if (devices.isNotEmpty) {
           _currentDeviceId = devices.first['device_id'];
+          
+          // Fetch available sensors for this device
+          _availableSensors = await _deviceService.getAvailableSensors(_currentDeviceId!);
+          
+          // Map backend sensor names to frontend display names
+          _availableSensorNames = _availableSensors.map((sensor) {
+            String sensorType = sensor['type'].toString();
+            return _mapSensorTypeToDisplayName(sensorType);
+          }).toList();
+          
+          // Set the first available sensor as default, or fallback to "No Sensors"
+          if (_availableSensorNames.isNotEmpty) {
+            selectedStat = _availableSensorNames.first;
+          } else {
+            selectedStat = "No Sensors";
+          }
+          
           await _fetchData(); // Fetch data for the accessible device
         } else {
           setState(() {
             _hasApprovedAccess = false;
+            _availableSensors = [];
+            _availableSensorNames = [];
             _approvalMessage = 'No accessible devices found.';
             _isLoading = false;
           });
@@ -100,6 +165,16 @@ class _StatisticsState extends State<AdminStatistics> {
   // Modified to use device-aware service
   Future<void> _fetchData() async {
     if (!_hasApprovedAccess || _currentDeviceId == null) return;
+    
+    // Don't fetch data if no sensors are available
+    if (selectedStat == "No Sensors" || _availableSensorNames.isEmpty) {
+      setState(() {
+        _currentData = [];
+        _isLoading = false;
+        _errorMessage = "No sensors available for this device";
+      });
+      return;
+    }
     
     setState(() {
       _isLoading = true;
@@ -603,29 +678,37 @@ class _StatisticsState extends State<AdminStatistics> {
                           fontFamily: 'Poppins',
                         ),
                         items:
-                            <String>[
-                              "Temp",
-                              "TDS",
-                              "pH Level",
-                              "Turbidity",
-                              "Conductivity",
-                              "Salinity",
-                              "EC",
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Center(
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontFamily: 'Poppins',
-                                      color: ASColor.getTextColor(context),
+                            _availableSensorNames.isNotEmpty 
+                                ? _availableSensorNames.map<DropdownMenuItem<String>>((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Center(
+                                        child: Text(
+                                          value,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: 'Poppins',
+                                            color: ASColor.getTextColor(context),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList()
+                                : <DropdownMenuItem<String>>[
+                                    DropdownMenuItem<String>(
+                                      value: "No Sensors",
+                                      child: Center(
+                                        child: Text(
+                                          "No Sensors",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: 'Poppins',
+                                            color: ASColor.getTextColor(context),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                                  ],
                       ),
                     ),
                   ),

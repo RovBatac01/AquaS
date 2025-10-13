@@ -20,6 +20,7 @@ import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/SAdmin/SAdminDashboard.dart';
 import 'package:aqua/pages/Signup.dart';
 import 'package:aqua/pages/User/UserDashboard.dart';
+import 'package:aqua/pages/User/UserStatistics.dart';
 import 'package:aqua/pages/User/WelcomePopup.dart';
 import 'package:aqua/pages/sample.dart';
 import 'package:flutter/material.dart';
@@ -85,7 +86,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: Sadmindashboard(),
+      home: LoginScreen(),
     );
   }
 }
