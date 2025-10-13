@@ -2,6 +2,7 @@ import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/pages/Calendar.dart';
+import 'package:aqua/pages/SAdmin/SAdminStatistics.dart';
 import 'package:aqua/pages/User/UserSettings.dart';
 import 'package:aqua/pages/SAdmin/SAdminAccountManagement.dart';
 
@@ -47,7 +48,7 @@ class _MainScreenState extends State<Sadmindashboard> {
   final List<Widget> _screens = [
     Center(child: SuperAdminHomeScreen()),
     Center(child: Sadminaccountmanagement()),
-    Center(child: Statistics()),
+    Center(child: SAdminStatistics()),
     Center(child: SAdminNotification()),
     Center(child: CalendarPage()),
     Center(child: SAdminSettingsScreen()),

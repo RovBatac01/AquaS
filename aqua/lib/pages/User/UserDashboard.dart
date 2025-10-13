@@ -10,6 +10,7 @@ import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:aqua/pages/User/Request.dart';
+import 'package:aqua/pages/User/UserStatistics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -55,7 +56,7 @@ class _MainScreenState extends State<Userdashboard> {
 
   final List<Widget> _screens = [
     Center(child: DetailsScreen(key: ValueKey('Home'))),
-    Center(child: Statistics(key: ValueKey('Stats'))),
+    Center(child: UserStatistics(key: ValueKey('Stats'))),
     Center(child: NotificationPage(key: ValueKey('Notif'))),
     Center(child: CalendarPage()),
     Center(child: SettingsScreen()),
