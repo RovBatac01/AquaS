@@ -925,21 +925,22 @@ const insertAndEmit = async (
   if (value !== undefined && value !== null) {
     console.log(`📡 Received ${valueColumn} Data:`, value);
     const currentTime = new Date();
-    const query = `INSERT INTO ${tableName} (${valueColumn}, timestamp) VALUES (?, ?)`;
+    // NOTE: Per request, do NOT insert sensor data into the database.
+    // Only emit the real-time socket event so frontend updates continue to work.
     try {
-      const [result] = await db.query(query, [value, currentTime]);
-      console.log(`✅ ${tableName} Data Inserted Successfully: ID`, result.insertId);
-
       io.emit(socketEventName, {
         value: value,
         timestamp: currentTime.toISOString(),
       });
 
+      // Emit notification for turbidity threshold if applicable
       if (notificationType === "turbidity" && threshold !== null && value < threshold) {
         emitNotification(value, threshold);
       }
+
+      console.log(`(Skipped DB insert) Emitted ${socketEventName} for ${tableName} at ${currentTime.toISOString()}`);
     } catch (err) {
-      console.error(`❌ ${tableName} Database Insert Error:`, err.sqlMessage || err.message);
+      console.error(`❌ Error emitting ${socketEventName}:`, err.message || err);
     }
   }
 };
