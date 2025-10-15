@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:ui';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../config/api_config.dart';
 
 void main() {
   runApp(const MyApp());
@@ -54,6 +58,12 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
   late Animation<double> _progressAnimation;
 
   io.Socket? _socket;
+  
+  // Available sensors from database
+  List<Map<String, dynamic>> _availableSensors = [];
+  bool _sensorsLoaded = false;
+  String? _currentDeviceId;
+  int? _establishmentId;
 
   @override
   void initState() {
@@ -63,6 +73,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
       duration: const Duration(milliseconds: 500),
     );
     _progressAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(_animationController);
+    _loadUserDeviceAndSensors();
     _connectAndListen();
   }
 
@@ -72,6 +83,165 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
     _socket?.disconnect();
     _socket?.dispose();
     super.dispose();
+  }
+  
+  // Load user's device and available sensors
+  Future<void> _loadUserDeviceAndSensors() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken'); // Changed from 'token' to 'userToken'
+      
+      if (token == null) {
+        print('No token found');
+        return;
+      }
+      
+      // Get user's accessible devices
+      final devicesResponse = await http.get(
+        Uri.parse('${ApiConfig.apiBase}/user/accessible-devices'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      if (devicesResponse.statusCode == 200) {
+        final devicesData = json.decode(devicesResponse.body);
+        print('🔍 DEBUG: Full devices response: $devicesData');
+        final devices = devicesData['devices'] as List;
+        
+        if (devices.isNotEmpty) {
+          final device = devices.first;
+          print('🔍 DEBUG: First device data: $device');
+          print('🔍 DEBUG: Available keys in device: ${device.keys}');
+          
+          // Try multiple possible field names for device_id
+          String? deviceId;
+          if (device.containsKey('device_id')) {
+            deviceId = device['device_id']?.toString();
+          } else if (device.containsKey('id')) {
+            deviceId = device['id']?.toString();
+          } else if (device.containsKey('deviceId')) {
+            deviceId = device['deviceId']?.toString();
+          }
+          
+          setState(() {
+            _currentDeviceId = deviceId;
+            _establishmentId = device['estab_id'] as int? ?? device['establishment_id'] as int?;
+          });
+          
+          print('🔍 DEBUG: Extracted Device ID: $_currentDeviceId, Establishment ID: $_establishmentId');
+          
+          // Fetch sensors for this device
+          if (_currentDeviceId != null) {
+            await _loadSensorsForDevice(_currentDeviceId!);
+          } else {
+            print('❌ ERROR: Could not extract device_id from device data');
+            setState(() {
+              _sensorsLoaded = true;
+            });
+          }
+        } else {
+          print('No accessible devices found');
+          setState(() {
+            _sensorsLoaded = true; // Mark as loaded even if empty
+          });
+        }
+      } else {
+        print('Failed to fetch devices: ${devicesResponse.statusCode}');
+        print('Response body: ${devicesResponse.body}');
+        setState(() {
+          _sensorsLoaded = true;
+        });
+      }
+    } catch (e) {
+      print('Error loading device and sensors: $e');
+      print('Stack trace: ${StackTrace.current}');
+      setState(() {
+        _sensorsLoaded = true; // Mark as loaded even on error
+      });
+    }
+  }
+  
+  // Load sensors for a specific device
+  Future<void> _loadSensorsForDevice(String deviceId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken'); // Changed from 'token' to 'userToken'
+      
+      if (token == null) {
+        print('❌ No token found for loading sensors');
+        return;
+      }
+      
+      print('🔍 Fetching sensors for device: $deviceId');
+      
+      final response = await http.get(
+        Uri.parse(ApiConfig.deviceSensorsEndpoint(deviceId)),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
+      print('📡 Sensors API response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final sensors = data['sensors'] as List;
+        
+        print('✅ Loaded ${sensors.length} sensors for device $deviceId');
+        print('🔍 Sensors data: $sensors');
+        
+        setState(() {
+          _availableSensors = sensors.cast<Map<String, dynamic>>();
+          _sensorsLoaded = true;
+        });
+      } else if (response.statusCode == 404) {
+        print('⚠️ Device not found: $deviceId');
+        setState(() {
+          _sensorsLoaded = true;
+        });
+      } else if (response.statusCode == 403) {
+        print('⚠️ Access denied to device: $deviceId');
+        setState(() {
+          _sensorsLoaded = true;
+        });
+      } else {
+        print('❌ Failed to fetch sensors: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        setState(() {
+          _sensorsLoaded = true;
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading sensors: $e');
+      print('Stack trace: ${StackTrace.current}');
+      setState(() {
+        _sensorsLoaded = true;
+      });
+    }
+  }
+  
+  // Check if a sensor is available for this device
+  bool _isSensorAvailable(String sensorName) {
+    if (!_sensorsLoaded) return true; // Show all until loaded
+    
+    // Map sensor names to sensor IDs from the sensors table
+    final sensorNameMap = {
+      'Total Dissolved Solids': 1,
+      'Conductivity': 2,
+      'Temperature': 3,
+      'Turbidity': 4,
+      'ph Level': 5,
+      'Salinity': 6,
+      'Electrical Conductivity': 7,
+    };
+    
+    final sensorId = sensorNameMap[sensorName];
+    if (sensorId == null) return false;
+    
+    return _availableSensors.any((sensor) => sensor['sensor_id'] == sensorId);
   }
 
   // New function to determine color based on value and parameter ranges
@@ -618,109 +788,142 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
                 // Enhanced Stats Grid
                 Column(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.thermostat_rounded,
-                            label: "Temperature",
-                            value: displayLiveValues ? "${_latestTemp.toStringAsFixed(1)}°C" : "---",
-                            unit: "°C",
-                            isSelected: selectedStat == "Temp",
-                            onTap: () => _onStatCardTap("Temp"),
-                            color: Colors.orange,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.water_drop_rounded,
-                            label: "TDS",
-                            value: displayLiveValues ? "${_latestTDS.toStringAsFixed(1)}" : "---",
-                            unit: "ppm",
-                            isSelected: selectedStat == "TDS",
-                            onTap: () => _onStatCardTap("TDS"),
-                            color: Colors.blue,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.science_rounded,
-                            label: "pH Level",
-                            value: displayLiveValues ? "${_latestPH.toStringAsFixed(1)}" : "---",
-                            unit: "pH",
-                            isSelected: selectedStat == "pH",
-                            onTap: () => _onStatCardTap("pH"),
-                            color: Colors.purple,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.visibility_rounded,
-                            label: "Turbidity",
-                            value: displayLiveValues ? "${_latestTurbidity.toStringAsFixed(1)}" : "---",
-                            unit: "NTU",
-                            isSelected: selectedStat == "Turbidity",
-                            onTap: () => _onStatCardTap("Turbidity"),
-                            color: Colors.brown,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.flash_on_rounded,
-                            label: "Conductivity",
-                            value: displayLiveValues ? "${_latestConductivity.toStringAsFixed(1)}" : "---",
-                            unit: "μS/cm",
-                            isSelected: selectedStat == "Conductivity",
-                            onTap: () => _onStatCardTap("Conductivity"),
-                            color: Colors.amber,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: EnhancedStatCard(
-                            icon: Icons.grain_rounded,
-                            label: "Salinity",
-                            value: displayLiveValues ? "${_latestSalinity.toStringAsFixed(1)}" : "---",
-                            unit: "ppt",
-                            isSelected: selectedStat == "Salinity",
-                            onTap: () => _onStatCardTap("Salinity"),
-                            color: Colors.teal,
-                            isDarkMode: isDarkMode,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: EnhancedStatCard(
-                        icon: Icons.electrical_services_rounded,
-                        label: "EC Compensated",
-                        value: displayLiveValues ? "${_latestECCompensated.toStringAsFixed(1)}" : "---",
-                        unit: "μS/cm",
-                        isSelected: selectedStat == "Electrical Conductivity (Condensed)",
-                        onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
-                        color: Colors.indigo,
-                        isDarkMode: isDarkMode,
+                    if (_isSensorAvailable('Temperature') || _isSensorAvailable('Total Dissolved Solids'))
+                      Row(
+                        children: [
+                          if (_isSensorAvailable('Temperature'))
+                            Expanded(
+                              child: EnhancedStatCard(
+                                icon: Icons.thermostat_rounded,
+                                label: "Temperature",
+                                value: displayLiveValues ? "${_latestTemp.toStringAsFixed(1)}°C" : "---",
+                                unit: "°C",
+                                isSelected: selectedStat == "Temp",
+                                onTap: () => _onStatCardTap("Temp"),
+                                color: Colors.orange,
+                                isDarkMode: isDarkMode,
+                              ),
+                            ),
+                          if (_isSensorAvailable('Temperature') && _isSensorAvailable('Total Dissolved Solids'))
+                            const SizedBox(width: 12),
+                          if (_isSensorAvailable('Total Dissolved Solids'))
+                            Expanded(
+                              child: EnhancedStatCard(
+                                icon: Icons.water_drop_rounded,
+                                label: "TDS",
+                                value: displayLiveValues ? "${_latestTDS.toStringAsFixed(1)}" : "---",
+                                unit: "ppm",
+                                isSelected: selectedStat == "TDS",
+                                onTap: () => _onStatCardTap("TDS"),
+                                color: Colors.blue,
+                                isDarkMode: isDarkMode,
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                    if (_isSensorAvailable('Temperature') || _isSensorAvailable('Total Dissolved Solids'))
+                      const SizedBox(height: 12),
+                    if (_isSensorAvailable('ph Level') || _isSensorAvailable('Turbidity'))
+                      Row(
+                        children: [
+                          if (_isSensorAvailable('ph Level'))
+                            Expanded(
+                              child: EnhancedStatCard(
+                                icon: Icons.science_rounded,
+                                label: "pH Level",
+                                value: displayLiveValues ? "${_latestPH.toStringAsFixed(1)}" : "---",
+                                unit: "pH",
+                                isSelected: selectedStat == "pH",
+                                onTap: () => _onStatCardTap("pH"),
+                                color: Colors.purple,
+                                isDarkMode: isDarkMode,
+                              ),
+                            ),
+                          if (_isSensorAvailable('ph Level') && _isSensorAvailable('Turbidity'))
+                            const SizedBox(width: 12),
+                          if (_isSensorAvailable('Turbidity'))
+                            Expanded(
+                              child: EnhancedStatCard(
+                                icon: Icons.visibility_rounded,
+                                label: "Turbidity",
+                                value: displayLiveValues ? "${_latestTurbidity.toStringAsFixed(1)}" : "---",
+                                unit: "NTU",
+                                isSelected: selectedStat == "Turbidity",
+                                onTap: () => _onStatCardTap("Turbidity"),
+                                color: Colors.brown,
+                                isDarkMode: isDarkMode,
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (_isSensorAvailable('ph Level') || _isSensorAvailable('Turbidity'))
+                      const SizedBox(height: 12),
+                    if (_isSensorAvailable('Conductivity') || _isSensorAvailable('Salinity'))
+                      Row(
+                        children: [
+                          if (_isSensorAvailable('Conductivity'))
+                            Expanded(
+                              child: EnhancedStatCard(
+                                icon: Icons.flash_on_rounded,
+                                label: "Conductivity",
+                                value: displayLiveValues ? "${_latestConductivity.toStringAsFixed(1)}" : "---",
+                                unit: "μS/cm",
+                                isSelected: selectedStat == "Conductivity",
+                                onTap: () => _onStatCardTap("Conductivity"),
+                                color: Colors.amber,
+                                isDarkMode: isDarkMode,
+                              ),
+                            ),
+                          if (_isSensorAvailable('Conductivity') && _isSensorAvailable('Salinity'))
+                            const SizedBox(width: 12),
+                          if (_isSensorAvailable('Salinity'))
+                            Expanded(
+                              child: EnhancedStatCard(
+                                icon: Icons.grain_rounded,
+                                label: "Salinity",
+                                value: displayLiveValues ? "${_latestSalinity.toStringAsFixed(1)}" : "---",
+                                unit: "ppt",
+                                isSelected: selectedStat == "Salinity",
+                                onTap: () => _onStatCardTap("Salinity"),
+                                color: Colors.teal,
+                                isDarkMode: isDarkMode,
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (_isSensorAvailable('Conductivity') || _isSensorAvailable('Salinity'))
+                      const SizedBox(height: 12),
+                    if (_isSensorAvailable('Electrical Conductivity'))
+                      SizedBox(
+                        width: double.infinity,
+                        child: EnhancedStatCard(
+                          icon: Icons.electrical_services_rounded,
+                          label: "EC Compensated",
+                          value: displayLiveValues ? "${_latestECCompensated.toStringAsFixed(1)}" : "---",
+                          unit: "μS/cm",
+                          isSelected: selectedStat == "Electrical Conductivity (Condensed)",
+                          onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
+                          color: Colors.indigo,
+                          isDarkMode: isDarkMode,
+                        ),
+                      ),
+                    if (!_sensorsLoaded)
+                      const Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    if (_sensorsLoaded && _availableSensors.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          'No sensors configured for this device',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 

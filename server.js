@@ -1768,10 +1768,14 @@ app.post('/api/device-request', authenticateToken, async (req, res) => {
         console.log('DEBUG: Available devices from estab:', allDevices);
         console.log('DEBUG: Looking for device ID:', deviceId.trim());
 
+        // Remove commas from device ID for comparison
+        const cleanDeviceId = deviceId.trim().replace(/,/g, '');
+
         // Check if device exists in estab table
+        // Use REPLACE to handle commas in stored device_id values
         const [deviceRows] = await connection.query(
-            'SELECT * FROM estab WHERE device_id = ?',
-            [deviceId.trim()]
+            'SELECT * FROM estab WHERE REPLACE(device_id, ",", "") = ?',
+            [cleanDeviceId]
         );
 
         if (deviceRows.length === 0) {
@@ -1810,9 +1814,10 @@ app.post('/api/device-request', authenticateToken, async (req, res) => {
         }
 
         // Check if user already has access to this device
+        // Use REPLACE to handle commas in device_id comparison
         const [accessRows] = await connection.query(
-            'SELECT * FROM user_device_access WHERE user_id = ? AND device_id = ?',
-            [userId, deviceId]
+            'SELECT * FROM user_device_access WHERE user_id = ? AND REPLACE(device_id, ",", "") = ?',
+            [userId, cleanDeviceId]
         );
 
         if (accessRows.length > 0) {
@@ -1820,9 +1825,10 @@ app.post('/api/device-request', authenticateToken, async (req, res) => {
         }
 
         // Check if there's already a pending request
+        // Use REPLACE to handle commas in device_id comparison
         const [pendingRows] = await connection.query(
-            'SELECT * FROM device_access_requests WHERE user_id = ? AND device_id = ? AND status = "pending"',
-            [userId, deviceId]
+            'SELECT * FROM device_access_requests WHERE user_id = ? AND REPLACE(device_id, ",", "") = ? AND status = "pending"',
+            [userId, cleanDeviceId]
         );
 
         if (pendingRows.length > 0) {
@@ -2078,3 +2084,136 @@ app.get('/api/user/device-requests', authenticateToken, async (req, res) => {
 });
 
 // ============= END DEVICE ACCESS REQUEST ENDPOINTS =============
+
+// ============= ESTABLISHMENT SENSORS ENDPOINTS =============
+
+// Get sensors for a specific establishment based on estab_sensors table
+app.get('/api/establishment/:establishmentId/sensors', authenticateToken, async (req, res) => {
+  let connection;
+  try {
+    const { establishmentId } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    console.log(`🔍 DEBUG: User ${userId} (${userRole}) requesting sensors for establishment ${establishmentId}`);
+    
+    connection = await db.getConnection();
+    
+    // Check if user has access to this establishment
+    if (userRole !== 'Super Admin') {
+      const [userEstab] = await connection.query(
+        'SELECT establishment_id FROM users WHERE id = ?',
+        [userId]
+      );
+      
+      if (userEstab.length === 0 || userEstab[0].establishment_id != establishmentId) {
+        return res.status(403).json({ error: 'Access denied to this establishment' });
+      }
+    }
+    
+    // Get sensors for this establishment
+    const [sensors] = await connection.query(
+      `SELECT s.id, s.sensor_name, es.estab_id, es.sensor_id
+       FROM estab_sensors es
+       JOIN sensors s ON es.sensor_id = s.id
+       WHERE es.estab_id = ?
+       ORDER BY s.id`,
+      [establishmentId]
+    );
+    
+    console.log(`🔍 DEBUG: Found ${sensors.length} sensors for establishment ${establishmentId}`);
+    
+    res.json({
+      success: true,
+      establishmentId: establishmentId,
+      sensors: sensors,
+      totalSensors: sensors.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching establishment sensors:', error);
+    res.status(500).json({ error: 'Failed to fetch sensors for establishment' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// Get sensors for a specific device_id
+app.get('/api/device/:deviceId/sensors', authenticateToken, async (req, res) => {
+  let connection;
+  try {
+    const { deviceId } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    
+    console.log(`🔍 DEBUG: User ${userId} (${userRole}) requesting sensors for device ${deviceId}`);
+    
+    connection = await db.getConnection();
+    
+    // Remove commas from deviceId to handle both formats (74175 and 74,175)
+    const cleanDeviceId = deviceId.replace(/,/g, '');
+    
+    // Get establishment ID from device_id
+    // Use REPLACE to strip commas from database values for comparison
+    const [estabInfo] = await connection.query(
+      'SELECT id FROM estab WHERE REPLACE(device_id, ",", "") = ?',
+      [cleanDeviceId]
+    );
+    
+    if (estabInfo.length === 0) {
+      console.log(`❌ Device not found: ${deviceId} (cleaned: ${cleanDeviceId})`);
+      return res.status(404).json({ error: 'Device not found' });
+    }
+    
+    const establishmentId = estabInfo[0].id;
+    
+    // Check if user has access to this device
+    if (userRole !== 'Super Admin') {
+      const [userEstab] = await connection.query(
+        'SELECT establishment_id FROM users WHERE id = ?',
+        [userId]
+      );
+      
+      if (userEstab.length === 0 || userEstab[0].establishment_id != establishmentId) {
+        // Check if user has device access
+        // Use REPLACE to handle commas in device_id comparison
+        const [deviceAccess] = await connection.query(
+          'SELECT * FROM user_device_access WHERE user_id = ? AND REPLACE(device_id, ",", "") = ?',
+          [userId, cleanDeviceId]
+        );
+        
+        if (deviceAccess.length === 0) {
+          return res.status(403).json({ error: 'Access denied to this device' });
+        }
+      }
+    }
+    
+    // Get sensors for this establishment
+    const [sensors] = await connection.query(
+      `SELECT s.id, s.sensor_name, es.estab_id, es.sensor_id
+       FROM estab_sensors es
+       JOIN sensors s ON es.sensor_id = s.id
+       WHERE es.estab_id = ?
+       ORDER BY s.id`,
+      [establishmentId]
+    );
+    
+    console.log(`🔍 DEBUG: Found ${sensors.length} sensors for device ${deviceId} (establishment ${establishmentId})`);
+    
+    res.json({
+      success: true,
+      deviceId: deviceId,
+      establishmentId: establishmentId,
+      sensors: sensors,
+      totalSensors: sensors.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching device sensors:', error);
+    res.status(500).json({ error: 'Failed to fetch sensors for device' });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
+// ============= END ESTABLISHMENT SENSORS ENDPOINTS =============

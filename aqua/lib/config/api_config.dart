@@ -43,4 +43,8 @@ class ApiConfig {
   static String deviceRequestResponseEndpoint(String requestId) => "$baseUrl/api/device-requests/$requestId/respond";
   static String get userDeviceAccessEndpoint => "$baseUrl/api/user/device-access";
   static String get userDeviceRequestsEndpoint => "$baseUrl/api/user/device-requests";
+  
+  // Establishment sensors endpoints
+  static String establishmentSensorsEndpoint(int establishmentId) => "$baseUrl/api/establishment/$establishmentId/sensors";
+  static String deviceSensorsEndpoint(String deviceId) => "$baseUrl/api/device/$deviceId/sensors";
 }
