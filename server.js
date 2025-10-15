@@ -1577,7 +1577,7 @@ app.get('/api/user/device-requests', authenticateToken, async (req, res) => {
               dar.message as user_message, dar.response_message, dar.created_at, dar.updated_at,
               u_admin.username as admin_name
        FROM device_access_requests dar
-       LEFT JOIN estab e ON dar.device_id = e.device_id  
+       LEFT JOIN estab e ON REPLACE(dar.device_id, ',', '') = REPLACE(e.device_id, ',', '')
        LEFT JOIN users u_admin ON dar.admin_id = u_admin.id
        WHERE dar.user_id = ?
        ORDER BY dar.created_at DESC`,
@@ -2001,7 +2001,7 @@ app.get('/api/user/device-access', authenticateToken, async (req, res) => {
                 uda.device_id, uda.access_granted_at,
                 e.estab_name as device_name, e.id
             FROM user_device_access uda
-            LEFT JOIN estab e ON uda.device_id = e.device_id
+            LEFT JOIN estab e ON REPLACE(uda.device_id, ',', '') = REPLACE(e.device_id, ',', '')
             WHERE uda.user_id = ?`,
             [userId]
         );
