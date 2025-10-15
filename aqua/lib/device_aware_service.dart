@@ -27,7 +27,14 @@ class DeviceAwareService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          return List<Map<String, dynamic>>.from(data['devices']);
+          // Convert device_id to String to ensure consistency
+          List<Map<String, dynamic>> devices = List<Map<String, dynamic>>.from(data['devices']);
+          for (var device in devices) {
+            if (device['device_id'] != null) {
+              device['device_id'] = device['device_id'].toString();
+            }
+          }
+          return devices;
         } else {
           throw Exception('Failed to fetch accessible devices');
         }

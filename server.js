@@ -1116,7 +1116,7 @@ app.get('/api/my/total-users', authenticateToken, async (req, res) => {
 app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log(`🔍 DEBUG: Counting sensors for admin ${userId} based on establishment`);
+    console.log(`🔍 DEBUG: Fetching total sensors for user ID: ${userId} with token`);
     
     // Get admin's establishment_id
     const [adminInfo] = await db.query(
@@ -1130,49 +1130,22 @@ app.get('/api/my/total-sensors', authenticateToken, async (req, res) => {
     }
     
     const establishmentId = adminInfo[0].establishment_id;
+    console.log(`🔍 DEBUG: Getting establishment for admin user ID: ${userId} based on device_id`);
     console.log(`🔍 DEBUG: Admin establishment_id: ${establishmentId}`);
     
-    // Get the establishment's device_id
-    const [estabInfo] = await db.query(
-      'SELECT device_id FROM estab WHERE id = ?',
+    // Get configured sensors from estab_sensors table
+    const [configuredSensors] = await db.query(
+      `SELECT COUNT(DISTINCT es.sensor_id) as totalSensors
+       FROM estab_sensors es
+       WHERE es.estab_id = ?`,
       [establishmentId]
     );
     
-    if (estabInfo.length === 0 || !estabInfo[0].device_id) {
-      console.warn(`No device_id found for establishment ${establishmentId}; returning zero totalSensors.`);
-      return res.json({ totalSensors: 0 });
-    }
+    const totalSensors = configuredSensors[0]?.totalSensors || 0;
     
-    const establishmentDeviceId = estabInfo[0].device_id;
-    console.log(`🔍 DEBUG: Establishment device_id: ${establishmentDeviceId}`);
-    
-    // Count sensors by checking which sensor types have data for this specific device
-    const sensorTypes = [
-      'turbidity_readings',
-      'phlevel_readings',
-      'tds_readings', 
-      'salinity_readings',
-      'ec_readings',
-      'ec_compensated_readings',
-      'temperature_readings'
-    ];
-    
-    let totalSensors = 0;
-    for (const table of sensorTypes) {
-      try {
-        // Check if this sensor type has data for this specific device
-        const [result] = await db.query(`SELECT COUNT(*) AS count FROM ${table} WHERE device_id = ?`, [establishmentDeviceId]);
-        if (result[0].count > 0) {
-          totalSensors++;
-          console.log(`🔍 DEBUG: Found ${result[0].count} records in ${table} for device ${establishmentDeviceId}`);
-        }
-      } catch (error) {
-        console.error(`Error checking table ${table}:`, error);
-        // Continue with other tables
-      }
-    }
-    
-    console.log(`🔍 DEBUG: Found ${totalSensors} sensors for establishment device_id ${establishmentDeviceId}`);
+    console.log(`🔍 DEBUG: Total sensors response status: 200`);
+    console.log(`🔍 DEBUG: Total sensors response body: {"totalSensors":${totalSensors}}`);
+    console.log(`🔍 DEBUG: Parsed total sensors data: {totalSensors: ${totalSensors}}`);
     
     return res.json({ totalSensors: totalSensors });
   } catch (error) {
@@ -1453,6 +1426,11 @@ app.get('/api/device/available-sensors', authenticateToken, async (req, res) => 
       return res.status(400).json({ error: 'device_id parameter is required' });
     }
     
+    console.log(`🔍 Fetching sensors for device ${requestedDeviceId}`);
+    
+    // Remove commas from deviceId to handle both formats (74175 and 74,175)
+    const cleanDeviceId = requestedDeviceId.replace(/,/g, '');
+    
     // Check if user has access to this device
     let hasAccess = false;
     
@@ -1460,14 +1438,14 @@ app.get('/api/device/available-sensors', authenticateToken, async (req, res) => 
       hasAccess = true;
     } else if (userRole === 'Admin') {
       const [adminDevices] = await db.query(
-        'SELECT e.device_id FROM estab e JOIN users u ON e.id = u.establishment_id WHERE u.id = ? AND e.device_id = ?',
-        [userId, requestedDeviceId]
+        'SELECT e.device_id FROM estab e JOIN users u ON e.id = u.establishment_id WHERE u.id = ? AND REPLACE(e.device_id, ",", "") = ?',
+        [userId, cleanDeviceId]
       );
       hasAccess = adminDevices.length > 0;
     } else {
       const [userAccess] = await db.query(
-        'SELECT device_id FROM user_device_access WHERE user_id = ? AND device_id = ?',
-        [userId, requestedDeviceId]
+        'SELECT device_id FROM user_device_access WHERE user_id = ? AND REPLACE(device_id, ",", "") = ?',
+        [userId, cleanDeviceId]
       );
       hasAccess = userAccess.length > 0;
     }
@@ -1476,38 +1454,53 @@ app.get('/api/device/available-sensors', authenticateToken, async (req, res) => 
       return res.status(403).json({ error: 'Access denied to requested device' });
     }
     
-    // Check which sensor types have data for this device
-    const sensorTypes = [
-      { name: 'turbidity', table: 'turbidity_readings', unit: 'NTU' },
-      { name: 'ph', table: 'phlevel_readings', unit: 'pH' },
-      { name: 'tds', table: 'tds_readings', unit: 'ppm' },
-      { name: 'salinity', table: 'salinity_readings', unit: 'ppt' },
-      { name: 'ec', table: 'ec_readings', unit: 'μS/cm' },
-      { name: 'ec_compensated', table: 'ec_compensated_readings', unit: 'μS/cm' },
-      { name: 'temperature', table: 'temperature_readings', unit: '°C' }
-    ];
+    // Get establishment ID from device_id
+    const [estabInfo] = await db.query(
+      'SELECT id FROM estab WHERE REPLACE(device_id, ",", "") = ?',
+      [cleanDeviceId]
+    );
     
-    const availableSensors = [];
-    
-    for (const sensor of sensorTypes) {
-      try {
-        const [result] = await db.query(
-          `SELECT COUNT(*) as count FROM ${sensor.table} WHERE device_id = ?`,
-          [requestedDeviceId]
-        );
-        
-        if (result[0].count > 0) {
-          availableSensors.push({
-            type: sensor.name,
-            name: sensor.name.charAt(0).toUpperCase() + sensor.name.slice(1),
-            unit: sensor.unit,
-            recordCount: result[0].count
-          });
-        }
-      } catch (tableError) {
-        console.log(`Error checking ${sensor.table}:`, tableError.message);
-      }
+    if (estabInfo.length === 0) {
+      return res.status(404).json({ error: 'Device not found' });
     }
+    
+    const establishmentId = estabInfo[0].id;
+    console.log(`🔍 Device ${cleanDeviceId} belongs to establishment ${establishmentId}`);
+    
+    // Get configured sensors from estab_sensors table
+    const [configuredSensors] = await db.query(
+      `SELECT s.id, s.sensor_name, es.sensor_id
+       FROM estab_sensors es
+       JOIN sensors s ON es.sensor_id = s.id
+       WHERE es.estab_id = ?
+       ORDER BY s.id`,
+      [establishmentId]
+    );
+    
+    console.log(`🔍 Found ${configuredSensors.length} configured sensors for establishment ${establishmentId}`);
+    
+    // Map sensor names to types used by the frontend
+    const sensorTypeMapping = {
+      'Total Dissolved Solids': { type: 'tds', unit: 'ppm' },
+      'Conductivity': { type: 'ec', unit: 'μS/cm' },
+      'Temperature': { type: 'temperature', unit: '°C' },
+      'Turbidity': { type: 'turbidity', unit: 'NTU' },
+      'ph Level': { type: 'ph', unit: 'pH' },
+      'Salinity': { type: 'salinity', unit: 'ppt' },
+      'Electrical Conductivity': { type: 'ec_compensated', unit: 'μS/cm' }
+    };
+    
+    const availableSensors = configuredSensors.map(sensor => {
+      const mapping = sensorTypeMapping[sensor.sensor_name];
+      return {
+        type: mapping ? mapping.type : sensor.sensor_name.toLowerCase(),
+        name: sensor.sensor_name,
+        unit: mapping ? mapping.unit : '',
+        sensor_id: sensor.sensor_id
+      };
+    });
+    
+    console.log(`✅ Returning ${availableSensors.length} sensors:`, availableSensors.map(s => s.name).join(', '));
     
     res.json({
       success: true,
