@@ -3,8 +3,8 @@ class ApiConfig {
   static const bool isDevelopment = true;
   
   // API Base URLs
-  static const String _developmentUrl = "http://localhost:5000";
-  static const String _productionUrl = "https://aquasense-p36u.onrender.com";
+  static const String _developmentUrl = "https://aquasense-p36u.onrender.com";
+  static const String _productionUrl = "http://localhost:5000";
   
   // Get the current base URL based on environment
   static String get baseUrl {
