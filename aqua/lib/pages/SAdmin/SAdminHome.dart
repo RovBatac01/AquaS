@@ -73,23 +73,49 @@ class ApiService {
     }
   }
 
-  // API endpoint to fetch establishment names
-  Future<List<String>?> fetchEstablishmentNames() async {
+  // API endpoint to fetch establishments with full details
+  Future<List<Map<String, dynamic>>?> fetchEstablishments() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/establishments'));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        print('No token found');
+        return null;
+      }
+      
+      final response = await http.get(
+        Uri.parse('$_baseUrl/user/accessible-devices'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((name) => name.toString()).toList();
+        final data = json.decode(response.body);
+        final devices = data['devices'] as List;
+        return devices.map((device) => {
+          'device_id': device['device_id']?.toString(),
+          'device_name': device['device_name']?.toString() ?? 'Unknown Device',
+          'estab_id': device['estab_id'] as int?,
+        }).toList();
       } else {
         print(
-          'Failed to fetch establishment names: ${response.statusCode} - ${response.body}',
+          'Failed to fetch establishments: ${response.statusCode} - ${response.body}',
         );
         return null;
       }
     } catch (e) {
-      print('Error fetching establishment names: $e');
+      print('Error fetching establishments: $e');
       return null;
     }
+  }
+  
+  // For backward compatibility - extract names from full establishment data
+  Future<List<String>?> fetchEstablishmentNames() async {
+    final establishments = await fetchEstablishments();
+    return establishments?.map((e) => e['device_name'] as String).toList();
   }
 }
 // --- END NEW/UPDATED: API Service ---
@@ -129,8 +155,10 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
   int? _totalEstablishments;
   int? _totalSensors;
 
-  // --- UPDATED/NEW: State variables for fetched and filtered establishment names ---
-  List<String> _allEstablishmentNames = []; // Store all fetched names
+  // --- UPDATED/NEW: State variables for establishments ---
+  List<Map<String, dynamic>> _allEstablishments = []; // Store full establishment objects
+  List<Map<String, dynamic>> _filteredEstablishments = []; // Store filtered establishments
+  List<String> _allEstablishmentNames = []; // Store all fetched names (for backward compatibility)
   List<String> _filteredEstablishmentNames = []; // Store names for display
   TextEditingController _searchController =
       TextEditingController(); // Controller for the search bar
@@ -254,18 +282,22 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
     });
   }
 
-  // --- UPDATED: Method to fetch establishment names ---
+  // --- UPDATED: Method to fetch establishments with full details ---
   Future<void> _fetchEstablishments() async {
     setState(() {
+      _allEstablishments = []; // Clear previous data
       _allEstablishmentNames = []; // Clear previous data
+      _filteredEstablishments = []; // Clear filtered data
       _filteredEstablishmentNames = []; // Clear filtered data
     });
-    final names = await _apiService.fetchEstablishmentNames();
-    if (names != null) {
+    final establishments = await _apiService.fetchEstablishments();
+    if (establishments != null) {
       setState(() {
-        _allEstablishmentNames = names;
-        _filteredEstablishmentNames =
-            names; // Initially, filtered list is the same as all
+        _allEstablishments = establishments;
+        _filteredEstablishments = establishments;
+        // Extract names for backward compatibility
+        _allEstablishmentNames = establishments.map((e) => e['device_name'] as String).toList();
+        _filteredEstablishmentNames = _allEstablishmentNames;
       });
     }
   }
@@ -273,18 +305,20 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
 
   // --- NEW: Search filtering logic ---
   void _filterEstablishments(String query) {
-    List<String> tempFilteredList = [];
     if (query.isEmpty) {
-      tempFilteredList = _allEstablishmentNames; // Show all if query is empty
+      setState(() {
+        _filteredEstablishments = _allEstablishments;
+        _filteredEstablishmentNames = _allEstablishmentNames;
+      });
     } else {
-      tempFilteredList =
-          _allEstablishmentNames.where((name) {
-            return name.toLowerCase().contains(query.toLowerCase());
-          }).toList();
+      setState(() {
+        _filteredEstablishments = _allEstablishments.where((establishment) {
+          final name = establishment['device_name'] as String;
+          return name.toLowerCase().contains(query.toLowerCase());
+        }).toList();
+        _filteredEstablishmentNames = _filteredEstablishments.map((e) => e['device_name'] as String).toList();
+      });
     }
-    setState(() {
-      _filteredEstablishmentNames = tempFilteredList;
-    });
   }
   // --- END NEW ---
 
@@ -669,20 +703,34 @@ class _HomeScreenState extends State<SuperAdminHomeScreen> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: _filteredEstablishmentNames.length,
+                  itemCount: _filteredEstablishments.length,
                   itemBuilder: (context, index) {
-                    final name = _filteredEstablishmentNames[index];
+                    final establishment = _filteredEstablishments[index];
+                    final name = establishment['device_name'] as String;
+                    final deviceId = establishment['device_id'] as String?;
+                    final estabId = establishment['estab_id'] as int?;
+                    
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: buildEnhancedDetailCard(
                         name: name,
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SAdminDetails(),
-                            ),
-                          );
+                          if (deviceId != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SAdminDetails(
+                                  deviceId: deviceId,
+                                  establishmentId: estabId,
+                                  establishmentName: name,
+                                ),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Device ID not available')),
+                            );
+                          }
                         },
                       ),
                     );

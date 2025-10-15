@@ -31,7 +31,16 @@ enum ConnectionStatus {
 }
 
 class SAdminDetails extends StatefulWidget {
-  const SAdminDetails({super.key});
+  final String? deviceId;
+  final int? establishmentId;
+  final String? establishmentName;
+  
+  const SAdminDetails({
+    super.key,
+    this.deviceId,
+    this.establishmentId,
+    this.establishmentName,
+  });
 
   @override
   State<SAdminDetails> createState() => _SAdminDetailsState();
@@ -88,6 +97,21 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
   // Load user's device and available sensors
   Future<void> _loadUserDeviceAndSensors() async {
     try {
+      // If deviceId and establishmentId are passed from previous screen, use them directly
+      if (widget.deviceId != null) {
+        setState(() {
+          _currentDeviceId = widget.deviceId;
+          _establishmentId = widget.establishmentId;
+        });
+        
+        print('🔍 DEBUG: Using passed Device ID: $_currentDeviceId, Establishment ID: $_establishmentId');
+        
+        // Fetch sensors for this device
+        await _loadSensorsForDevice(widget.deviceId!);
+        return;
+      }
+      
+      // Otherwise, fetch from API (fallback for backward compatibility)
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('userToken'); // Changed from 'token' to 'userToken'
       
@@ -632,7 +656,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Home Water Tank',
+                                  widget.establishmentName ?? 'Home Water Tank',
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
