@@ -3,6 +3,7 @@ import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/OTPVerification.dart';
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/terms_and_conditions_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:convert';
@@ -38,11 +39,12 @@ class _SignupState extends State<Signup> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(
-        child: CircularProgressIndicator(
-          color: ASColor.buttonBackground(context),
-        ),
-      ),
+      builder:
+          (context) => Center(
+            child: CircularProgressIndicator(
+              color: ASColor.buttonBackground(context),
+            ),
+          ),
     );
 
     try {
@@ -68,43 +70,49 @@ class _SignupState extends State<Signup> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OTPVerificationScreen(
-              email: email.text.trim(),
-              username: username.text.trim(),
-              phoneNumber: phoneNumber.text.trim(),
-              password: password.text,
-            ),
+            builder:
+                (context) => OTPVerificationScreen(
+                  email: email.text.trim(),
+                  username: username.text.trim(),
+                  phoneNumber: phoneNumber.text.trim(),
+                  password: password.text,
+                ),
           ),
         );
       } else {
-        _showErrorDialog(responseData['message'] ?? 'Registration failed. Please try again.');
+        _showErrorDialog(
+          responseData['message'] ?? 'Registration failed. Please try again.',
+        );
       }
     } catch (error) {
       Navigator.pop(context); // Remove loading dialog
-      _showErrorDialog('Network error. Please check your connection and try again.');
+      _showErrorDialog(
+        'Network error. Please check your connection and try again.',
+      );
     }
   }
 
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: ASColor.Background(context),
-        title: Text(
-          'Error',
-          style: TextStyle(color: ASColor.getTextColor(context)),
-        ),
-        content: Text(
-          message,
-          style: TextStyle(color: ASColor.getTextColor(context)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: ASColor.Background(context),
+            title: Text(
+              'Error',
+              style: TextStyle(color: ASColor.getTextColor(context)),
+            ),
+            content: Text(
+              message,
+              style: TextStyle(color: ASColor.getTextColor(context)),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -212,7 +220,9 @@ class _SignupState extends State<Signup> {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Fill all the text field';
                                 }
-                                if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value.trim())) {
+                                if (!RegExp(
+                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                ).hasMatch(value.trim())) {
                                   return 'Enter a valid email address';
                                 }
                                 return null;
@@ -403,6 +413,8 @@ class _SignupState extends State<Signup> {
                               ),
                             ),
 
+                            SizedBox(height: 10),
+
                             Row(
                               children: [
                                 Checkbox(
@@ -412,199 +424,47 @@ class _SignupState extends State<Signup> {
                                       isChecked = newValue ?? false;
                                     });
                                   },
-                                  activeColor: ASColor.buttonBackground(context),
+                                  activeColor: ASColor.buttonBackground(
+                                    context,
+                                  ),
                                 ),
                                 Flexible(
-                                  child: TextButton(
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        barrierDismissible:
-                                            false, // Prevent closing by tapping outside
-                                        builder: (BuildContext context) {
-                                          bool localAccepted = false;
-
-                                          return StatefulBuilder(
-                                            builder: (context, setState) {
-                                              return Dialog(
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: SizedBox(
-                                                  height:
-                                                      MediaQuery.of(
-                                                        context,
-                                                      ).size.height *
-                                                      0.75,
-                                                  child: Column(
-                                                    children: [
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets.all(
-                                                              16.0,
-                                                            ),
-                                                        child: Text(
-                                                          'Terms and Conditions',
-                                                          style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 18,
-                                                            fontFamily:
-                                                                'Poppins',
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const Divider(height: 1),
-                                                      Expanded(
-                                                        child: SingleChildScrollView(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                horizontal:
-                                                                    16.0,
-                                                              ),
-                                                          child: Text(
-                                                            '''1. Acceptance of Terms
-
-By creating an account or using our services, you acknowledge that you have read, understood, and agree to be bound by these Terms.
-
-2. User Accounts
-
-You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities that occur under your account.
-
-3. Use of Services
-
-You agree to use our services only for lawful purposes and in a manner that does not infringe the rights of or restrict or inhibit anyone else's use and enjoyment of our services.
-
-4. Privacy Policy
-
-Your use of our services is also governed by our Privacy Policy, which is incorporated into these Terms by reference. Please review our Privacy Policy to understand our practices regarding your personal information.
-
-5. Intellectual Property
-
-The content, trademarks, service marks, and logos on our services are owned by or licensed to us and are subject to copyright and other intellectual property rights.
-
-6. Disclaimer of Warranties
-
-Our services are provided on an "as is" and "as available" basis without any warranties of any kind, express or implied.
-
-7. Limitation of Liability
-
-To the fullest extent permitted by applicable law, we shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of our services.
-
-8. Governing Law
-
-These Terms shall be governed by and construed in accordance with the laws of [Your Country/State], without regard to its conflict of law provisions.
-
-9. Changes to Terms
-
-We reserve the right to modify or revise these Terms at any time. Your continued use of our services after any such changes constitutes your acceptance of the new Terms.
-
-10. Contact Us
-
-If you have any questions about these Terms, please contact us at [Your Contact Information].
-''',
-                                                            style: TextStyle(
-                                                              fontSize: 14,
-                                                              fontFamily:
-                                                                  'Poppins',
-                                                              color:
-                                                                  Colors
-                                                                      .black87,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              horizontal: 16.0,
-                                                            ),
-                                                        child: CheckboxListTile(
-                                                          contentPadding:
-                                                              EdgeInsets.zero,
-                                                          controlAffinity:
-                                                              ListTileControlAffinity
-                                                                  .leading,
-                                                          title: Text(
-                                                            "I have read and agree to the terms and conditions",
-                                                            style: TextStyle(
-                                                              fontSize: 13,
-                                                              fontFamily:
-                                                                  'Poppins',
-                                                            ),
-                                                          ),
-                                                          value: localAccepted,
-                                                          onChanged: (
-                                                            bool? value,
-                                                          ) {
-                                                            setState(() {
-                                                              localAccepted =
-                                                                  value ??
-                                                                  false;
-                                                            });
-                                                          },
-                                                        ),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed:
-                                                            localAccepted
-                                                                ? () {
-                                                                  Navigator.of(
-                                                                    context,
-                                                                  ).pop();
-                                                                }
-                                                                : null, // Disable if not accepted
-                                                        child: Text(
-                                                          "Close",
-                                                          style: TextStyle(
-                                                            color:
-                                                                localAccepted
-                                                                    ? Colors
-                                                                        .blue
-                                                                    : Colors
-                                                                        .grey,
-                                                            fontSize: 14,
-                                                            fontFamily:
-                                                                'Poppins',
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 8),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      );
-                                    },
-
-                                    style: ButtonStyle(
-                                      overlayColor: MaterialStateProperty.all(
-                                        Colors.transparent,
-                                      ), // No ripple
-                                      splashFactory:
-                                          NoSplash
-                                              .splashFactory, // Optional: remove all splash behavior
-                                      padding: MaterialStateProperty.all(
-                                        EdgeInsets.zero,
-                                      ), // Optional: remove default padding
-                                    ),
-                                    child: Text(
-                                      "I agree to the terms and conditions",
+                                  child: RichText(
+                                    text: TextSpan(
                                       style: TextStyle(
                                         fontFamily: 'Poppins',
                                         color: ASColor.getTextColor(context),
-                                        fontSize: 12,
-                                        decoration: TextDecoration.underline,
+                                        fontSize: 14,
                                       ),
+                                      children: [
+                                        TextSpan(text: "I agree to the "),
+                                        WidgetSpan(
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              TermsAndConditionsDialog.show(
+                                                context,
+                                              );
+                                            },
+                                            child: Text(
+                                              "terms and conditions",
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                color: Colors.blue,
+                                                fontSize: 14,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ],
                             ),
+                            
+                            SizedBox(height: 10),
                             // Sign Up button
                             Center(
                               child: ElevatedButton(
@@ -618,15 +478,19 @@ If you have any questions about these Terms, please contact us at [Your Contact 
                                         }
                                         : null,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: ASColor.buttonBackground(context),
-                                  foregroundColor: ASColor.getTextColor(context),
+                                  backgroundColor: ASColor.buttonBackground(
+                                    context,
+                                  ),
+                                  foregroundColor: ASColor.getTextColor(
+                                    context,
+                                  ),
                                 ),
                                 child: const Text(
                                   'Sign Up',
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 16,
-                                    color: ASColor.txt1Color
+                                    color: ASColor.txt1Color,
                                   ),
                                 ),
                               ),

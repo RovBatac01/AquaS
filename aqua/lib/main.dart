@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: Userdashboard(),
+      home: Signup(),
     );
   }
 }

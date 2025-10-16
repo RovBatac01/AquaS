@@ -1,4 +1,5 @@
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/terms_and_conditions_dialog.dart';
 import 'package:aqua/pages/Admin/AdminHome.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:aqua/pages/Login.dart';
@@ -467,6 +468,20 @@ class _SettingsScreenState extends State<UserSettingsScreen> {
                 },
               ),
               if (FAQExpanded) buildEnhancedQuestion(),
+
+              const SizedBox(height: 16),
+
+              // Enhanced Terms and Conditions Section
+              buildEnhancedSettingsCard(
+                context: context,
+                icon: Icons.article_rounded,
+                title: 'Terms and Conditions',
+                subtitle: 'Data Privacy Policy and Terms of Service',
+                isExpanded: false,
+                onTap: () {
+                  TermsAndConditionsDialog.show(context);
+                },
+              ),
 
               const SizedBox(height: 16),
 
