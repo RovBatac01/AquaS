@@ -852,7 +852,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Home Water Tank',
+                                  _currentDeviceName ?? 'Loading...',
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
@@ -862,7 +862,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Real-time water quality monitoring',
+                                  _currentDeviceId != null 
+                                    ? 'Device ID: $_currentDeviceId'
+                                    : 'Real-time water quality monitoring',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],

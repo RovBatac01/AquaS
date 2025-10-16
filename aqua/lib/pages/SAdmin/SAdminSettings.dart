@@ -1,5 +1,6 @@
 import 'dart:convert' show jsonEncode, jsonDecode;
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
@@ -417,24 +418,40 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
                                 ),
                               ),
                               onPressed: () async {
-                                // Optional: Notify server
-                                try {
-                                  await http.post(
-                                    Uri.parse("https://aquasense-p36u.onrender.com/logout"),
-                                    headers: {"Content-Type": "application/json"},
-                                  );
-                                } catch (e) {
-                                  print("Logout request failed (optional): $e");
+                                // Get user token before clearing session
+                                final prefs = await SharedPreferences.getInstance();
+                                final String? userToken = prefs.getString('userToken');
+
+                                // Notify server about logout with authentication
+                                if (userToken != null) {
+                                  try {
+                                    final response = await http.post(
+                                      Uri.parse(ApiConfig.logoutEndpoint),
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                        "Authorization": "Bearer $userToken",
+                                      },
+                                    );
+                                    
+                                    if (response.statusCode == 200) {
+                                      print("✅ Logout successful on server");
+                                    } else {
+                                      print("⚠️ Logout response: ${response.statusCode} - ${response.body}");
+                                    }
+                                  } catch (e) {
+                                    print("❌ Logout request failed: $e");
+                                  }
                                 }
 
-                                // Clear session
-                                final prefs = await SharedPreferences.getInstance();
+                                // Clear session data
                                 await prefs.remove('userToken');
                                 await prefs.remove('userId');
                                 await prefs.remove('loggedInUsername');
+                                await prefs.remove('loggedInEmail');
+                                await prefs.remove('loggedInPhone');
 
                                 // Navigate to login screen
-                                Navigator.of(context).pop();
+                                Navigator.of(context).pop(); // Close dialog
                                 Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                     builder: (context) => LoginScreen(),

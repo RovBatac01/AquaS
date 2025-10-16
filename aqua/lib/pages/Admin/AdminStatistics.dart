@@ -30,7 +30,7 @@ class AdminStatistics extends StatefulWidget {
 }
 
 class _StatisticsState extends State<AdminStatistics> {
-  String selectedStat = "Temp";
+  String selectedStat = "Loading...";
   String selectedPeriod = "Real-time"; // Default selection: "Daily" (maps to 24h)
 
   List<WaterQualityData> _currentData = [];
@@ -40,7 +40,7 @@ class _StatisticsState extends State<AdminStatistics> {
   String? _approvalMessage;
   String? _currentDeviceId;
   List<Map<String, dynamic>> _availableSensors = [];
-  List<String> _availableSensorNames = [];
+  List<String> _availableSensorNames = ["Loading..."];
 
   final DeviceAwareService _deviceService = DeviceAwareService();
 

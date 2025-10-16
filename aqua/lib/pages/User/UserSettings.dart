@@ -1,9 +1,12 @@
 import 'package:aqua/components/colors.dart';
+import 'package:aqua/config/api_config.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(SettingsApp());
@@ -227,8 +230,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       size: 16,
                     ),
                     onTap: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      // Show confirmation dialog
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext dialogContext) {
+                          bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            backgroundColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                            title: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.logout_rounded,
+                                    color: Colors.red[600],
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Confirm Logout',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Montserrat',
+                                      color: isDarkMode ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            content: Text(
+                              'Are you sure you want to log out? You will need to sign in again to access your account.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                color: isDarkMode ? Colors.white70 : Colors.black87,
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                child: Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  // Close the dialog first
+                                  Navigator.of(dialogContext).pop();
+                                  
+                                  // Get user token before clearing session
+                                  final prefs = await SharedPreferences.getInstance();
+                                  final String? userToken = prefs.getString('userToken');
+
+                                  // Notify server about logout with authentication
+                                  if (userToken != null) {
+                                    try {
+                                      final response = await http.post(
+                                        Uri.parse(ApiConfig.logoutEndpoint),
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                          "Authorization": "Bearer $userToken",
+                                        },
+                                      );
+                                      
+                                      if (response.statusCode == 200) {
+                                        print('✅ Logout successful on server');
+                                      } else {
+                                        print('⚠️ Logout response: ${response.statusCode} - ${response.body}');
+                                      }
+                                    } catch (e) {
+                                      print('❌ Logout request failed: $e');
+                                    }
+                                  }
+
+                                  // Clear session data
+                                  await prefs.remove('userToken');
+                                  await prefs.remove('userId');
+                                  await prefs.remove('loggedInUsername');
+                                  await prefs.remove('loggedInEmail');
+                                  await prefs.remove('loggedInPhone');
+
+                                  // Navigate to login screen
+                                  Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red[600],
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Logout',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
                   ),
