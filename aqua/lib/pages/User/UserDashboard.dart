@@ -59,7 +59,7 @@ class _MainScreenState extends State<Userdashboard> {
     Center(child: UserStatistics(key: ValueKey('Stats'))),
     Center(child: NotificationPage(key: ValueKey('Notif'))),
     Center(child: CalendarPage()),
-    Center(child: SettingsScreen()),
+    Center(child: UserSettingsScreen()),
   ];
 
   final List<String> _titles = [

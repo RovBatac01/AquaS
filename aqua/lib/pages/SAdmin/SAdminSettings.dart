@@ -301,24 +301,6 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // Enhanced Session History Section
-              _buildEnhancedSettingsCard(
-                icon: Icons.history_rounded,
-                title: 'Session History',
-                subtitle: 'Monitor your account activity and sessions',
-                isExpanded: SessionExpanded,
-                onTap: () {
-                  setState(() {
-                    SessionExpanded = !SessionExpanded;
-                  });
-                },
-                child: SessionExpanded ? AccountActivityLog() : null,
-                color: Colors.green,
-                isDarkMode: isDarkMode,
-              ),
-
-              const SizedBox(height: 24),
-
               // Enhanced Logout Section
               Container(
                 decoration: BoxDecoration(

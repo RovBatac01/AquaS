@@ -221,6 +221,186 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     }
   }
 
+
+  void _showContactSupportDialog() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[850] : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with icon
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.support_agent_rounded,
+                    size: 32,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Title
+                Text(
+                  'Contact Support',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: ASColor.getTextColor(context),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Description
+                Text(
+                  'Get help with your account or report issues',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: ASColor.getTextColor(context).withOpacity(0.7),
+                    fontFamily: 'Poppins',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+
+                // Contact Information
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      // Email
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.email_rounded,
+                            color: Colors.blue,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Email',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: ASColor.getTextColor(
+                                      context,
+                                    ).withOpacity(0.7),
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                Text(
+                                  'aquasense35@gmail.com',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: ASColor.getTextColor(context),
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Phone
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.phone_rounded,
+                            color: Colors.green,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Contact Number',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: ASColor.getTextColor(
+                                      context,
+                                    ).withOpacity(0.7),
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                Text(
+                                  '09770439485',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: ASColor.getTextColor(context),
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Close button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Close',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -240,65 +420,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Enhanced Header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isDarkMode 
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.02),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDarkMode ? Colors.white12 : Colors.black12,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.settings_rounded,
-                        color: Colors.blue,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Settings',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: ASColor.getTextColor(context),
-                              fontFamily: 'Montserrat',
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Manage your account and preferences',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: ASColor.getTextColor(context).withOpacity(0.7),
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            // Enhanced Profile Management Section
             buildEnhancedSettingsCard(
               context: context,
               icon: Icons.person_rounded,
@@ -348,23 +469,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
             if (FAQExpanded) buildEnhancedQuestion(),
 
             const SizedBox(height: 16),
-
-            // Enhanced Session History Section
-            buildEnhancedSettingsCard(
-              context: context,
-              icon: Icons.history_rounded,
-              title: 'Session History',
-              subtitle: 'Monitor your account activity and login history',
-              isExpanded: SessionExpanded,
-              onTap: () {
-                setState(() {
-                  SessionExpanded = !SessionExpanded;
-                });
-              },
-            ),
-            if (SessionExpanded) buildEnhancedAccountActivityLog(),
-
-            const SizedBox(height: 24),
 
             // Enhanced Logout Section
             Container(
@@ -626,62 +730,75 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDarkMode 
-          ? Colors.white.withOpacity(0.03)
-          : Colors.black.withOpacity(0.02),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDarkMode ? Colors.white12 : Colors.black12,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            print('Contact support tapped!'); // Debug print
+            _showContactSupportDialog();
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color:
+                  isDarkMode
+                      ? Colors.white.withOpacity(0.03)
+                      : Colors.black.withOpacity(0.02),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDarkMode ? Colors.white12 : Colors.black12,
+                width: 1,
+              ),
             ),
-            child: Icon(
-              Icons.support_agent_rounded,
-              color: Colors.green,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  'Contact Support',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Poppins',
-                    color: ASColor.getTextColor(context),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.support_agent_rounded,
+                    color: Colors.green,
+                    size: 20,
                   ),
                 ),
-                Text(
-                  'Get help with your account or report issues',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ASColor.getTextColor(context).withOpacity(0.6),
-                    fontFamily: 'Poppins',
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Contact Support',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Poppins',
+                          color: ASColor.getTextColor(context),
+                        ),
+                      ),
+                      Text(
+                        'Get help with your account or report issues',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ASColor.getTextColor(context).withOpacity(0.6),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: ASColor.getTextColor(context).withOpacity(0.4),
                 ),
               ],
             ),
           ),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: ASColor.getTextColor(context).withOpacity(0.4),
-          ),
-        ],
+        ),
       ),
     );
   }

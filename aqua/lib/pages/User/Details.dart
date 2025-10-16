@@ -750,14 +750,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
       appBar: AppBar(
         backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
         elevation: 0,
-        title: Text(
-          'Water Quality Monitor',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Montserrat',
-          ),
-        ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),

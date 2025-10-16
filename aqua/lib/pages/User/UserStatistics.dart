@@ -386,67 +386,6 @@ class _StatisticsState extends State<UserStatistics> {
             padding: const EdgeInsets.all(20.0),
             child: Column(
               children: [
-                // Enhanced Header Section
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey[800] : Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.blue.shade400, Colors.blue.shade600],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.analytics_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Water Quality Analytics',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: isDarkMode ? Colors.white : Colors.black87,
-                                fontFamily: 'Montserrat',
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Real-time insights and trends for your water quality data',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                fontFamily: 'Poppins',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
                 // Enhanced Controls Section
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -463,36 +402,7 @@ class _StatisticsState extends State<UserStatistics> {
                   ),
                   child: Row(
                     children: [
-                      // Enhanced Export Button
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          height: 48,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              print('Export tapped');
-                            },
-                            icon: Icon(Icons.download_rounded, size: 20),
-                            label: Text(
-                              'Export Data',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              elevation: 2,
-                              shadowColor: Colors.green.withOpacity(0.3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                      
                       const SizedBox(width: 16),
                       // Enhanced Period Selector
                       Expanded(
@@ -747,6 +657,33 @@ class _StatisticsState extends State<UserStatistics> {
 
                 const SizedBox(height: 24),
 
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.insights_rounded,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Water Quality Highlights',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontFamily: 'Montserrat',
+                      ),
+                    ),
+                  ],
+                ),
+
                 // Enhanced Sensor Selection and Highlights Section
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -767,39 +704,32 @@ class _StatisticsState extends State<UserStatistics> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.insights_rounded,
-                                  color: Colors.green,
-                                  size: 20,
-                                ),
+                          Expanded(
+                            child: Text(
+                              'Select Sensor Type:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isDarkMode ? Colors.white : Colors.black87,
+                                fontFamily: 'Poppins',
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Water Quality Highlights',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDarkMode ? Colors.white : Colors.black87,
-                                  fontFamily: 'Montserrat',
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                           Container(
+                            width: 160, // Set specific width for the dropdown
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.grey[700] : Colors.grey[100],
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[700]
+                                      : Colors.grey[100],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[600]!
+                                        : Colors.grey[300]!,
                               ),
                             ),
                             child: DropdownButtonHideUnderline(
@@ -813,36 +743,50 @@ class _StatisticsState extends State<UserStatistics> {
                                 },
                                 icon: Icon(
                                   Icons.keyboard_arrow_down_rounded,
-                                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[300]
+                                          : Colors.grey[700],
                                 ),
-                                items: _availableSensorNames.isNotEmpty 
-                                    ? _availableSensorNames.map<DropdownMenuItem<String>>((String value) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(
-                                            value,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontFamily: 'Poppins',
-                                              fontWeight: FontWeight.w500,
-                                              color: isDarkMode ? Colors.white : Colors.black87,
+                                items:
+                                    _availableSensorNames.isNotEmpty
+                                        ? _availableSensorNames
+                                            .map<DropdownMenuItem<String>>((
+                                              String value,
+                                            ) {
+                                              return DropdownMenuItem<String>(
+                                                value: value,
+                                                child: Text(
+                                                  value,
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontFamily: 'Poppins',
+                                                    fontWeight: FontWeight.w500,
+                                                    color:
+                                                        isDarkMode
+                                                            ? Colors.white
+                                                            : Colors.black87,
+                                                  ),
+                                                ),
+                                              );
+                                            })
+                                            .toList()
+                                        : <DropdownMenuItem<String>>[
+                                          DropdownMenuItem<String>(
+                                            value: "No Sensors",
+                                            child: Text(
+                                              "No Sensors",
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontFamily: 'Poppins',
+                                                color:
+                                                    isDarkMode
+                                                        ? Colors.grey[400]
+                                                        : Colors.grey[600],
+                                              ),
                                             ),
                                           ),
-                                        );
-                                      }).toList()
-                                    : <DropdownMenuItem<String>>[
-                                        DropdownMenuItem<String>(
-                                          value: "No Sensors",
-                                          child: Text(
-                                            "No Sensors",
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontFamily: 'Poppins',
-                                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
+                                        ],
                               ),
                             ),
                           ),
@@ -850,47 +794,48 @@ class _StatisticsState extends State<UserStatistics> {
                       ),
                       const SizedBox(height: 20),
                       IntrinsicHeight(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: buildHighlightCard(
-                        // Using the new inline helper
-                        "Highest",
-                        getStatMaxValue().toStringAsFixed(2),
-                        getStatColor(),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: buildHighlightCard(
+                                // Using the new inline helper
+                                "Highest",
+                                getStatMaxValue().toStringAsFixed(2),
+                                getStatColor(),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: buildHighlightCard(
+                                // Using the new inline helper
+                                "Lowest",
+                                getStatMinValue().toStringAsFixed(2),
+                                getStatColor(),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: buildHighlightCard(
+                                // Using the new inline helper
+                                "Average",
+                                getStatAverage().toStringAsFixed(2),
+                                getStatColor(),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: buildHighlightCard(
+                                // Using the new inline helper
+                                "Last Reading",
+                                getStatLastValue().toStringAsFixed(2),
+                                getStatColor(),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: buildHighlightCard(
-                        // Using the new inline helper
-                        "Lowest",
-                        getStatMinValue().toStringAsFixed(2),
-                        getStatColor(),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: buildHighlightCard(
-                        // Using the new inline helper
-                        "Average",
-                        getStatAverage().toStringAsFixed(2),
-                        getStatColor(),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: buildHighlightCard(
-                        // Using the new inline helper
-                        "Last Reading",
-                        getStatLastValue().toStringAsFixed(2),
-                        getStatColor(),
-                      ),
-                    ),
-                  ],
-                ),
-                  )],
+                    ],
                   ),
                 ),
               ],

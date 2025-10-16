@@ -53,7 +53,7 @@ class _MainScreenState extends State<Admindashboard> {
     'Statistics',
     'Notification',
     'Calendar',
-    'Settings'
+    'Settings',
   ];
 
   //Code for the bottom navigation bar
@@ -83,9 +83,10 @@ class _MainScreenState extends State<Admindashboard> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: isDarkMode 
-                    ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
-                    : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
+                  colors:
+                      isDarkMode
+                          ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
+                          : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
                 ),
               ),
               child: SafeArea(
@@ -103,12 +104,14 @@ class _MainScreenState extends State<Admindashboard> {
                             (constraints.maxWidth * 0.05).clamp(16.0, 24.0),
                           ),
                           decoration: BoxDecoration(
-                            color: isDarkMode 
-                              ? Colors.white.withOpacity(0.05)
-                              : Colors.black.withOpacity(0.02),
+                            color:
+                                isDarkMode
+                                    ? Colors.white.withOpacity(0.05)
+                                    : Colors.black.withOpacity(0.02),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: isDarkMode ? Colors.white12 : Colors.black12,
+                              color:
+                                  isDarkMode ? Colors.white12 : Colors.black12,
                               width: 1,
                             ),
                             boxShadow: [
@@ -145,7 +148,9 @@ class _MainScreenState extends State<Admindashboard> {
                                       child: Text(
                                         _titles[_currentIndex],
                                         style: TextStyle(
-                                          fontSize: (constraints.maxWidth * 0.055).clamp(18.0, 24.0),
+                                          fontSize: (constraints.maxWidth *
+                                                  0.055)
+                                              .clamp(18.0, 24.0),
                                           fontWeight: FontWeight.bold,
                                           color: ASColor.getTextColor(context),
                                           fontFamily: 'Montserrat',
@@ -156,8 +161,11 @@ class _MainScreenState extends State<Admindashboard> {
                                     Text(
                                       _getSubtitleForPage(_currentIndex),
                                       style: TextStyle(
-                                        fontSize: (constraints.maxWidth * 0.035).clamp(12.0, 16.0),
-                                        color: ASColor.getTextColor(context).withOpacity(0.7),
+                                        fontSize: (constraints.maxWidth * 0.035)
+                                            .clamp(12.0, 16.0),
+                                        color: ASColor.getTextColor(
+                                          context,
+                                        ).withOpacity(0.7),
                                         fontFamily: 'Poppins',
                                       ),
                                       overflow: TextOverflow.ellipsis,
@@ -169,7 +177,10 @@ class _MainScreenState extends State<Admindashboard> {
                               const SizedBox(width: 8),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: isDarkMode ? Colors.white12 : Colors.black12,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white12
+                                          : Colors.black12,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: IconButton(
@@ -180,13 +191,17 @@ class _MainScreenState extends State<Admindashboard> {
                                   ),
                                   onPressed: () {
                                     setState(() {
-                                      _currentIndex = _titles.indexOf('Settings');
+                                      _currentIndex = _titles.indexOf(
+                                        'Settings',
+                                      );
                                     });
                                   },
                                   tooltip: 'Settings',
-                                  constraints: const BoxConstraints(
+                                  constraints: BoxConstraints(
                                     minWidth: 40,
                                     minHeight: 40,
+                                    maxWidth: 48,
+                                    maxHeight: 48,
                                   ),
                                 ),
                               ),
@@ -196,11 +211,7 @@ class _MainScreenState extends State<Admindashboard> {
                       },
                     ),
                     // Content Area
-                    Expanded(
-                      child: ClipRect(
-                        child: _screens[_currentIndex],
-                      ),
-                    ),
+                    Expanded(child: ClipRect(child: _screens[_currentIndex])),
                   ],
                 ),
               ),
@@ -211,18 +222,22 @@ class _MainScreenState extends State<Admindashboard> {
           child: Container(
             margin: EdgeInsets.fromLTRB(
               MediaQuery.of(context).size.width * 0.03, // 3% of screen width
-              0, 
+              0,
               MediaQuery.of(context).size.width * 0.03,
               MediaQuery.of(context).size.width * 0.03,
             ),
             constraints: BoxConstraints(
               minHeight: 60,
-              maxHeight: MediaQuery.of(context).size.height * 0.08, // Max 8% of screen height
+              maxHeight: (MediaQuery.of(context).size.height * 0.08).clamp(
+                60.0,
+                80.0,
+              ), // Ensure max is at least 60
             ),
             decoration: BoxDecoration(
-              color: isDarkMode 
-                ? Colors.white.withOpacity(0.05)
-                : Colors.white.withOpacity(0.9),
+              color:
+                  isDarkMode
+                      ? Colors.white.withOpacity(0.05)
+                      : Colors.white.withOpacity(0.9),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -238,19 +253,53 @@ class _MainScreenState extends State<Admindashboard> {
             ),
             child: LayoutBuilder(
               builder: (context, constraints) {
+                // Ensure minimum usable height
+                final availableHeight = constraints.maxHeight.clamp(
+                  60.0,
+                  double.infinity,
+                );
+
                 return Container(
+                  height: availableHeight,
                   padding: EdgeInsets.symmetric(
-                    horizontal: constraints.maxWidth * 0.02, // 2% of container width
+                    horizontal: (constraints.maxWidth * 0.02).clamp(
+                      4.0,
+                      12.0,
+                    ), // 2% of container width with bounds
                     vertical: 4,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Expanded(child: _buildEnhancedNavItem(Icons.home_rounded, 'Home', 0)),
-                      Expanded(child: _buildEnhancedNavItem(Icons.analytics_rounded, 'Statistics', 1)),
-                      Expanded(child: _buildEnhancedNavItem(Icons.notifications_rounded, 'Notifications', 2)),
-                      Expanded(child: _buildEnhancedNavItem(Icons.calendar_month_rounded, 'Calendar', 3)),
+                      Expanded(
+                        child: _buildEnhancedNavItem(
+                          Icons.home_rounded,
+                          'Home',
+                          0,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildEnhancedNavItem(
+                          Icons.analytics_rounded,
+                          'Statistics',
+                          1,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildEnhancedNavItem(
+                          Icons.notifications_rounded,
+                          'Notifications',
+                          2,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildEnhancedNavItem(
+                          Icons.calendar_month_rounded,
+                          'Calendar',
+                          3,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -264,23 +313,35 @@ class _MainScreenState extends State<Admindashboard> {
 
   IconData _getIconForPage(int index) {
     switch (index) {
-      case 0: return Icons.home_rounded;
-      case 1: return Icons.analytics_rounded;
-      case 2: return Icons.notifications_rounded;
-      case 3: return Icons.calendar_month_rounded;
-      case 4: return Icons.settings_rounded;
-      default: return Icons.home_rounded;
+      case 0:
+        return Icons.home_rounded;
+      case 1:
+        return Icons.analytics_rounded;
+      case 2:
+        return Icons.notifications_rounded;
+      case 3:
+        return Icons.calendar_month_rounded;
+      case 4:
+        return Icons.settings_rounded;
+      default:
+        return Icons.home_rounded;
     }
   }
 
   String _getSubtitleForPage(int index) {
     switch (index) {
-      case 0: return 'Dashboard overview';
-      case 1: return 'Data analytics';
-      case 2: return 'System alerts';
-      case 3: return 'Schedule management';
-      case 4: return 'Account preferences';
-      default: return '';
+      case 0:
+        return 'Dashboard overview';
+      case 1:
+        return 'Data analytics';
+      case 2:
+        return 'System alerts';
+      case 3:
+        return 'Schedule management';
+      case 4:
+        return 'Account preferences';
+      default:
+        return '';
     }
   }
 
@@ -289,23 +350,31 @@ class _MainScreenState extends State<Admindashboard> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculate responsive sizes based on available space
-        final double iconSize = (constraints.maxWidth * 0.25).clamp(16.0, 22.0);
+        // Calculate responsive sizes based on available space with safety bounds
+        final double iconSize = (constraints.maxWidth * 0.25).clamp(16.0, 24.0);
         final double fontSize = (constraints.maxWidth * 0.12).clamp(8.0, 12.0);
-        final double paddingHorizontal = (constraints.maxWidth * 0.08).clamp(2.0, 6.0);
-        
+        final double paddingHorizontal = (constraints.maxWidth * 0.08).clamp(
+          2.0,
+          8.0,
+        );
+
         return GestureDetector(
           onTap: () => _onItemTapped(index),
           child: Container(
             width: double.infinity,
+            height: constraints.maxHeight.clamp(
+              48.0,
+              double.infinity,
+            ), // Ensure minimum height
             padding: EdgeInsets.symmetric(
-              horizontal: paddingHorizontal, 
+              horizontal: paddingHorizontal,
               vertical: 4,
             ),
             decoration: BoxDecoration(
-              color: isSelected 
-                ? Colors.blue.withOpacity(0.1)
-                : Colors.transparent,
+              color:
+                  isSelected
+                      ? Colors.blue.withOpacity(0.1)
+                      : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -316,16 +385,18 @@ class _MainScreenState extends State<Admindashboard> {
                 Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: isSelected 
-                      ? Colors.blue.withOpacity(0.2)
-                      : Colors.transparent,
+                    color:
+                        isSelected
+                            ? Colors.blue.withOpacity(0.2)
+                            : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Icon(
-                    icon, 
-                    color: isSelected 
-                      ? Colors.blue 
-                      : ASColor.getTextColor(context).withOpacity(0.6),
+                    icon,
+                    color:
+                        isSelected
+                            ? Colors.blue
+                            : ASColor.getTextColor(context).withOpacity(0.6),
                     size: iconSize,
                   ),
                 ),
@@ -334,13 +405,17 @@ class _MainScreenState extends State<Admindashboard> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      label, 
+                      label,
                       style: TextStyle(
-                        fontSize: fontSize, 
-                        color: isSelected 
-                          ? Colors.blue 
-                          : ASColor.getTextColor(context).withOpacity(0.6),
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: fontSize,
+                        color:
+                            isSelected
+                                ? Colors.blue
+                                : ASColor.getTextColor(
+                                  context,
+                                ).withOpacity(0.6),
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
                         fontFamily: 'Poppins',
                       ),
                       textAlign: TextAlign.center,
