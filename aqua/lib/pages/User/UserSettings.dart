@@ -406,14 +406,18 @@ class _SettingsScreenState extends State<UserSettingsScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
-                    : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
-          ),
+          color: isDarkMode ? null : ASColor.BGfirst,
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      ASColor.BGSecond,
+                      ASColor.BGthird.withOpacity(0.8),
+                    ],
+                  )
+                  : null,
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),

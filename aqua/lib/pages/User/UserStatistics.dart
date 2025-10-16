@@ -31,7 +31,8 @@ class UserStatistics extends StatefulWidget {
 
 class _StatisticsState extends State<UserStatistics> {
   String selectedStat = "Loading...";
-  String selectedPeriod = "Real-time"; // Default selection: "Daily" (maps to 24h)
+  String selectedPeriod =
+      "Real-time"; // Default selection: "Daily" (maps to 24h)
 
   List<WaterQualityData> _currentData = [];
   bool _isLoading = true;
@@ -82,29 +83,32 @@ class _StatisticsState extends State<UserStatistics> {
     try {
       // Check if user has any approved device access
       _hasApprovedAccess = await _deviceService.hasApprovedDeviceAccess();
-      
+
       if (_hasApprovedAccess) {
         // User has approved access, get the first accessible device
         final devices = await _deviceService.getAccessibleDevices();
         if (devices.isNotEmpty) {
           _currentDeviceId = devices.first['device_id'];
-          
+
           // Fetch available sensors for this device
-          _availableSensors = await _deviceService.getAvailableSensors(_currentDeviceId!);
-          
+          _availableSensors = await _deviceService.getAvailableSensors(
+            _currentDeviceId!,
+          );
+
           // Map backend sensor names to frontend display names
-          _availableSensorNames = _availableSensors.map((sensor) {
-            String sensorType = sensor['type'].toString();
-            return _mapSensorTypeToDisplayName(sensorType);
-          }).toList();
-          
+          _availableSensorNames =
+              _availableSensors.map((sensor) {
+                String sensorType = sensor['type'].toString();
+                return _mapSensorTypeToDisplayName(sensorType);
+              }).toList();
+
           // Set the first available sensor as default, or fallback to "No Sensors"
           if (_availableSensorNames.isNotEmpty) {
             selectedStat = _availableSensorNames.first;
           } else {
             selectedStat = "No Sensors";
           }
-          
+
           await _fetchData(); // Fetch data for the accessible device
         } else {
           setState(() {
@@ -117,18 +121,23 @@ class _StatisticsState extends State<UserStatistics> {
         }
       } else {
         // No approved access - check for pending requests
-        List<Map<String, dynamic>> pendingRequests = await _deviceService.getPendingDeviceRequests();
-        List<Map<String, dynamic>> allRequests = await _deviceService.getUserDeviceRequests();
-        
+        List<Map<String, dynamic>> pendingRequests =
+            await _deviceService.getPendingDeviceRequests();
+        List<Map<String, dynamic>> allRequests =
+            await _deviceService.getUserDeviceRequests();
+
         setState(() {
           _isLoading = false;
-          
+
           if (pendingRequests.isNotEmpty) {
-            _approvalMessage = 'Your device access request is pending approval. Statistics will be available once approved.';
+            _approvalMessage =
+                'Your device access request is pending approval. Statistics will be available once approved.';
           } else if (allRequests.any((req) => req['status'] == 'rejected')) {
-            _approvalMessage = 'Your device access request was rejected. Please contact your administrator to view statistics.';
+            _approvalMessage =
+                'Your device access request was rejected. Please contact your administrator to view statistics.';
           } else {
-            _approvalMessage = 'No device access found. Please request access from your administrator to view statistics.';
+            _approvalMessage =
+                'No device access found. Please request access from your administrator to view statistics.';
           }
         });
       }
@@ -143,7 +152,7 @@ class _StatisticsState extends State<UserStatistics> {
   // Modified to use device-aware service
   Future<void> _fetchData() async {
     if (!_hasApprovedAccess || _currentDeviceId == null) return;
-    
+
     // Don't fetch data if no sensors are available
     if (selectedStat == "No Sensors" || _availableSensorNames.isEmpty) {
       setState(() {
@@ -153,7 +162,7 @@ class _StatisticsState extends State<UserStatistics> {
       });
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -169,7 +178,8 @@ class _StatisticsState extends State<UserStatistics> {
 
       if (mounted) {
         setState(() {
-          _currentData = data.reversed.toList(); // Reverse to show oldest first on chart
+          _currentData =
+              data.reversed.toList(); // Reverse to show oldest first on chart
           _isLoading = false;
         });
       }
@@ -239,15 +249,16 @@ class _StatisticsState extends State<UserStatistics> {
   /// Build approval pending UI for statistics
   Widget _buildApprovalPendingUI(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: ASColor.Background(context),
+      backgroundColor:
+          isDarkMode ? ASColor.Background(context) : ASColor.BGfirst,
       body: Center(
         child: Container(
           margin: const EdgeInsets.all(20.0),
           padding: const EdgeInsets.all(30),
           decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[800] : Colors.white,
+            color: isDarkMode ? Colors.grey[800] : ASColor.BGfirst,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -274,7 +285,7 @@ class _StatisticsState extends State<UserStatistics> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Title
               Text(
                 'Statistics Unavailable',
@@ -287,19 +298,18 @@ class _StatisticsState extends State<UserStatistics> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              
+
               // Message
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.orange.withOpacity(0.3),
-                  ),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
                 ),
                 child: Text(
-                  _approvalMessage ?? 'Device access required to view statistics.',
+                  _approvalMessage ??
+                      'Device access required to view statistics.',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.orange[700],
@@ -330,7 +340,7 @@ class _StatisticsState extends State<UserStatistics> {
           color:
               Theme.of(context).brightness == Brightness.dark
                   ? color.withOpacity(0.1)
-                  : ASColor.Background(context),
+                  : ASColor.BGfirst,
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
@@ -368,18 +378,20 @@ class _StatisticsState extends State<UserStatistics> {
     }
 
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: isDarkMode ? Colors.grey[900] : ASColor.BGfirst,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDarkMode 
-              ? [Colors.grey[900]!, Colors.grey[850]!]
-              : [Colors.grey[50]!, Colors.white],
-          ),
+          color: isDarkMode ? null : ASColor.BGfirst,
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.grey[900]!, Colors.grey[850]!],
+                  )
+                  : null,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -402,7 +414,6 @@ class _StatisticsState extends State<UserStatistics> {
                   ),
                   child: Row(
                     children: [
-                      
                       const SizedBox(width: 16),
                       // Enhanced Period Selector
                       Expanded(
@@ -411,10 +422,16 @@ class _StatisticsState extends State<UserStatistics> {
                           height: 48,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.grey[700] : Colors.grey[100],
+                            color:
+                                isDarkMode
+                                    ? Colors.grey[700]
+                                    : Colors.grey[100],
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[600]!
+                                      : Colors.grey[300]!,
                             ),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -429,27 +446,36 @@ class _StatisticsState extends State<UserStatistics> {
                               },
                               icon: Icon(
                                 Icons.keyboard_arrow_down_rounded,
-                                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[300]
+                                        : Colors.grey[700],
                               ),
-                              items: <String>[
-                                'Real-time',
-                                "Daily",
-                                "Weekly", 
-                                "Monthly",
-                              ].map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: isDarkMode ? Colors.white : Colors.black87,
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
+                              items:
+                                  <String>[
+                                    'Real-time',
+                                    "Daily",
+                                    "Weekly",
+                                    "Monthly",
+                                  ].map<DropdownMenuItem<String>>((
+                                    String value,
+                                  ) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        value,
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
                             ),
                           ),
                         ),
@@ -505,153 +531,180 @@ class _StatisticsState extends State<UserStatistics> {
                       const SizedBox(height: 20),
                       SizedBox(
                         height: 300,
-                        child: _isLoading
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    CircularProgressIndicator(
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Loading sensor data...',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        child:
+                            _isLoading
+                                ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.blue,
+                                            ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : _errorMessage != null
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline_rounded,
-                                      size: 48,
-                                      color: Colors.red,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      _errorMessage!,
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Loading sensor data...',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                : _errorMessage != null
+                                ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        size: 48,
                                         color: Colors.red,
                                       ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : _currentData.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.analytics_outlined,
-                                      size: 48,
-                                      color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      "No data available for this selection",
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 16,
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        _errorMessage!,
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Colors.red,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                : _currentData.isEmpty
+                                ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.analytics_outlined,
+                                        size: 48,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.grey[600]
+                                                : Colors.grey[400],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        "No data available for this selection",
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 16,
+                                          color:
+                                              isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                : LineChart(
+                                  LineChartData(
+                                    minY: 0,
+                                    maxY: 100,
+                                    gridData: FlGridData(show: true),
+                                    titlesData: FlTitlesData(
+                                      leftTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          reservedSize: 40,
+                                          getTitlesWidget:
+                                              (value, _) => Text(
+                                                value.toStringAsFixed(1),
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                        ),
+                                      ),
+                                      bottomTitles: AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: true,
+                                          reservedSize: 50,
+                                          interval:
+                                              _getBottomTitleInterval(), // Dynamic interval
+                                          getTitlesWidget: (value, _) {
+                                            List<DateTime> timeData =
+                                                getTimeData();
+                                            int index = value.toInt();
+                                            if (index >= 0 &&
+                                                index < timeData.length) {
+                                              String formattedTime =
+                                                  _formatTimestamp(
+                                                    timeData[index],
+                                                  );
+                                              return Transform.rotate(
+                                                angle:
+                                                    -45 *
+                                                    (3.141592653589793 / 180),
+                                                child: Text(
+                                                  formattedTime,
+                                                  style: const TextStyle(
+                                                    fontSize: 9,
+                                                    fontFamily: 'Poppins',
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                            return const Text("");
+                                          },
+                                        ),
+                                      ),
+                                      topTitles: const AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: false,
+                                        ),
+                                      ),
+                                      rightTitles: const AxisTitles(
+                                        sideTitles: SideTitles(
+                                          showTitles: false,
+                                        ),
                                       ),
                                     ),
-                                  ],
-                                ),
-                              )
-                        : LineChart(
-                          LineChartData(
-                            minY: 0,
-                            maxY: 100,
-                            gridData: FlGridData(show: true),
-                            titlesData: FlTitlesData(
-                              leftTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 40,
-                                  getTitlesWidget:
-                                      (value, _) => Text(
-                                        value.toStringAsFixed(1),
-                                        style: const TextStyle(fontSize: 12),
+                                    borderData: FlBorderData(
+                                      show: true,
+                                      border: const Border(
+                                        left: BorderSide(color: Colors.black),
+                                        bottom: BorderSide(color: Colors.black),
+                                        right: BorderSide.none,
+                                        top: BorderSide.none,
                                       ),
-                                ),
-                              ),
-                              bottomTitles: AxisTitles(
-                                sideTitles: SideTitles(
-                                  showTitles: true,
-                                  reservedSize: 50,
-                                  interval:
-                                      _getBottomTitleInterval(), // Dynamic interval
-                                  getTitlesWidget: (value, _) {
-                                    List<DateTime> timeData = getTimeData();
-                                    int index = value.toInt();
-                                    if (index >= 0 && index < timeData.length) {
-                                      String formattedTime = _formatTimestamp(
-                                        timeData[index],
-                                      );
-                                      return Transform.rotate(
-                                        angle: -45 * (3.141592653589793 / 180),
-                                        child: Text(
-                                          formattedTime,
-                                          style: const TextStyle(
-                                            fontSize: 9,
-                                            fontFamily: 'Poppins',
-                                            fontWeight: FontWeight.w500,
+                                    ),
+                                    lineBarsData: [
+                                      LineChartBarData(
+                                        spots: List.generate(
+                                          getCurrentChartData().length,
+                                          (index) => FlSpot(
+                                            index.toDouble(),
+                                            getCurrentChartData()[index],
                                           ),
                                         ),
-                                      );
-                                    }
-                                    return const Text("");
-                                  },
-                                ),
-                              ),
-                              topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                              rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false),
-                              ),
-                            ),
-                            borderData: FlBorderData(
-                              show: true,
-                              border: const Border(
-                                left: BorderSide(color: Colors.black),
-                                bottom: BorderSide(color: Colors.black),
-                                right: BorderSide.none,
-                                top: BorderSide.none,
-                              ),
-                            ),
-                            lineBarsData: [
-                              LineChartBarData(
-                                spots: List.generate(
-                                  getCurrentChartData().length,
-                                  (index) => FlSpot(
-                                    index.toDouble(),
-                                    getCurrentChartData()[index],
+                                        isCurved: true,
+                                        color: getStatColor(),
+                                        barWidth: 4,
+                                        isStrokeCapRound: true,
+                                        belowBarData: BarAreaData(
+                                          show: true,
+                                          color: getStatColor().withOpacity(
+                                            0.3,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                isCurved: true,
-                                color: getStatColor(),
-                                barWidth: 4,
-                                isStrokeCapRound: true,
-                                belowBarData: BarAreaData(
-                                  show: true,
-                                  color: getStatColor().withOpacity(0.3),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                  )],
+                      ),
+                    ],
                   ),
                 ),
 
@@ -871,4 +924,3 @@ class _StatisticsState extends State<UserStatistics> {
     return (_currentData.length / 5).ceilToDouble(); // Show approx 5 labels
   }
 }
-  

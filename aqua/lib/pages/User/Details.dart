@@ -5,6 +5,7 @@ import 'dart:async'; // Required for Timer
 import 'dart:convert'; // For JSON encoding/decoding
 
 import 'package:aqua/water_quality_model.dart'; // Corrected import path
+import '../../components/colors.dart'; // Import ASColor
 
 import '../../device_aware_service.dart'; // New device-aware service
 
@@ -61,7 +62,6 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   Timer? _timer; // Timer for auto-refresh
 
-
   final DeviceAwareService _deviceService = DeviceAwareService();
 
   // Device management
@@ -69,7 +69,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   String? _currentDeviceId;
   String? _currentDeviceName;
   bool _hasMultipleDevices = false;
-  List<String> _availableSensors = []; // Track which sensors are available for current device
+  List<String> _availableSensors =
+      []; // Track which sensors are available for current device
 
   @override
   void initState() {
@@ -83,47 +84,52 @@ class _DetailsScreenState extends State<DetailsScreen> {
     super.dispose();
   }
 
-
-
   /// Initialize device data and start fetching sensor data
   Future<void> _initializeDeviceData() async {
     try {
       // Check if user has any approved device access first
       bool hasApprovedAccess = await _deviceService.hasApprovedDeviceAccess();
-      
+
       if (hasApprovedAccess) {
         // User has approved access, proceed normally
         _accessibleDevices = await _deviceService.getAccessibleDevices();
         _hasMultipleDevices = _accessibleDevices.length > 1;
-        
+
         // Set the first device as current
         _currentDeviceId = _accessibleDevices.first['device_id'];
         _currentDeviceName = _accessibleDevices.first['device_name'];
-        
-        print('DEBUG: User has access to ${_accessibleDevices.length} device(s)');
+
+        print(
+          'DEBUG: User has access to ${_accessibleDevices.length} device(s)',
+        );
         print('DEBUG: Current device: $_currentDeviceId ($_currentDeviceName)');
-        
+
         // Start fetching data for the current device
         _fetchLatestDataForAllStats();
-        
+
         // Set up timer for auto-refresh
         _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
           _fetchLatestDataForAllStats();
         });
       } else {
         // No approved access - check for pending requests
-        List<Map<String, dynamic>> pendingRequests = await _deviceService.getPendingDeviceRequests();
-        List<Map<String, dynamic>> allRequests = await _deviceService.getUserDeviceRequests();
-        
+        List<Map<String, dynamic>> pendingRequests =
+            await _deviceService.getPendingDeviceRequests();
+        List<Map<String, dynamic>> allRequests =
+            await _deviceService.getUserDeviceRequests();
+
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNetworkError;
-          
+
           if (pendingRequests.isNotEmpty) {
-            _errorMessage = 'Your device access request is pending approval. Please wait for admin approval.';
+            _errorMessage =
+                'Your device access request is pending approval. Please wait for admin approval.';
           } else if (allRequests.any((req) => req['status'] == 'rejected')) {
-            _errorMessage = 'Your device access request was rejected. Please contact your administrator.';
+            _errorMessage =
+                'Your device access request was rejected. Please contact your administrator.';
           } else {
-            _errorMessage = 'No device access found. Please request access from your administrator.';
+            _errorMessage =
+                'No device access found. Please request access from your administrator.';
           }
         });
       }
@@ -143,7 +149,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
       _currentDeviceName = deviceName;
       _connectionStatus = ConnectionStatus.connecting;
     });
-    
+
     // Fetch data for the new device
     _fetchLatestDataForAllStats();
   }
@@ -162,13 +168,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
     try {
       // Get available sensors for this device
-      List<Map<String, dynamic>> availableSensorsData = await _deviceService.getAvailableSensors(_currentDeviceId!);
-      List<String> availableSensors = availableSensorsData.map((sensor) => sensor['type'] as String).toList();
-      
+      List<Map<String, dynamic>> availableSensorsData = await _deviceService
+          .getAvailableSensors(_currentDeviceId!);
+      List<String> availableSensors =
+          availableSensorsData
+              .map((sensor) => sensor['type'] as String)
+              .toList();
+
       // Store available sensors for UI rendering
       _availableSensors = availableSensors;
-      
-      print('DEBUG: Device $_currentDeviceId has sensors: ${availableSensors.join(", ")}');
+
+      print(
+        'DEBUG: Device $_currentDeviceId has sensors: ${availableSensors.join(", ")}',
+      );
 
       // Initialize variables for sensor data
       List<WaterQualityData> temp = [];
@@ -181,42 +193,76 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
       // Fetch data for available sensors only
       if (availableSensors.contains('temperature')) {
-        temp = await _deviceService.fetchDeviceData('Temp', 'Daily', _currentDeviceId!);
+        temp = await _deviceService.fetchDeviceData(
+          'Temp',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('tds')) {
-        tds = await _deviceService.fetchDeviceData('TDS', 'Daily', _currentDeviceId!);
+        tds = await _deviceService.fetchDeviceData(
+          'TDS',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('ph')) {
-        ph = await _deviceService.fetchDeviceData('pH Level', 'Daily', _currentDeviceId!);
+        ph = await _deviceService.fetchDeviceData(
+          'pH Level',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('turbidity')) {
-        turbidity = await _deviceService.fetchDeviceData('Turbidity', 'Daily', _currentDeviceId!);
+        turbidity = await _deviceService.fetchDeviceData(
+          'Turbidity',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('ec')) {
-        conductivity = await _deviceService.fetchDeviceData('Conductivity', 'Daily', _currentDeviceId!);
+        conductivity = await _deviceService.fetchDeviceData(
+          'Conductivity',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('salinity')) {
-        salinity = await _deviceService.fetchDeviceData('Salinity', 'Daily', _currentDeviceId!);
+        salinity = await _deviceService.fetchDeviceData(
+          'Salinity',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('ec_compensated')) {
-        ecCompensated = await _deviceService.fetchDeviceData('EC', 'Daily', _currentDeviceId!);
+        ecCompensated = await _deviceService.fetchDeviceData(
+          'EC',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
 
       // Check if we have at least one sensor with data
-      bool hasAnyData = temp.isNotEmpty || tds.isNotEmpty || ph.isNotEmpty || 
-                       turbidity.isNotEmpty || conductivity.isNotEmpty || 
-                       salinity.isNotEmpty || ecCompensated.isNotEmpty;
+      bool hasAnyData =
+          temp.isNotEmpty ||
+          tds.isNotEmpty ||
+          ph.isNotEmpty ||
+          turbidity.isNotEmpty ||
+          conductivity.isNotEmpty ||
+          salinity.isNotEmpty ||
+          ecCompensated.isNotEmpty;
 
       if (!hasAnyData) {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
-          _errorMessage = "No data received from device $_currentDeviceId sensors.";
+          _errorMessage =
+              "No data received from device $_currentDeviceId sensors.";
         });
         return;
       }
@@ -226,9 +272,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
       final newTDS = tds.isNotEmpty ? tds.first.value : null;
       final newPH = ph.isNotEmpty ? ph.first.value : null;
       final newTurbidity = turbidity.isNotEmpty ? turbidity.first.value : null;
-      final newConductivity = conductivity.isNotEmpty ? conductivity.first.value : null;
+      final newConductivity =
+          conductivity.isNotEmpty ? conductivity.first.value : null;
       final newSalinity = salinity.isNotEmpty ? salinity.first.value : null;
-      final newECCompensated = ecCompensated.isNotEmpty ? ecCompensated.first.value : null;
+      final newECCompensated =
+          ecCompensated.isNotEmpty ? ecCompensated.first.value : null;
 
       // Create a payload from the newly fetched data for comparison
       final newPayload = {
@@ -267,7 +315,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
         });
       }
     } catch (e) {
-      print('ERROR fetching latest data for device $_currentDeviceId: $e'); // Debugging print
+      print(
+        'ERROR fetching latest data for device $_currentDeviceId: $e',
+      ); // Debugging print
       setState(() {
         _connectionStatus = ConnectionStatus.disconnectedNetworkError;
         _errorMessage = 'Failed to load latest data: ${e.toString()}';
@@ -395,18 +445,23 @@ class _DetailsScreenState extends State<DetailsScreen> {
   bool _isTurbidityAvailable() => _availableSensors.contains('turbidity');
   bool _isConductivityAvailable() => _availableSensors.contains('ec');
   bool _isSalinityAvailable() => _availableSensors.contains('salinity');
-  bool _isECCompensatedAvailable() => _availableSensors.contains('ec_compensated');
+  bool _isECCompensatedAvailable() =>
+      _availableSensors.contains('ec_compensated');
 
   // Build available sensor cards dynamically
   List<Widget> _buildAvailableSensorCards() {
     List<Widget> availableCards = [];
-    
+
     if (_isTemperatureAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.thermostat_rounded,
           label: "Temperature",
-          value: _connectionStatus == ConnectionStatus.connected && _latestTemp != null ? "${_latestTemp!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestTemp != null
+                  ? "${_latestTemp!.toStringAsFixed(1)}"
+                  : "---",
           unit: "°C",
           isSelected: selectedStat == "Temp",
           onTap: () => _onStatCardTap("Temp"),
@@ -415,13 +470,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     if (_isTDSAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.water_drop_rounded,
           label: "TDS",
-          value: _connectionStatus == ConnectionStatus.connected && _latestTDS != null ? "${_latestTDS!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestTDS != null
+                  ? "${_latestTDS!.toStringAsFixed(1)}"
+                  : "---",
           unit: "PPM",
           isSelected: selectedStat == "TDS",
           onTap: () => _onStatCardTap("TDS"),
@@ -430,13 +489,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     if (_isPHAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.science_rounded,
           label: "pH Level",
-          value: _connectionStatus == ConnectionStatus.connected && _latestPH != null ? "${_latestPH!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestPH != null
+                  ? "${_latestPH!.toStringAsFixed(1)}"
+                  : "---",
           unit: "pH",
           isSelected: selectedStat == "pH",
           onTap: () => _onStatCardTap("pH"),
@@ -445,13 +508,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     if (_isTurbidityAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.blur_on_rounded,
           label: "Turbidity",
-          value: _connectionStatus == ConnectionStatus.connected && _latestTurbidity != null ? "${_latestTurbidity!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestTurbidity != null
+                  ? "${_latestTurbidity!.toStringAsFixed(1)}"
+                  : "---",
           unit: "NTU",
           isSelected: selectedStat == "Turbidity",
           onTap: () => _onStatCardTap("Turbidity"),
@@ -460,13 +527,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     if (_isConductivityAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.electrical_services_rounded,
           label: "Conductivity",
-          value: _connectionStatus == ConnectionStatus.connected && _latestConductivity != null ? "${_latestConductivity!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestConductivity != null
+                  ? "${_latestConductivity!.toStringAsFixed(1)}"
+                  : "---",
           unit: "mS/cm",
           isSelected: selectedStat == "Conductivity",
           onTap: () => _onStatCardTap("Conductivity"),
@@ -475,13 +546,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     if (_isSalinityAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.grain_rounded,
           label: "Salinity",
-          value: _connectionStatus == ConnectionStatus.connected && _latestSalinity != null ? "${_latestSalinity!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestSalinity != null
+                  ? "${_latestSalinity!.toStringAsFixed(1)}"
+                  : "---",
           unit: "ppt",
           isSelected: selectedStat == "Salinity",
           onTap: () => _onStatCardTap("Salinity"),
@@ -490,13 +565,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     if (_isECCompensatedAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.settings_input_component_rounded,
           label: "EC Compensated",
-          value: _connectionStatus == ConnectionStatus.connected && _latestECCompensated != null ? "${_latestECCompensated!.toStringAsFixed(1)}" : "---",
+          value:
+              _connectionStatus == ConnectionStatus.connected &&
+                      _latestECCompensated != null
+                  ? "${_latestECCompensated!.toStringAsFixed(1)}"
+                  : "---",
           unit: "mS/cm",
           isSelected: selectedStat == "Electrical Conductivity (Condensed)",
           onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
@@ -505,14 +584,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     return availableCards;
   }
 
   // Build dynamic sensor layout
   Widget _buildSensorGrid() {
     List<Widget> availableCards = _buildAvailableSensorCards();
-    
+
     if (availableCards.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -522,11 +601,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.sensors_off,
-              size: 48,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.sensors_off, size: 48, color: Colors.grey[600]),
             const SizedBox(height: 12),
             Text(
               'No sensors available for this device',
@@ -540,29 +615,29 @@ class _DetailsScreenState extends State<DetailsScreen> {
         ),
       );
     }
-    
+
     // Build grid with 2 columns
     List<Widget> rows = [];
     for (int i = 0; i < availableCards.length; i += 2) {
-      List<Widget> rowChildren = [
-        Expanded(child: availableCards[i]),
-      ];
-      
+      List<Widget> rowChildren = [Expanded(child: availableCards[i])];
+
       if (i + 1 < availableCards.length) {
         rowChildren.addAll([
           const SizedBox(width: 12),
           Expanded(child: availableCards[i + 1]),
         ]);
       } else {
-        rowChildren.add(const Expanded(child: SizedBox())); // Empty space for odd number
+        rowChildren.add(
+          const Expanded(child: SizedBox()),
+        ); // Empty space for odd number
       }
-      
+
       rows.add(Row(children: rowChildren));
       if (i + 2 < availableCards.length) {
         rows.add(const SizedBox(height: 12));
       }
     }
-    
+
     return Column(children: rows);
   }
 
@@ -591,7 +666,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           Container(
             padding: const EdgeInsets.all(30),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[800] : Colors.white,
+              color: isDarkMode ? Colors.grey[800] : ASColor.BGfirst,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -617,7 +692,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Title
                 Text(
                   'Device Access Required',
@@ -630,19 +705,18 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                
+
                 // Message
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.orange.withOpacity(0.3),
-                    ),
+                    border: Border.all(color: Colors.orange.withOpacity(0.3)),
                   ),
                   child: Text(
-                    _errorMessage ?? 'Your device access request is pending approval.',
+                    _errorMessage ??
+                        'Your device access request is pending approval.',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.orange[700],
@@ -653,7 +727,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Info text
                 Text(
                   'You will receive a notification once your request is processed.',
@@ -675,9 +749,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     // If no approved access, show approval pending UI instead of data
-    if (_accessibleDevices.isEmpty && _connectionStatus == ConnectionStatus.disconnectedNetworkError) {
+    if (_accessibleDevices.isEmpty &&
+        _connectionStatus == ConnectionStatus.disconnectedNetworkError) {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
@@ -697,9 +772,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.orange.withOpacity(0.3),
-                ),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -732,20 +805,19 @@ class _DetailsScreenState extends State<DetailsScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: isDarkMode 
-                ? [Colors.grey[900]!, Colors.grey[850]!]
-                : [Colors.grey[50]!, Colors.white],
+              colors:
+                  isDarkMode
+                      ? [Colors.grey[900]!, Colors.grey[850]!]
+                      : [Colors.grey[50]!, Colors.white],
             ),
           ),
           child: SafeArea(
-            child: Center(
-              child: _buildApprovalPendingUI(isDarkMode),
-            ),
+            child: Center(child: _buildApprovalPendingUI(isDarkMode)),
           ),
         ),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
@@ -777,8 +849,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   _connectionStatus == ConnectionStatus.connected
                       ? 'Live'
                       : _connectionStatus == ConnectionStatus.connecting
-                          ? 'Connecting'
-                          : 'Offline',
+                      ? 'Connecting'
+                      : 'Offline',
                   style: TextStyle(
                     color: _getConnectionStatusColor(),
                     fontSize: 12,
@@ -796,9 +868,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: isDarkMode 
-              ? [Colors.grey[900]!, Colors.grey[850]!]
-              : [Colors.grey[50]!, Colors.white],
+            colors:
+                isDarkMode
+                    ? [Colors.grey[900]!, Colors.grey[850]!]
+                    : [Colors.grey[50]!, Colors.white],
           ),
         ),
         child: SafeArea(
@@ -848,18 +921,24 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
-                                    color: isDarkMode ? Colors.white : Colors.black87,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white
+                                            : Colors.black87,
                                     fontFamily: 'Montserrat',
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _currentDeviceId != null 
-                                    ? 'Device ID: $_currentDeviceId'
-                                    : 'Real-time water quality monitoring',
+                                  _currentDeviceId != null
+                                      ? 'Device ID: $_currentDeviceId'
+                                      : 'Real-time water quality monitoring',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                    color:
+                                        isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                     fontFamily: 'Poppins',
                                   ),
                                 ),
@@ -871,7 +950,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     ],
                   ),
                 ),
-                
+
                 // Device Selector (shown when user has multiple devices)
                 if (_hasMultipleDevices && _accessibleDevices.isNotEmpty)
                   Container(
@@ -892,7 +971,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       children: [
                         Icon(
                           Icons.device_hub,
-                          color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                          color:
+                              isDarkMode ? Colors.blue[300] : Colors.blue[600],
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -903,7 +983,10 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                 'Device Selection',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
                                   fontFamily: 'Poppins',
                                 ),
                               ),
@@ -912,24 +995,32 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                 hint: const Text('Select Device'),
                                 isExpanded: true,
                                 underline: const SizedBox(),
-                                items: _accessibleDevices.map((device) {
-                                  return DropdownMenuItem<String>(
-                                    value: device['device_id'],
-                                    child: Text(
-                                      'Device ${device['device_id']} - ${device['device_name']}',
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                items:
+                                    _accessibleDevices.map((device) {
+                                      return DropdownMenuItem<String>(
+                                        value: device['device_id'],
+                                        child: Text(
+                                          'Device ${device['device_id']} - ${device['device_name']}',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                 onChanged: (String? newDeviceId) {
-                                  if (newDeviceId != null && newDeviceId != _currentDeviceId) {
-                                    final selectedDevice = _accessibleDevices.firstWhere(
-                                      (device) => device['device_id'] == newDeviceId,
+                                  if (newDeviceId != null &&
+                                      newDeviceId != _currentDeviceId) {
+                                    final selectedDevice = _accessibleDevices
+                                        .firstWhere(
+                                          (device) =>
+                                              device['device_id'] ==
+                                              newDeviceId,
+                                        );
+                                    _switchDevice(
+                                      newDeviceId,
+                                      selectedDevice['device_name'],
                                     );
-                                    _switchDevice(newDeviceId, selectedDevice['device_name']);
                                   }
                                 },
                               ),
@@ -939,131 +1030,146 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       ],
                     ),
                   ),
-              
-              const SizedBox(height: 20),
 
-              // Enhanced Circular Indicator Section
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800] : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Water Quality Monitor',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: isDarkMode ? Colors.white : Colors.black87,
-                        fontFamily: 'Montserrat',
+                const SizedBox(height: 20),
+
+                // Enhanced Circular Indicator Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: _connectionStatus == ConnectionStatus.connecting
-                          ? const CircularProgressIndicator()
-                          : Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: indicatorColor.withOpacity(0.3),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                              child: CustomPaint(
-                                size: const Size(280, 280),
-                                painter: CircularIndicator(
-                                  progress: progress,
-                                  label: label,
-                                  color: indicatorColor,
-                                  brightness: Theme.of(context).brightness,
-                                  disconnectedMessage:
-                                      _connectionStatus != ConnectionStatus.connected
-                                          ? (_errorMessage ?? "Disconnected")
-                                          : null,
-                                ),
-                              ),
-                            ),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _connectionStatus == ConnectionStatus.connected
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _connectionStatus == ConnectionStatus.connected
-                              ? Colors.green.withOpacity(0.3)
-                              : Colors.red.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Text(
-                        _connectionStatus == ConnectionStatus.connected
-                            ? "🟢 Live monitoring active"
-                            : "🔴 Connection lost",
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Water Quality Monitor',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: _connectionStatus == ConnectionStatus.connected
-                              ? Colors.green
-                              : Colors.red,
-                          fontFamily: 'Poppins',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                          fontFamily: 'Montserrat',
                         ),
                       ),
-                    ),
-                    if (_errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12.0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 20),
+                      Center(
+                        child:
+                            _connectionStatus == ConnectionStatus.connecting
+                                ? const CircularProgressIndicator()
+                                : Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: indicatorColor.withOpacity(0.3),
+                                        blurRadius: 20,
+                                        spreadRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                  child: CustomPaint(
+                                    size: const Size(280, 280),
+                                    painter: CircularIndicator(
+                                      progress: progress,
+                                      label: label,
+                                      color: indicatorColor,
+                                      brightness: Theme.of(context).brightness,
+                                      disconnectedMessage:
+                                          _connectionStatus !=
+                                                  ConnectionStatus.connected
+                                              ? (_errorMessage ??
+                                                  "Disconnected")
+                                              : null,
+                                    ),
+                                  ),
+                                ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color:
+                                _connectionStatus == ConnectionStatus.connected
+                                    ? Colors.green.withOpacity(0.3)
+                                    : Colors.red.withOpacity(0.3),
                           ),
-                          child: Text(
-                            _errorMessage!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.red[700],
-                              fontFamily: 'Poppins',
+                        ),
+                        child: Text(
+                          _connectionStatus == ConnectionStatus.connected
+                              ? "🟢 Live monitoring active"
+                              : "🔴 Connection lost",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color:
+                                _connectionStatus == ConnectionStatus.connected
+                                    ? Colors.green
+                                    : Colors.red,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                      ),
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
                             ),
-                            textAlign: TextAlign.center,
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.red[700],
+                                fontFamily: 'Poppins',
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              // Sensor Cards Section Header
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
-                child: Text(
-                  'Water Quality Sensors',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                    fontFamily: 'Montserrat',
+                    ],
                   ),
                 ),
-              ),
+                // Sensor Cards Section Header
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 4,
+                  ),
+                  child: Text(
+                    'Water Quality Sensors',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                      fontFamily: 'Montserrat',
+                    ),
+                  ),
+                ),
 
-              // Cards - Dynamic grid based on available sensors
-              _buildSensorGrid(),
+                // Cards - Dynamic grid based on available sensors
+                _buildSensorGrid(),
               ],
             ),
           ),
@@ -1104,25 +1210,28 @@ class EnhancedStatCard extends StatelessWidget {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withOpacity(0.1)
-              : isDarkMode
+          color:
+              isSelected
+                  ? color.withOpacity(0.1)
+                  : isDarkMode
                   ? Colors.grey[800]
                   : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? color
-                : isDarkMode
+            color:
+                isSelected
+                    ? color
+                    : isDarkMode
                     ? Colors.grey[700]!
                     : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected
-                  ? color.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.05),
+              color:
+                  isSelected
+                      ? color.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.05),
               blurRadius: isSelected ? 15 : 10,
               offset: const Offset(0, 4),
             ),
@@ -1139,19 +1248,11 @@ class EnhancedStatCard extends StatelessWidget {
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 20,
-                    color: color,
-                  ),
+                  child: Icon(icon, size: 20, color: color),
                 ),
                 const Spacer(),
                 if (isSelected)
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: color,
-                    size: 16,
-                  ),
+                  Icon(Icons.check_circle_rounded, color: color, size: 16),
               ],
             ),
             const SizedBox(height: 12),
