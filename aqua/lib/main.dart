@@ -9,6 +9,7 @@ import 'package:aqua/pages/Admin/AdminStatistics.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
+import 'package:aqua/pages/SAdmin/SAdminStatistics.dart';
 import 'package:aqua/pages/User/UserSettings.dart';
 
 import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
@@ -87,7 +88,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: LoginScreen(),
+      home: SAdminStatistics(),
     );
   }
 }

@@ -39,8 +39,12 @@ class _StatisticsState extends State<AdminStatistics> {
   bool _hasApprovedAccess = false;
   String? _approvalMessage;
   String? _currentDeviceId;
+  
+  // New variables for establishment selection
+  List<Map<String, dynamic>> _availableDevices = [];
   List<Map<String, dynamic>> _availableSensors = [];
   List<String> _availableSensorNames = ["Loading..."];
+  String? _selectedEstablishment;
 
   final DeviceAwareService _deviceService = DeviceAwareService();
 
@@ -106,31 +110,22 @@ class _StatisticsState extends State<AdminStatistics> {
       _hasApprovedAccess = await _deviceService.hasApprovedDeviceAccess();
       
       if (_hasApprovedAccess) {
-        // User has approved access, get the first accessible device
-        final devices = await _deviceService.getAccessibleDevices();
-        if (devices.isNotEmpty) {
-          _currentDeviceId = devices.first['device_id'];
+        // User has approved access, get all accessible devices
+        _availableDevices = await _deviceService.getAccessibleDevices();
+        
+        if (_availableDevices.isNotEmpty) {
+          // Set the first device as default
+          _currentDeviceId = _availableDevices.first['device_id'];
+          _selectedEstablishment = _availableDevices.first['device_name'] ?? 
+                                   _availableDevices.first['device_id'];
           
           // Fetch available sensors for this device
-          _availableSensors = await _deviceService.getAvailableSensors(_currentDeviceId!);
-          
-          // Map backend sensor names to frontend display names
-          _availableSensorNames = _availableSensors.map((sensor) {
-            String sensorType = sensor['type'].toString();
-            return _mapSensorTypeToDisplayName(sensorType);
-          }).toList();
-          
-          // Set the first available sensor as default, or fallback to "No Sensors"
-          if (_availableSensorNames.isNotEmpty) {
-            selectedStat = _availableSensorNames.first;
-          } else {
-            selectedStat = "No Sensors";
-          }
-          
+          await _loadSensorsForDevice(_currentDeviceId!);
           await _fetchData(); // Fetch data for the accessible device
         } else {
           setState(() {
             _hasApprovedAccess = false;
+            _availableDevices = [];
             _availableSensors = [];
             _availableSensorNames = [];
             _approvalMessage = 'No accessible devices found.';
@@ -160,6 +155,58 @@ class _StatisticsState extends State<AdminStatistics> {
         _errorMessage = 'Failed to check device access: $e';
       });
     }
+  }
+
+  // Load sensors for a specific device
+  Future<void> _loadSensorsForDevice(String deviceId) async {
+    try {
+      _availableSensors = await _deviceService.getAvailableSensors(deviceId);
+      
+      // Map backend sensor names to frontend display names
+      _availableSensorNames = _availableSensors.map((sensor) {
+        String sensorType = sensor['type'].toString();
+        return _mapSensorTypeToDisplayName(sensorType);
+      }).toList();
+      
+      // Set the first available sensor as default, or fallback to "No Sensors"
+      if (_availableSensorNames.isNotEmpty) {
+        selectedStat = _availableSensorNames.first;
+      } else {
+        selectedStat = "No Sensors";
+        _availableSensorNames = ["No Sensors"];
+      }
+    } catch (e) {
+      print('Error loading sensors: $e');
+      setState(() {
+        _availableSensors = [];
+        _availableSensorNames = ["No Sensors"];
+        selectedStat = "No Sensors";
+      });
+    }
+  }
+
+  // Handle establishment/device change
+  Future<void> _onEstablishmentChanged(String? newDeviceId) async {
+    if (newDeviceId == null || newDeviceId == _currentDeviceId) return;
+    
+    setState(() {
+      _isLoading = true;
+      _currentDeviceId = newDeviceId;
+      _currentData = [];
+      
+      // Update selected establishment name
+      final device = _availableDevices.firstWhere(
+        (d) => d['device_id'] == newDeviceId,
+        orElse: () => {'device_name': newDeviceId},
+      );
+      _selectedEstablishment = device['device_name'] ?? device['device_id'];
+    });
+
+    // Load sensors for the new device
+    await _loadSensorsForDevice(newDeviceId);
+    
+    // Fetch data for the new device
+    await _fetchData();
   }
 
   // Modified to use device-aware service
@@ -454,7 +501,9 @@ class _StatisticsState extends State<AdminStatistics> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Real-time insights and trends for your water quality data',
+                              _selectedEstablishment != null 
+                                  ? 'Monitoring: $_selectedEstablishment'
+                                  : 'Real-time insights and trends for your water quality data',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
@@ -468,6 +517,106 @@ class _StatisticsState extends State<AdminStatistics> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                // Establishment Selector Section
+                if (_availableDevices.length > 1)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[800] : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.business_rounded,
+                            color: Colors.purple,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Select Establishment',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode ? Colors.grey[700] : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                                  ),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    isExpanded: true,
+                                    value: _currentDeviceId,
+                                    onChanged: _onEstablishmentChanged,
+                                    icon: Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                                    ),
+                                    items: _availableDevices.map<DropdownMenuItem<String>>((device) {
+                                      return DropdownMenuItem<String>(
+                                        value: device['device_id'],
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.store_rounded,
+                                              size: 18,
+                                              color: Colors.purple,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                device['device_name'] ?? device['device_id'],
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (_availableDevices.length > 1) const SizedBox(height: 24),
 
                 // Enhanced Controls Section
                 Container(
