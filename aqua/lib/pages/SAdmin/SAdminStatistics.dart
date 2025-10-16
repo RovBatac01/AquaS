@@ -314,168 +314,297 @@ class _StatisticsState extends State<SAdminStatistics> {
       );
     }
 
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: ASColor.Background(context),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Water quality at a glance',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                        wordSpacing: 1,
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode 
+              ? [Colors.grey[900]!, Colors.grey[850]!]
+              : [Colors.grey[50]!, Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                // Enhanced Header Section
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Take a quick look at your water quality stats',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: ASColor.getTextColor(context),
-                        letterSpacing: 0.5,
-                        wordSpacing: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Button styled to match dropdown height
-                  Container(
-                    height: 30,
-                    child: Material(
-                      color: ASColor.buttonBackground(context), // Background based on theme
-                      borderRadius: BorderRadius.circular(12),
-                      elevation: 2, // Slight elevation for subtle shadow
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          // Handle export action here
-                          print('Export tapped');
-                        }, 
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 5,
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blue.shade400, Colors.blue.shade600],
                           ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            // Optional: If you want extra shadow beyond Material
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                spreadRadius: 1,
-                                blurRadius: 6,
-                                offset: Offset(0, 3),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          Icons.analytics_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Water Quality Analytics',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: isDarkMode ? Colors.white : Colors.black87,
+                                fontFamily: 'Montserrat',
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            'Export',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: ASColor.txt1Color,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Real-time insights and trends for your water quality data',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Enhanced Controls Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Enhanced Export Button
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          height: 48,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              print('Export tapped');
+                            },
+                            icon: Icon(Icons.download_rounded, size: 20),
+                            label: Text(
+                              'Export Data',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              shadowColor: Colors.green.withOpacity(0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 16),
+                      // Enhanced Period Selector
+                      Expanded(
+                        flex: 3,
+                        child: Container(
+                          height: 48,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: isDarkMode ? Colors.grey[700] : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                            ),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              value: selectedPeriod,
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  selectedPeriod = newValue!;
+                                  _fetchData();
+                                });
+                              },
+                              icon: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                              items: <String>[
+                                'Real-time',
+                                "Daily",
+                                "Weekly", 
+                                "Monthly",
+                              ].map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDarkMode ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                const SizedBox(height: 24),
 
-                  // Dropdown styled to match button height
-                  SizedBox(
-                    height: 30,
-                    width: 100,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: ASColor.Background(context), // or any light background color
-                        borderRadius: BorderRadius.circular(6),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
+                // Enhanced Chart Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.trending_up_rounded,
+                              color: Colors.blue,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Sensor Data Trends',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                              fontFamily: 'Montserrat',
+                            ),
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: selectedPeriod,
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                selectedPeriod = newValue!;
-                                _fetchData();
-                              });
-                            },
-                            items:
-                                <String>[
-                                  'Real-time',
-                                  "Daily",
-                                  "Weekly",
-                                  "Monthly",
-                                ].map<DropdownMenuItem<String>>((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Center(
-                                      child: Text(
-                                        value,
-                                        style: TextStyle(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 300,
+                        child: _isLoading
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Loading sensor data...',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                       ),
                                     ),
-                                  );
-                                }).toList(),
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontFamily: 'Poppins',
-                              color: ASColor.getTextColor(context),
-                            ),
-                            iconSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-
-              // Line Graph
-              SizedBox(
-                height: 300,
-                child:
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _errorMessage != null
-                        ? Center(child: Text(_errorMessage!))
-                        : _currentData.isEmpty
-                        ? const Center(
-                          child: Text("No data available for this selection."),
-                        )
+                                  ],
+                                ),
+                              )
+                            : _errorMessage != null
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline_rounded,
+                                      size: 48,
+                                      color: Colors.red,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      _errorMessage!,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Colors.red,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _currentData.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.analytics_outlined,
+                                      size: 48,
+                                      color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      "No data available for this selection",
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 16,
+                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
                         : LineChart(
                           LineChartData(
                             minY: 0,
@@ -551,6 +680,7 @@ class _StatisticsState extends State<SAdminStatistics> {
                                 color: getStatColor(),
                                 barWidth: 4,
                                 isStrokeCapRound: true,
+                                dotData: const FlDotData(show: false),
                                 belowBarData: BarAreaData(
                                   show: true,
                                   color: getStatColor().withOpacity(0.3),
@@ -559,81 +689,109 @@ class _StatisticsState extends State<SAdminStatistics> {
                             ],
                           ),
                         ),
-              ),
-              const SizedBox(height: 20),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Water quality highlights',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Montserrat',
-                    ),
+                  )],
                   ),
-                  Container(
-                    width: 90,
-                    height: 30,
-                    decoration: BoxDecoration(
-                        color: ASColor.Background(context), // or any light background color
-                        borderRadius: BorderRadius.circular(6),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Enhanced Sensor Selection and Highlights Section
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey[800] : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.insights_rounded,
+                                  color: Colors.green,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Water Quality Highlights',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                  fontFamily: 'Montserrat',
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.grey[700] : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                              ),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedStat,
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    selectedStat = newValue!;
+                                    _fetchData();
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                                ),
+                                items: <String>[
+                                  "Temp",
+                                  "TDS",
+                                  "pH Level",
+                                  "Turbidity",
+                                  "Conductivity",
+                                  "Salinity",
+                                  "EC",
+                                ].map<DropdownMenuItem<String>>((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w500,
+                                        color: isDarkMode ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedStat,
-                        onChanged: (newValue) {
-                          setState(() {
-                            selectedStat = newValue!;
-                            _fetchData(); // Fetch new data when statistic changes
-                          });
-                        },
-                        isExpanded: true,
-                        iconSize: 24,
-                        style: const TextStyle(
-                          fontSize: 8,
-                          fontFamily: 'Poppins',
-                        ),
-                        items:
-                            <String>[
-                              "Temp",
-                              "TDS",
-                              "pH Level",
-                              "Turbidity",
-                              "Conductivity",
-                              "Salinity",
-                              "EC",
-                            ].map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Center(
-                                  child: Text(
-                                    value,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontFamily: 'Poppins',
-                                      color: ASColor.getTextColor(context),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              IntrinsicHeight(
+                      const SizedBox(height: 20),
+                      IntrinsicHeight(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -674,8 +832,11 @@ class _StatisticsState extends State<SAdminStatistics> {
                     ),
                   ],
                 ),
-              ),
-            ],
+                  )],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

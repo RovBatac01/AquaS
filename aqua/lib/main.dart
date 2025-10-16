@@ -5,6 +5,7 @@ import 'package:aqua/pages/Admin/AdminDashboard.dart';
 import 'package:aqua/pages/Admin/AdminDetails.dart';
 import 'package:aqua/pages/Admin/AdminNotification.dart';
 import 'package:aqua/pages/Admin/AdminSettings.dart';
+import 'package:aqua/pages/Admin/AdminStatistics.dart';
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/pages/CalibrationRequest.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
