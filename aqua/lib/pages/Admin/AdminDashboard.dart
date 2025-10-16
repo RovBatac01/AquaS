@@ -80,14 +80,18 @@ class _MainScreenState extends State<Admindashboard> {
               width: constraints.maxWidth,
               height: constraints.maxHeight,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors:
-                      isDarkMode
-                          ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
-                          : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
-                ),
+                color: isDarkMode ? null : ASColor.BGfirst,
+                gradient:
+                    isDarkMode
+                        ? LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            ASColor.BGSecond,
+                            ASColor.BGthird.withOpacity(0.8),
+                          ],
+                        )
+                        : null,
               ),
               child: SafeArea(
                 child: Column(
@@ -107,7 +111,7 @@ class _MainScreenState extends State<Admindashboard> {
                             color:
                                 isDarkMode
                                     ? Colors.white.withOpacity(0.05)
-                                    : Colors.black.withOpacity(0.02),
+                                    : ASColor.BGfirst,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color:
@@ -235,9 +239,7 @@ class _MainScreenState extends State<Admindashboard> {
             ),
             decoration: BoxDecoration(
               color:
-                  isDarkMode
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.white.withOpacity(0.9),
+                  isDarkMode ? Colors.white.withOpacity(0.05) : ASColor.BGfirst,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isDarkMode ? Colors.white12 : Colors.black12,

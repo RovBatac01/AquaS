@@ -41,7 +41,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
   bool _obscurecurrentPassword = true;
   bool _obscurenewPassword = true;
   bool _obscureConfirmPassword = true;
-  
+
   // ApiService instance for logout functionality
   final ApiService _apiService = ApiService();
 
@@ -51,25 +51,24 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       // Clear session data immediately
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       // Navigate immediately
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => LoginScreen()),
         (Route<dynamic> route) => false,
       );
-      
+
       // Try server logout in background (non-blocking)
       _apiService.performLogout().catchError((e) {
         print('Background logout failed: $e');
         return false; // Return false on error
       });
-      
     } catch (error) {
       print('Quick logout error: $error');
       // Even if there's an error, try to navigate
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
     }
   }
 
@@ -78,7 +77,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     // Store the navigator and scaffold messenger to avoid context issues
     final navigator = Navigator.of(context);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+
     try {
       // Show loading indicator
       showDialog(
@@ -117,12 +116,14 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       );
 
       // Use ApiService for logout with session destroy (with timeout)
-      final bool logoutSuccess = await _apiService.performLogout()
-          .timeout(Duration(seconds: 15), onTimeout: () {
-        print('Logout timed out, but continuing with local cleanup...');
-        return true; // Continue with local cleanup even if server call times out
-      });
-      
+      final bool logoutSuccess = await _apiService.performLogout().timeout(
+        Duration(seconds: 15),
+        onTimeout: () {
+          print('Logout timed out, but continuing with local cleanup...');
+          return true; // Continue with local cleanup even if server call times out
+        },
+      );
+
       if (!logoutSuccess) {
         throw Exception("Logout failed");
       }
@@ -130,13 +131,13 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       // Close loading dialog - use pop with result to ensure it closes
       if (context.mounted) {
         navigator.pop();
-      }      // Navigate immediately to login screen - no delays to avoid context issues
+      } // Navigate immediately to login screen - no delays to avoid context issues
       try {
         navigator.pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => LoginScreen()),
           (Route<dynamic> route) => false,
         );
-        
+
         // Show success message after navigation
         Future.delayed(Duration(milliseconds: 100), () {
           if (context.mounted) {
@@ -165,7 +166,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
             );
           }
         });
-        
       } catch (navError) {
         print('Navigation error: $navError');
         // If navigation fails, try to close dialog and show error
@@ -174,10 +174,9 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
         }
         throw Exception('Navigation failed: $navError');
       }
-
     } catch (error) {
       print('Signout error: $error');
-      
+
       // Close any open dialogs
       try {
         if (context.mounted) {
@@ -186,7 +185,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       } catch (e) {
         print('Failed to close dialog: $e');
       }
-      
+
       // Show error message
       try {
         if (context.mounted) {
@@ -220,7 +219,6 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       }
     }
   }
-
 
   void _showContactSupportDialog() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -407,128 +405,135 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode 
-              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
-              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
-          ),
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      ASColor.BGSecond,
+                      ASColor.BGthird.withOpacity(0.8),
+                    ],
+                  )
+                  : null,
+          color: isDarkMode ? null : ASColor.BGfirst,
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            buildEnhancedSettingsCard(
-              context: context,
-              icon: Icons.person_rounded,
-              title: 'Profile Management',
-              subtitle: 'Manage your personal information and account security',
-              isExpanded: ProfileExpanded,
-              onTap: () {
-                setState(() {
-                  ProfileExpanded = !ProfileExpanded;
-                });
-              },
-            ),
-            if (ProfileExpanded) buildEnhancedProfileForm(),
-
-            const SizedBox(height: 16),
-
-            // Enhanced App Appearance Section
-            buildEnhancedSettingsCard(
-              context: context,
-              icon: Icons.palette_rounded,
-              title: 'App Appearance',
-              subtitle: 'Switch between dark and light themes',
-              isExpanded: AppearanceExpanded,
-              onTap: () {
-                setState(() {
-                  AppearanceExpanded = !AppearanceExpanded;
-                });
-              },
-            ),
-            if (AppearanceExpanded) buildEnhancedAppearance(),
-
-            const SizedBox(height: 16),
-
-            // Enhanced Help and Support Section
-            buildEnhancedSettingsCard(
-              context: context,
-              icon: Icons.help_rounded,
-              title: 'Help and Support',
-              subtitle: 'Get assistance and answers to your questions',
-              isExpanded: FAQExpanded,
-              onTap: () {
-                setState(() {
-                  FAQExpanded = !FAQExpanded;
-                });
-              },
-            ),
-            if (FAQExpanded) buildEnhancedQuestion(),
-
-            const SizedBox(height: 16),
-
-            // Enhanced Logout Section
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isDarkMode 
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.red.withOpacity(0.2),
-                  width: 1,
-                ),
+              buildEnhancedSettingsCard(
+                context: context,
+                icon: Icons.person_rounded,
+                title: 'Profile Management',
+                subtitle:
+                    'Manage your personal information and account security',
+                isExpanded: ProfileExpanded,
+                onTap: () {
+                  setState(() {
+                    ProfileExpanded = !ProfileExpanded;
+                  });
+                },
               ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    showEnhancedLogoutDialog(context);
-                  },
+              if (ProfileExpanded) buildEnhancedProfileForm(),
+
+              const SizedBox(height: 16),
+
+              // Enhanced App Appearance Section
+              buildEnhancedSettingsCard(
+                context: context,
+                icon: Icons.palette_rounded,
+                title: 'App Appearance',
+                subtitle: 'Switch between dark and light themes',
+                isExpanded: AppearanceExpanded,
+                onTap: () {
+                  setState(() {
+                    AppearanceExpanded = !AppearanceExpanded;
+                  });
+                },
+              ),
+              if (AppearanceExpanded) buildEnhancedAppearance(),
+
+              const SizedBox(height: 16),
+
+              // Enhanced Help and Support Section
+              buildEnhancedSettingsCard(
+                context: context,
+                icon: Icons.help_rounded,
+                title: 'Help and Support',
+                subtitle: 'Get assistance and answers to your questions',
+                isExpanded: FAQExpanded,
+                onTap: () {
+                  setState(() {
+                    FAQExpanded = !FAQExpanded;
+                  });
+                },
+              ),
+              if (FAQExpanded) buildEnhancedQuestion(),
+
+              const SizedBox(height: 16),
+
+              // Enhanced Logout Section
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color:
+                      isDarkMode
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.white.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            Icons.logout_rounded,
-                            color: Colors.red,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Log Out',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                  border: Border.all(
+                    color: Colors.red.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      showEnhancedLogoutDialog(context);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.logout_rounded,
                               color: Colors.red,
-                              fontFamily: 'Poppins',
+                              size: 20,
                             ),
                           ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: Colors.red.withOpacity(0.6),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Log Out',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                            color: Colors.red.withOpacity(0.6),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
             ],
           ),
         ),
@@ -549,9 +554,10 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDarkMode 
-          ? Colors.white.withOpacity(0.05)
-          : Colors.white.withOpacity(0.8),
+        color:
+            isDarkMode
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -580,11 +586,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
                     color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(
-                    icon,
-                    color: Colors.blue,
-                    size: 20,
-                  ),
+                  child: Icon(icon, color: Colors.blue, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -613,7 +615,9 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
                   ),
                 ),
                 Icon(
-                  isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                  isExpanded
+                      ? Icons.expand_less_rounded
+                      : Icons.expand_more_rounded,
                   color: ASColor.getTextColor(context).withOpacity(0.6),
                 ),
               ],
@@ -630,9 +634,10 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode 
-          ? Colors.white.withOpacity(0.03)
-          : Colors.black.withOpacity(0.02),
+        color:
+            isDarkMode
+                ? Colors.white.withOpacity(0.03)
+                : Colors.black.withOpacity(0.02),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -665,9 +670,10 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode 
-          ? Colors.white.withOpacity(0.03)
-          : Colors.black.withOpacity(0.02),
+        color:
+            isDarkMode
+                ? Colors.white.withOpacity(0.03)
+                : Colors.black.withOpacity(0.02),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -679,13 +685,16 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: themeProvider.isDarkMode 
-                ? Colors.orange.withOpacity(0.1)
-                : Colors.blue.withOpacity(0.1),
+              color:
+                  themeProvider.isDarkMode
+                      ? Colors.orange.withOpacity(0.1)
+                      : Colors.blue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              themeProvider.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              themeProvider.isDarkMode
+                  ? Icons.dark_mode_rounded
+                  : Icons.light_mode_rounded,
               color: themeProvider.isDarkMode ? Colors.orange : Colors.blue,
               size: 20,
             ),
@@ -815,9 +824,10 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode 
-          ? Colors.white.withOpacity(0.03)
-          : Colors.black.withOpacity(0.02),
+        color:
+            isDarkMode
+                ? Colors.white.withOpacity(0.03)
+                : Colors.black.withOpacity(0.02),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -843,7 +853,10 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+                color:
+                    isDarkMode
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.black.withOpacity(0.02),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -851,9 +864,10 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: isLogin 
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.red.withOpacity(0.1),
+                      color:
+                          isLogin
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
@@ -881,7 +895,9 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontFamily: 'Poppins',
-                            color: ASColor.getTextColor(context).withOpacity(0.6),
+                            color: ASColor.getTextColor(
+                              context,
+                            ).withOpacity(0.6),
                           ),
                         ),
                       ],
@@ -907,19 +923,20 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () async {
-                  await _quickLogout(context); // Use quick logout for immediate response
+                  await _quickLogout(
+                    context,
+                  ); // Use quick logout for immediate response
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.logout_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                      Icon(Icons.logout_rounded, color: Colors.white, size: 20),
                       const SizedBox(width: 8),
                       Text(
                         'Sign Out All Sessions',
@@ -959,11 +976,7 @@ class _SettingsScreenState extends State<AdminSettingsScreen> {
                   color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.logout_rounded,
-                  color: Colors.red,
-                  size: 20,
-                ),
+                child: Icon(Icons.logout_rounded, color: Colors.red, size: 20),
               ),
               const SizedBox(width: 12),
               Text(

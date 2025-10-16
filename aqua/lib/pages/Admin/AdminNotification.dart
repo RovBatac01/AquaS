@@ -539,7 +539,9 @@ class _AdminNotification extends State<AdminNotification> {
         ),
         trailing: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.3, // Max 30% of screen width
+            maxWidth:
+                MediaQuery.of(context).size.width *
+                0.3, // Max 30% of screen width
             minWidth: 90, // Minimum width for three buttons
           ),
           child: Row(
@@ -548,25 +550,21 @@ class _AdminNotification extends State<AdminNotification> {
             children: [
               Flexible(
                 child: IconButton(
-                  onPressed: () => _handleDeviceRequest(request['id'], 'reject'),
+                  onPressed:
+                      () => _handleDeviceRequest(request['id'], 'reject'),
                   icon: Icon(Icons.close, color: Colors.red, size: 16.sp),
                   tooltip: 'Reject',
-                  constraints: BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
+                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
                   padding: EdgeInsets.all(1),
                 ),
               ),
               Flexible(
                 child: IconButton(
-                  onPressed: () => _handleDeviceRequest(request['id'], 'approve'),
+                  onPressed:
+                      () => _handleDeviceRequest(request['id'], 'approve'),
                   icon: Icon(Icons.check, color: Colors.green, size: 16.sp),
                   tooltip: 'Approve',
-                  constraints: BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
+                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
                   padding: EdgeInsets.all(1),
                 ),
               ),
@@ -579,10 +577,7 @@ class _AdminNotification extends State<AdminNotification> {
                     size: 16.sp,
                   ),
                   tooltip: 'More options',
-                  constraints: BoxConstraints(
-                    minWidth: 24,
-                    minHeight: 24,
-                  ),
+                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
                   padding: EdgeInsets.all(1),
                 ),
               ),
@@ -658,7 +653,9 @@ class _AdminNotification extends State<AdminNotification> {
           ),
           trailing: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.22, // Max 22% of screen width
+              maxWidth:
+                  MediaQuery.of(context).size.width *
+                  0.22, // Max 22% of screen width
               minWidth: 50, // Minimum width to ensure functionality
             ),
             child: Column(
@@ -697,10 +694,7 @@ class _AdminNotification extends State<AdminNotification> {
                   width: 24.w, // Responsive width
                   child: IconButton(
                     padding: EdgeInsets.zero,
-                    constraints: BoxConstraints(
-                      minWidth: 20,
-                      minHeight: 20,
-                    ),
+                    constraints: BoxConstraints(minWidth: 20, minHeight: 20),
                     icon: Icon(
                       Icons.delete,
                       color: Colors.red,
@@ -724,14 +718,18 @@ class _AdminNotification extends State<AdminNotification> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors:
-                isDarkMode
-                    ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
-                    : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
-          ),
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      ASColor.BGSecond,
+                      ASColor.BGthird.withOpacity(0.8),
+                    ],
+                  )
+                  : null,
+          color: isDarkMode ? null : ASColor.BGfirst,
         ),
         child: SafeArea(
           child: Column(

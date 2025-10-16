@@ -27,7 +27,9 @@ class ApiService {
       print('DEBUG: Fetching total users for userId: $userId with token');
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/my/total-users'), // Device-scoped authenticated endpoint
+        Uri.parse(
+          '$_baseUrl/my/total-users',
+        ), // Device-scoped authenticated endpoint
         headers: {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',
@@ -42,7 +44,9 @@ class ApiService {
         print('DEBUG: Parsed total users data: $data');
         return data['totalUsers'];
       } else {
-        print('Failed to fetch total users: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to fetch total users: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -66,7 +70,9 @@ class ApiService {
       print('DEBUG: Fetching total sensors for userId: $userId with token');
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/my/total-sensors'), // Device-scoped authenticated endpoint
+        Uri.parse(
+          '$_baseUrl/my/total-sensors',
+        ), // Device-scoped authenticated endpoint
         headers: {
           'Authorization': 'Bearer $userToken',
           'Content-Type': 'application/json',
@@ -81,7 +87,9 @@ class ApiService {
         print('DEBUG: Parsed total sensors data: $data');
         return data['totalSensors'];
       } else {
-        print('Failed to fetch total sensors: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to fetch total sensors: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -102,15 +110,19 @@ class ApiService {
         return null;
       }
 
-      print('DEBUG: Getting establishment for admin user ID: $userId based on device_id');
+      print(
+        'DEBUG: Getting establishment for admin user ID: $userId based on device_id',
+      );
 
-      final response = await http.get(
-        Uri.parse('$_baseUrl/my/device-info'),
-        headers: {
-          'Authorization': 'Bearer $userToken',
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/my/device-info'),
+            headers: {
+              'Authorization': 'Bearer $userToken',
+              'Content-Type': 'application/json',
+            },
+          )
+          .timeout(Duration(seconds: 15));
 
       print('DEBUG: Device info response status: ${response.statusCode}');
       print('DEBUG: Device info response body: ${response.body}');
@@ -118,31 +130,36 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         print('DEBUG: Admin device association data: $data');
-        
+
         // Extract establishment information
         final bool hasDevice = data['hasDevice'] ?? false;
         final bool hasEstablishment = data['hasEstablishment'] ?? false;
         final String? establishmentName = data['establishmentName'];
         final String? deviceId = data['deviceId']?.toString();
         final String? establishmentId = data['establishmentId']?.toString();
-        
-        print('DEBUG: Admin has device: $hasDevice, has establishment: $hasEstablishment');
+
+        print(
+          'DEBUG: Admin has device: $hasDevice, has establishment: $hasEstablishment',
+        );
         print('DEBUG: Establishment name: $establishmentName');
-        
+
         return {
           'hasDevice': hasDevice,
           'hasEstablishment': hasEstablishment,
           'deviceId': deviceId,
           'establishmentId': establishmentId,
           'establishmentName': establishmentName,
-          'deviceMessage': hasEstablishment 
-            ? 'Assigned to establishment: $establishmentName'
-            : (hasDevice 
-              ? 'Device registered but no establishment assigned'
-              : 'No device or establishment assigned')
+          'deviceMessage':
+              hasEstablishment
+                  ? 'Assigned to establishment: $establishmentName'
+                  : (hasDevice
+                      ? 'Device registered but no establishment assigned'
+                      : 'No device or establishment assigned'),
         };
       } else {
-        print('Failed to get device info: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to get device info: ${response.statusCode} - ${response.body}',
+        );
         return null;
       }
     } catch (e) {
@@ -157,31 +174,35 @@ class ApiService {
       // Get stored token
       final prefs = await SharedPreferences.getInstance();
       final String? userToken = prefs.getString('userToken');
-      
+
       // Call logout endpoint with authentication
       if (userToken != null) {
         try {
-          final response = await http.post(
-            Uri.parse(ApiConfig.logoutEndpoint),
-            headers: {
-              'Authorization': 'Bearer $userToken',
-              'Content-Type': 'application/json',
-            },
-          ).timeout(Duration(seconds: 10)); // Add 10 second timeout
-          
+          final response = await http
+              .post(
+                Uri.parse(ApiConfig.logoutEndpoint),
+                headers: {
+                  'Authorization': 'Bearer $userToken',
+                  'Content-Type': 'application/json',
+                },
+              )
+              .timeout(Duration(seconds: 10)); // Add 10 second timeout
+
           if (response.statusCode == 200) {
             print('Server logout successful');
           } else {
-            print('Server logout failed: ${response.statusCode} - ${response.body}');
+            print(
+              'Server logout failed: ${response.statusCode} - ${response.body}',
+            );
           }
         } catch (e) {
           print('Logout API call failed (non-critical): $e');
         }
       }
-      
+
       // Clear local session data
       await prefs.clear();
-      
+
       return true;
     } catch (e) {
       print('Logout error: $e');
@@ -217,17 +238,22 @@ class AdminHomeScreen extends StatefulWidget {
 }
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
-  String _loggedInUsername = 'Loading...'; // State variable to hold the fetched username
+  String _loggedInUsername =
+      'Loading...'; // State variable to hold the fetched username
 
   // --- NEW: State variables for fetched counts ---
   int? _totalUsers;
   int? _totalSensors;
 
   // --- State variables for device and establishment association ---
-  bool? _hasDeviceAssociation; // null = loading, true = has device, false = no device
-  bool? _hasEstablishmentAssociation; // null = loading, true = has establishment, false = no establishment
-  String? _establishmentName; // The name of the establishment assigned to this admin
-  String? _deviceMessage; // Status message about device/establishment association
+  bool?
+  _hasDeviceAssociation; // null = loading, true = has device, false = no device
+  bool?
+  _hasEstablishmentAssociation; // null = loading, true = has establishment, false = no establishment
+  String?
+  _establishmentName; // The name of the establishment assigned to this admin
+  String?
+  _deviceMessage; // Status message about device/establishment association
   // --- END ---
 
   final ApiService _apiService = ApiService(); // Instance of your ApiService
@@ -263,9 +289,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         setState(() {
           _loggedInUsername = 'Guest';
         });
-        print('User token not found. Cannot fetch username. Navigating to Login.');
+        print(
+          'User token not found. Cannot fetch username. Navigating to Login.',
+        );
         // If token is null, redirect to login screen
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
         return; // Exit if no token
       }
 
@@ -292,9 +322,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         await prefs.remove('userToken');
         await prefs.remove('userId');
         await prefs.remove('loggedInUsername');
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       } else {
-        print('Failed to load username: ${response.statusCode} - ${response.body}');
+        print(
+          'Failed to load username: ${response.statusCode} - ${response.body}',
+        );
         setState(() {
           _loggedInUsername = 'Error';
         });
@@ -333,23 +367,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   // --- Method to check device association and load establishment ---
   Future<void> _checkDeviceAssociation() async {
     print('DEBUG: Starting device association check...');
-    
+
     try {
       final response = await _apiService.checkDeviceAssociation();
-      
+
       if (response != null) {
         print('DEBUG: Device association response received successfully');
         print('DEBUG: Has device: ${response['hasDevice']}');
         print('DEBUG: Has establishment: ${response['hasEstablishment']}');
         print('DEBUG: Establishment name: ${response['establishmentName']}');
-        
+
         setState(() {
           _hasDeviceAssociation = response['hasDevice'] ?? false;
           _hasEstablishmentAssociation = response['hasEstablishment'] ?? false;
           _establishmentName = response['establishmentName'];
           _deviceMessage = response['deviceMessage'] ?? 'No device association';
         });
-        
+
         // Log the final state
         print('DEBUG: Updated UI state - Establishment: $_establishmentName');
       } else {
@@ -373,21 +407,24 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
   // --- END ---
 
-
-
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDarkMode 
-              ? [ASColor.BGSecond, ASColor.BGthird.withOpacity(0.8)]
-              : [ASColor.BGFifth, Colors.white.withOpacity(0.95)],
-          ),
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      ASColor.BGSecond,
+                      ASColor.BGthird.withOpacity(0.8),
+                    ],
+                  )
+                  : null,
+          color: isDarkMode ? null : ASColor.BGfirst,
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
@@ -399,9 +436,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDarkMode 
-                    ? Colors.white.withOpacity(0.05)
-                    : Colors.black.withOpacity(0.02),
+                  color:
+                      isDarkMode
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.black.withOpacity(0.02),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -418,7 +456,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                             'Welcome back! 👋',
                             style: TextStyle(
                               fontSize: 14,
-                              color: ASColor.getTextColor(context).withOpacity(0.7),
+                              color: ASColor.getTextColor(
+                                context,
+                              ).withOpacity(0.7),
                               fontFamily: 'Poppins',
                               fontWeight: FontWeight.w400,
                             ),
@@ -466,9 +506,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   height: 48,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: isDarkMode 
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.black.withOpacity(0.04),
+                    color:
+                        isDarkMode
+                            ? Colors.white.withOpacity(0.08)
+                            : Colors.black.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -489,30 +530,47 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               else
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
-                    color: (_hasEstablishmentAssociation == true ? Colors.green : Colors.orange).withOpacity(0.1),
+                    color: (_hasEstablishmentAssociation == true
+                            ? Colors.green
+                            : Colors.orange)
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: _hasEstablishmentAssociation == true ? Colors.green : Colors.orange,
+                      color:
+                          _hasEstablishmentAssociation == true
+                              ? Colors.green
+                              : Colors.orange,
                       width: 1,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
-                        _hasEstablishmentAssociation == true ? Icons.business : Icons.info_outline,
-                        color: _hasEstablishmentAssociation == true ? Colors.green : Colors.orange,
+                        _hasEstablishmentAssociation == true
+                            ? Icons.business
+                            : Icons.info_outline,
+                        color:
+                            _hasEstablishmentAssociation == true
+                                ? Colors.green
+                                : Colors.orange,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _hasEstablishmentAssociation == true 
-                            ? 'Assigned to: ${_establishmentName ?? 'Unknown'}'
-                            : _deviceMessage ?? 'No establishment assigned',
+                          _hasEstablishmentAssociation == true
+                              ? 'Assigned to: ${_establishmentName ?? 'Unknown'}'
+                              : _deviceMessage ?? 'No establishment assigned',
                           style: TextStyle(
-                            color: _hasEstablishmentAssociation == true ? Colors.green : Colors.orange,
+                            color:
+                                _hasEstablishmentAssociation == true
+                                    ? Colors.green
+                                    : Colors.orange,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Poppins',
@@ -535,7 +593,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   fontFamily: 'Montserrat',
                 ),
               ),
-              
+
               const SizedBox(height: 16),
 
               // Stats Cards with better layout
@@ -590,7 +648,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
@@ -599,14 +660,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.circle,
-                          color: Colors.green,
-                          size: 6,
-                        ),
+                        Icon(Icons.circle, color: Colors.green, size: 6),
                         const SizedBox(width: 4),
                         Text(
-                          _hasEstablishmentAssociation == true ? '1 Active' : '0 Active',
+                          _hasEstablishmentAssociation == true
+                              ? '1 Active'
+                              : '0 Active',
                           style: TextStyle(
                             color: Colors.green,
                             fontSize: 11,
@@ -636,7 +695,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 buildEmptyState(
                   icon: Icons.business_rounded,
                   title: 'No establishment assigned',
-                  subtitle: 'Please contact administrator to assign an establishment to your account',
+                  subtitle:
+                      'Please contact administrator to assign an establishment to your account',
                 )
               else
                 Container(
@@ -757,11 +817,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      icon,
-                      color: Colors.white,
-                      size: 28,
-                    ),
+                    child: Icon(icon, color: Colors.white, size: 28),
                   ),
                 ],
               ),
@@ -787,11 +843,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               color: Colors.grey.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 48,
-              color: Colors.grey.withOpacity(0.5),
-            ),
+            child: Icon(icon, size: 48, color: Colors.grey.withOpacity(0.5)),
           ),
           SizedBox(height: 16),
           Text(
@@ -825,9 +877,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode 
-          ? Colors.white.withOpacity(0.05)
-          : Colors.white.withOpacity(0.8),
+        color:
+            isDarkMode
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDarkMode ? Colors.white12 : Colors.black12,
@@ -867,7 +920,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Establishment icon
                 Container(
                   padding: const EdgeInsets.all(8),
@@ -882,7 +935,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Content
                 Expanded(
                   child: Column(
@@ -929,7 +982,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     ],
                   ),
                 ),
-                
+
                 // Arrow icon
                 Icon(
                   Icons.arrow_forward_ios_rounded,

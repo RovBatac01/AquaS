@@ -5,7 +5,7 @@ import 'dart:async'; // Required for Timer
 import 'dart:convert'; // For JSON encoding/decoding
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../../config/api_config.dart';
-
+import '../../components/colors.dart'; // For ASColor
 
 import '../../device_aware_service.dart'; // New device-aware service
 import '../../water_quality_model.dart'; // For WaterQualityData type
@@ -41,10 +41,12 @@ class AdminDetailsScreen extends StatefulWidget {
   State<AdminDetailsScreen> createState() => _AdminDetailsState();
 }
 
-class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProviderStateMixin {
+class _AdminDetailsState extends State<AdminDetailsScreen>
+    with SingleTickerProviderStateMixin {
   // Add SingleTickerProviderStateMixin for AnimationController
 
-  String selectedStat = "Temp"; // Currently selected statistic for the circular indicator
+  String selectedStat =
+      "Temp"; // Currently selected statistic for the circular indicator
 
   // State variables to hold the latest fetched RAW data for each parameter
   double? _latestTemp;
@@ -72,7 +74,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   String? _currentDeviceId;
   String? _currentDeviceName;
   bool _hasMultipleDevices = false;
-  List<String> _availableSensors = []; // Track which sensors are available for current device
+  List<String> _availableSensors =
+      []; // Track which sensors are available for current device
 
   // Current values for the circular indicator (derived from _latestX values)
   // Initialize with sensible defaults or placeholders if no data yet.
@@ -86,7 +89,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   // Animation variables
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
-  bool _isDisposed = false; // Guard to avoid using animation controller after dispose
+  bool _isDisposed =
+      false; // Guard to avoid using animation controller after dispose
 
   @override
   void initState() {
@@ -95,24 +99,27 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     // Initialize AnimationController
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500), // Duration for smooth animation
+      duration: const Duration(
+        milliseconds: 500,
+      ), // Duration for smooth animation
     );
 
     // Initialize progress animation
-    _progressAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(_animationController)
-      ..addListener(() {
-        // Guard against calling setState after dispose (listener may fire)
-        if (mounted && !_isDisposed) {
-          super.setState(() {
-            // Update the UI as the animation progresses
-            _currentProgress = _progressAnimation.value;
-          });
-        }
-      });
+    _progressAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.0,
+    ).animate(_animationController)..addListener(() {
+      // Guard against calling setState after dispose (listener may fire)
+      if (mounted && !_isDisposed) {
+        super.setState(() {
+          // Update the UI as the animation progresses
+          _currentProgress = _progressAnimation.value;
+        });
+      }
+    });
 
     // Initialize device data (socket will be started after device selection)
     _initializeDeviceData();
-
   }
 
   // Map backend sensor_name to frontend type keys
@@ -164,7 +171,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   @override
   void dispose() {
     _isDisposed = true;
-    _timer?.cancel(); // Cancel the timer to prevent memory leaks (no-op if not used)
+    _timer
+        ?.cancel(); // Cancel the timer to prevent memory leaks (no-op if not used)
     try {
       _animationController.dispose(); // Dispose of the animation controller
     } catch (e) {
@@ -203,34 +211,52 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       // Get accessible devices
       _accessibleDevices = await _deviceService.getAccessibleDevices();
       _hasMultipleDevices = _accessibleDevices.length > 1;
-      
+
       if (_accessibleDevices.isNotEmpty) {
         // Set the first device as current
         _currentDeviceId = _accessibleDevices.first['device_id'];
         _currentDeviceName = _accessibleDevices.first['device_name'];
-        
-        print('DEBUG: Admin has access to ${_accessibleDevices.length} device(s)');
+
+        print(
+          'DEBUG: Admin has access to ${_accessibleDevices.length} device(s)',
+        );
         print('DEBUG: Current device: $_currentDeviceId ($_currentDeviceName)');
-        
+
         // Do NOT fetch historical data from the database — rely on Socket.IO live updates only.
         // Try to fetch available sensors based on the establishment (estab_id) so the UI
         // only shows sensor cards that are actually configured for this establishment.
         try {
-          final estabId = _accessibleDevices.first['estab_id'] as int? ?? _accessibleDevices.first['estab_id'] as int?;
+          final estabId =
+              _accessibleDevices.first['estab_id'] as int? ??
+              _accessibleDevices.first['estab_id'] as int?;
           if (estabId != null) {
-            final sensors = await _deviceService.getEstablishmentSensors(estabId);
+            final sensors = await _deviceService.getEstablishmentSensors(
+              estabId,
+            );
             // Map backend sensor names/types to the frontend's sensor keys
-            _availableSensors = sensors.map<String>((s) {
-              final typeFromApi = s['type'] as String?;
-              final nameFromApi = s['sensor_name'] as String?;
-              if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
-              return _sensorNameToType(nameFromApi);
-            }).toList();
+            _availableSensors =
+                sensors.map<String>((s) {
+                  final typeFromApi = s['type'] as String?;
+                  final nameFromApi = s['sensor_name'] as String?;
+                  if (typeFromApi != null && typeFromApi.isNotEmpty)
+                    return typeFromApi;
+                  return _sensorNameToType(nameFromApi);
+                }).toList();
           }
         } catch (e) {
           // If anything fails, fall back to showing a sensible default set so UI remains usable
-          print('Warning: failed to fetch estab sensors, falling back to defaults: $e');
-          _availableSensors = ['temperature', 'tds', 'ph', 'turbidity', 'ec', 'salinity', 'ec_compensated'];
+          print(
+            'Warning: failed to fetch estab sensors, falling back to defaults: $e',
+          );
+          _availableSensors = [
+            'temperature',
+            'tds',
+            'ph',
+            'turbidity',
+            'ec',
+            'salinity',
+            'ec_compensated',
+          ];
         }
 
         // Start Socket.IO for live updates after device selection
@@ -239,7 +265,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         // No accessible devices - show error state
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNetworkError;
-          _errorMessage = 'No accessible devices found. Please request device access.';
+          _errorMessage =
+              'No accessible devices found. Please request device access.';
         });
       }
     } catch (e) {
@@ -267,17 +294,17 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       _socket?.onConnect((_) {
         print('Socket.IO connected');
         if (mounted && !_isDisposed) {
-            try {
-              setState(() {
-                _connectionStatus = ConnectionStatus.connected;
-                _errorMessage = null;
-                _updateCircularIndicatorValues();
-              });
-            } catch (e) {
-              // ignore: avoid_print
-              print('setState skipped on connect: $e');
-            }
+          try {
+            setState(() {
+              _connectionStatus = ConnectionStatus.connected;
+              _errorMessage = null;
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            // ignore: avoid_print
+            print('setState skipped on connect: $e');
           }
+        }
       });
 
       _socket?.onDisconnect((_) {
@@ -402,7 +429,6 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
           }
         }
       });
-
     } catch (e) {
       print('Error connecting to Socket.IO: $e');
       if (mounted) {
@@ -415,13 +441,17 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   }
 
   /// Switch to a different device
-  Future<void> _switchDevice(String deviceId, String deviceName, [int? estabId]) async {
+  Future<void> _switchDevice(
+    String deviceId,
+    String deviceName, [
+    int? estabId,
+  ]) async {
     setState(() {
       _currentDeviceId = deviceId;
       _currentDeviceName = deviceName;
       _connectionStatus = ConnectionStatus.connecting;
     });
-    
+
     // Reconnect socket for the new device (stop previous live updates then start again)
     try {
       _socket?.disconnect();
@@ -432,18 +462,36 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     if (estabId != null) {
       try {
         final sensors = await _deviceService.getEstablishmentSensors(estabId);
-        _availableSensors = sensors.map<String>((s) {
-          final typeFromApi = s['type'] as String?;
-          final nameFromApi = s['sensor_name'] as String?;
-          if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
-          return _sensorNameToType(nameFromApi);
-        }).toList();
+        _availableSensors =
+            sensors.map<String>((s) {
+              final typeFromApi = s['type'] as String?;
+              final nameFromApi = s['sensor_name'] as String?;
+              if (typeFromApi != null && typeFromApi.isNotEmpty)
+                return typeFromApi;
+              return _sensorNameToType(nameFromApi);
+            }).toList();
       } catch (e) {
         print('Warning: failed to fetch estab sensors on device switch: $e');
-        _availableSensors = ['temperature', 'tds', 'ph', 'turbidity', 'ec', 'salinity', 'ec_compensated'];
+        _availableSensors = [
+          'temperature',
+          'tds',
+          'ph',
+          'turbidity',
+          'ec',
+          'salinity',
+          'ec_compensated',
+        ];
       }
     } else {
-      _availableSensors = ['temperature', 'tds', 'ph', 'turbidity', 'ec', 'salinity', 'ec_compensated'];
+      _availableSensors = [
+        'temperature',
+        'tds',
+        'ph',
+        'turbidity',
+        'ec',
+        'salinity',
+        'ec_compensated',
+      ];
     }
 
     _connectAndListen();
@@ -476,13 +524,19 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       }
 
       // Get available sensors for this device
-      List<Map<String, dynamic>> availableSensorsData = await _deviceService.getAvailableSensors(_currentDeviceId!);
-      List<String> availableSensors = availableSensorsData.map((sensor) => sensor['type'] as String).toList();
-      
+      List<Map<String, dynamic>> availableSensorsData = await _deviceService
+          .getAvailableSensors(_currentDeviceId!);
+      List<String> availableSensors =
+          availableSensorsData
+              .map((sensor) => sensor['type'] as String)
+              .toList();
+
       // Store available sensors for UI rendering
       _availableSensors = availableSensors;
-      
-      print('DEBUG: Admin device $_currentDeviceId has sensors: ${availableSensors.join(", ")}');
+
+      print(
+        'DEBUG: Admin device $_currentDeviceId has sensors: ${availableSensors.join(", ")}',
+      );
 
       // Initialize variables for sensor data
       List<WaterQualityData> temp = [];
@@ -495,42 +549,76 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
 
       // Fetch data for available sensors only
       if (availableSensors.contains('temperature')) {
-        temp = await _deviceService.fetchDeviceData('Temp', 'Daily', _currentDeviceId!);
+        temp = await _deviceService.fetchDeviceData(
+          'Temp',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('tds')) {
-        tds = await _deviceService.fetchDeviceData('TDS', 'Daily', _currentDeviceId!);
+        tds = await _deviceService.fetchDeviceData(
+          'TDS',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('ph')) {
-        ph = await _deviceService.fetchDeviceData('pH Level', 'Daily', _currentDeviceId!);
+        ph = await _deviceService.fetchDeviceData(
+          'pH Level',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('turbidity')) {
-        turbidity = await _deviceService.fetchDeviceData('Turbidity', 'Daily', _currentDeviceId!);
+        turbidity = await _deviceService.fetchDeviceData(
+          'Turbidity',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('ec')) {
-        conductivity = await _deviceService.fetchDeviceData('Conductivity', 'Daily', _currentDeviceId!);
+        conductivity = await _deviceService.fetchDeviceData(
+          'Conductivity',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('salinity')) {
-        salinity = await _deviceService.fetchDeviceData('Salinity', 'Daily', _currentDeviceId!);
+        salinity = await _deviceService.fetchDeviceData(
+          'Salinity',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
-      
+
       if (availableSensors.contains('ec_compensated')) {
-        ecCompensated = await _deviceService.fetchDeviceData('EC', 'Daily', _currentDeviceId!);
+        ecCompensated = await _deviceService.fetchDeviceData(
+          'EC',
+          'Daily',
+          _currentDeviceId!,
+        );
       }
 
       // Check if we have at least one sensor with data
-      bool hasAnyData = temp.isNotEmpty || tds.isNotEmpty || ph.isNotEmpty || 
-                       turbidity.isNotEmpty || conductivity.isNotEmpty || 
-                       salinity.isNotEmpty || ecCompensated.isNotEmpty;
+      bool hasAnyData =
+          temp.isNotEmpty ||
+          tds.isNotEmpty ||
+          ph.isNotEmpty ||
+          turbidity.isNotEmpty ||
+          conductivity.isNotEmpty ||
+          salinity.isNotEmpty ||
+          ecCompensated.isNotEmpty;
 
       if (!hasAnyData) {
         setState(() {
           _connectionStatus = ConnectionStatus.disconnectedNoData;
-          _errorMessage = "No data received from device $_currentDeviceId sensors.";
+          _errorMessage =
+              "No data received from device $_currentDeviceId sensors.";
           _hasInitialDataLoaded = true;
         });
         return;
@@ -541,9 +629,11 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       final newTDS = tds.isNotEmpty ? tds.first.value : null;
       final newPH = ph.isNotEmpty ? ph.first.value : null;
       final newTurbidity = turbidity.isNotEmpty ? turbidity.first.value : null;
-      final newConductivity = conductivity.isNotEmpty ? conductivity.first.value : null;
+      final newConductivity =
+          conductivity.isNotEmpty ? conductivity.first.value : null;
       final newSalinity = salinity.isNotEmpty ? salinity.first.value : null;
-      final newECCompensated = ecCompensated.isNotEmpty ? ecCompensated.first.value : null;
+      final newECCompensated =
+          ecCompensated.isNotEmpty ? ecCompensated.first.value : null;
 
       // Create a payload from the newly fetched data for comparison
       final newPayload = {
@@ -631,12 +721,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
 
     // Define max values for progress calculation (adjust as needed for your sensors)
     const double maxTemp = 100.0; // Max expected temperature for 100% progress
-    const double maxTDS = 1000.0; // Adjusted max TDS to a more realistic value (e.g., 1000 PPM)
+    const double maxTDS =
+        1000.0; // Adjusted max TDS to a more realistic value (e.g., 1000 PPM)
     const double maxPH = 14.0; // Max pH scale
     const double maxTurbidity = 100.0; // Max turbidity percentage (0-100%)
-    const double maxConductivity = 10.0; // Adjusted max conductivity (e.g., 10 mS/cm)
-    const double maxSalinity = 40.0; // Adjusted max salinity (e.g., 40 ppt for seawater)
-    const double maxECCompensated = 10.0; // Adjusted max compensated EC (e.g., 10 mS/cm)
+    const double maxConductivity =
+        10.0; // Adjusted max conductivity (e.g., 10 mS/cm)
+    const double maxSalinity =
+        40.0; // Adjusted max salinity (e.g., 40 ppt for seawater)
+    const double maxECCompensated =
+        10.0; // Adjusted max compensated EC (e.g., 10 mS/cm)
 
     switch (selectedStat) {
       case "Temp":
@@ -703,7 +797,10 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         if (_latestECCompensated != null) {
           targetProgress = _latestECCompensated! / maxECCompensated;
           currentLabel = "${_latestECCompensated!.toStringAsFixed(1)} %";
-          currentColor = _getIndicatorColor(selectedStat, _latestECCompensated!);
+          currentColor = _getIndicatorColor(
+            selectedStat,
+            _latestECCompensated!,
+          );
         } else {
           currentLabel = "No Data";
           currentColor = Colors.grey;
@@ -721,10 +818,12 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         _progressAnimation = Tween<double>(
           begin: _currentProgress, // Start from the current animated value
           end: targetProgress,
-        ).animate(CurvedAnimation(
-          parent: _animationController,
-          curve: Curves.easeInOut, // Smooth curve for animation
-        ));
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut, // Smooth curve for animation
+          ),
+        );
         _animationController.forward();
       }
     } catch (e) {
@@ -746,8 +845,6 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       _updateCircularIndicatorValues(); // Recalculate indicator values for the new selection
     });
   }
-
-
 
   // New function to determine color based on value and parameter ranges
   Color _getIndicatorColor(String stat, double value) {
@@ -790,18 +887,25 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   bool _isTurbidityAvailable() => _availableSensors.contains('turbidity');
   bool _isConductivityAvailable() => _availableSensors.contains('ec');
   bool _isSalinityAvailable() => _availableSensors.contains('salinity');
-  bool _isECCompensatedAvailable() => _availableSensors.contains('ec_compensated');
+  bool _isECCompensatedAvailable() =>
+      _availableSensors.contains('ec_compensated');
 
   // Build available sensor cards dynamically
-  List<Widget> _buildAvailableSensorCards(bool isDarkMode, bool displayLiveValues) {
+  List<Widget> _buildAvailableSensorCards(
+    bool isDarkMode,
+    bool displayLiveValues,
+  ) {
     List<Widget> availableCards = [];
-    
+
     if (_isTemperatureAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.thermostat_rounded,
           label: "Temperature",
-          value: displayLiveValues && _latestTemp != null ? "${_latestTemp!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestTemp != null
+                  ? "${_latestTemp!.toStringAsFixed(1)}"
+                  : "---",
           unit: "°C",
           isSelected: selectedStat == "Temp",
           onTap: () => _onStatCardTap("Temp"),
@@ -810,13 +914,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     if (_isTDSAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.water_drop_rounded,
           label: "TDS",
-          value: displayLiveValues && _latestTDS != null ? "${_latestTDS!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestTDS != null
+                  ? "${_latestTDS!.toStringAsFixed(1)}"
+                  : "---",
           unit: "PPM",
           isSelected: selectedStat == "TDS",
           onTap: () => _onStatCardTap("TDS"),
@@ -825,13 +932,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     if (_isPHAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.science_rounded,
           label: "pH Level",
-          value: displayLiveValues && _latestPH != null ? "${_latestPH!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestPH != null
+                  ? "${_latestPH!.toStringAsFixed(1)}"
+                  : "---",
           unit: "pH",
           isSelected: selectedStat == "pH",
           onTap: () => _onStatCardTap("pH"),
@@ -840,13 +950,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     if (_isTurbidityAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.blur_on_rounded,
           label: "Turbidity",
-          value: displayLiveValues && _latestTurbidity != null ? "${_latestTurbidity!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestTurbidity != null
+                  ? "${_latestTurbidity!.toStringAsFixed(1)}"
+                  : "---",
           unit: "NTU",
           isSelected: selectedStat == "Turbidity",
           onTap: () => _onStatCardTap("Turbidity"),
@@ -855,13 +968,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     if (_isConductivityAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.electrical_services_rounded,
           label: "Conductivity",
-          value: displayLiveValues && _latestConductivity != null ? "${_latestConductivity!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestConductivity != null
+                  ? "${_latestConductivity!.toStringAsFixed(1)}"
+                  : "---",
           unit: "mS/cm",
           isSelected: selectedStat == "Conductivity",
           onTap: () => _onStatCardTap("Conductivity"),
@@ -870,13 +986,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     if (_isSalinityAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.grain_rounded,
           label: "Salinity",
-          value: displayLiveValues && _latestSalinity != null ? "${_latestSalinity!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestSalinity != null
+                  ? "${_latestSalinity!.toStringAsFixed(1)}"
+                  : "---",
           unit: "ppt",
           isSelected: selectedStat == "Salinity",
           onTap: () => _onStatCardTap("Salinity"),
@@ -885,13 +1004,16 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     if (_isECCompensatedAvailable()) {
       availableCards.add(
         EnhancedStatCard(
           icon: Icons.settings_input_component_rounded,
           label: "EC Compensated",
-          value: displayLiveValues && _latestECCompensated != null ? "${_latestECCompensated!.toStringAsFixed(1)}" : "---",
+          value:
+              displayLiveValues && _latestECCompensated != null
+                  ? "${_latestECCompensated!.toStringAsFixed(1)}"
+                  : "---",
           unit: "mS/cm",
           isSelected: selectedStat == "Electrical Conductivity (Condensed)",
           onTap: () => _onStatCardTap("Electrical Conductivity (Condensed)"),
@@ -900,14 +1022,17 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     return availableCards;
   }
 
   // Build dynamic grid layout for available sensors
   Widget _buildSensorGrid(bool isDarkMode, bool displayLiveValues) {
-    List<Widget> availableCards = _buildAvailableSensorCards(isDarkMode, displayLiveValues);
-    
+    List<Widget> availableCards = _buildAvailableSensorCards(
+      isDarkMode,
+      displayLiveValues,
+    );
+
     if (availableCards.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -935,29 +1060,29 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         ),
       );
     }
-    
+
     // Build grid with 2 columns
     List<Widget> rows = [];
     for (int i = 0; i < availableCards.length; i += 2) {
-      List<Widget> rowChildren = [
-        Expanded(child: availableCards[i]),
-      ];
-      
+      List<Widget> rowChildren = [Expanded(child: availableCards[i])];
+
       if (i + 1 < availableCards.length) {
         rowChildren.addAll([
           const SizedBox(width: 12),
           Expanded(child: availableCards[i + 1]),
         ]);
       } else {
-        rowChildren.add(const Expanded(child: SizedBox())); // Empty space for odd number
+        rowChildren.add(
+          const Expanded(child: SizedBox()),
+        ); // Empty space for odd number
       }
-      
+
       rows.add(Row(children: rowChildren));
       if (i + 2 < availableCards.length) {
         rows.add(const SizedBox(height: 12));
       }
     }
-    
+
     return Column(children: rows);
   }
 
@@ -985,11 +1110,12 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       disconnectedMessageForIndicator = "No New Data";
     }
 
-    bool displayLiveValues = _connectionStatus == ConnectionStatus.connected ||
+    bool displayLiveValues =
+        _connectionStatus == ConnectionStatus.connected ||
         _connectionStatus == ConnectionStatus.disconnectedNoData;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: isDarkMode ? Colors.grey[900] : ASColor.BGfirst,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -1047,8 +1173,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                   _connectionStatus == ConnectionStatus.connected
                       ? 'Live'
                       : _connectionStatus == ConnectionStatus.connecting
-                          ? 'Connecting'
-                          : 'Offline',
+                      ? 'Connecting'
+                      : 'Offline',
                   style: TextStyle(
                     color: _getConnectionStatusColor(),
                     fontSize: 12,
@@ -1063,13 +1189,15 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDarkMode 
-              ? [Colors.grey[900]!, Colors.grey[850]!]
-              : [Colors.grey[50]!, Colors.white],
-          ),
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.grey[900]!, Colors.grey[850]!],
+                  )
+                  : null,
+          color: isDarkMode ? null : ASColor.BGfirst,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -1118,7 +1246,10 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w800,
-                                    color: isDarkMode ? Colors.white : Colors.black87,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white
+                                            : Colors.black87,
                                     fontFamily: 'Montserrat',
                                   ),
                                 ),
@@ -1127,7 +1258,10 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                                   'Real-time water quality monitoring',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                    color:
+                                        isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                     fontFamily: 'Poppins',
                                   ),
                                 ),
@@ -1139,7 +1273,7 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                     ],
                   ),
                 ),
-                
+
                 // Device Selector (shown when admin has multiple devices)
                 if (_hasMultipleDevices && _accessibleDevices.isNotEmpty)
                   Container(
@@ -1160,7 +1294,8 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                       children: [
                         Icon(
                           Icons.device_hub,
-                          color: isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                          color:
+                              isDarkMode ? Colors.blue[300] : Colors.blue[600],
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1169,39 +1304,55 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                             hint: Text(
                               'Select Device',
                               style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                               ),
                             ),
                             isExpanded: true,
                             underline: const SizedBox(),
-                            dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            dropdownColor:
+                                isDarkMode ? Colors.grey[800] : Colors.white,
                             style: TextStyle(
                               color: isDarkMode ? Colors.white : Colors.black,
                               fontSize: 16,
                             ),
-                            items: _accessibleDevices.map((device) {
+                            items:
+                                _accessibleDevices.map((device) {
                                   return DropdownMenuItem<String>(
                                     value: device['device_id'],
-                                    child: Text('Device ${device['device_id']} - ${device['device_name']}'),
+                                    child: Text(
+                                      'Device ${device['device_id']} - ${device['device_name']}',
+                                    ),
                                   );
                                 }).toList(),
-                                onChanged: (String? newDeviceId) {
-                                  if (newDeviceId != null && newDeviceId != _currentDeviceId) {
-                                    final selectedDevice = _accessibleDevices.firstWhere(
-                                      (device) => device['device_id'] == newDeviceId,
+                            onChanged: (String? newDeviceId) {
+                              if (newDeviceId != null &&
+                                  newDeviceId != _currentDeviceId) {
+                                final selectedDevice = _accessibleDevices
+                                    .firstWhere(
+                                      (device) =>
+                                          device['device_id'] == newDeviceId,
                                     );
-                                    final estabId = selectedDevice['estab_id'] as int? ?? selectedDevice['establishment_id'] as int?;
-                                    _switchDevice(newDeviceId, selectedDevice['device_name'], estabId);
-                                  }
-                                },
+                                final estabId =
+                                    selectedDevice['estab_id'] as int? ??
+                                    selectedDevice['establishment_id'] as int?;
+                                _switchDevice(
+                                  newDeviceId,
+                                  selectedDevice['device_name'],
+                                  estabId,
+                                );
+                              }
+                            },
                           ),
                         ),
                       ],
                     ),
                   ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Enhanced Circular Indicator
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -1229,48 +1380,60 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                       ),
                       const SizedBox(height: 20),
                       Center(
-                        child: !_hasInitialDataLoaded && _connectionStatus == ConnectionStatus.connecting
-                            ? const CircularProgressIndicator()
-                            : AnimatedBuilder(
-                                animation: _animationController,
-                                builder: (context, child) {
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: indicatorColor.withOpacity(0.3),
-                                          blurRadius: 20,
-                                          spreadRadius: 5,
-                                        ),
-                                      ],
-                                    ),
-                                    child: CustomPaint(
-                                      size: const Size(280, 280),
-                                      painter: CircularIndicator(
-                                        progress: _progressAnimation.value,
-                                        label: label,
-                                        color: indicatorColor,
-                                        brightness: Theme.of(context).brightness,
-                                        disconnectedMessage: disconnectedMessageForIndicator,
+                        child:
+                            !_hasInitialDataLoaded &&
+                                    _connectionStatus ==
+                                        ConnectionStatus.connecting
+                                ? const CircularProgressIndicator()
+                                : AnimatedBuilder(
+                                  animation: _animationController,
+                                  builder: (context, child) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: indicatorColor.withOpacity(
+                                              0.3,
+                                            ),
+                                            blurRadius: 20,
+                                            spreadRadius: 5,
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
+                                      child: CustomPaint(
+                                        size: const Size(280, 280),
+                                        painter: CircularIndicator(
+                                          progress: _progressAnimation.value,
+                                          label: label,
+                                          color: indicatorColor,
+                                          brightness:
+                                              Theme.of(context).brightness,
+                                          disconnectedMessage:
+                                              disconnectedMessageForIndicator,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                       ),
                       const SizedBox(height: 20),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: _connectionStatus == ConnectionStatus.connected
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
+                          color:
+                              _connectionStatus == ConnectionStatus.connected
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: _connectionStatus == ConnectionStatus.connected
-                                ? Colors.green.withOpacity(0.3)
-                                : Colors.red.withOpacity(0.3),
+                            color:
+                                _connectionStatus == ConnectionStatus.connected
+                                    ? Colors.green.withOpacity(0.3)
+                                    : Colors.red.withOpacity(0.3),
                           ),
                         ),
                         child: Text(
@@ -1280,9 +1443,10 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: _connectionStatus == ConnectionStatus.connected
-                                ? Colors.green
-                                : Colors.red,
+                            color:
+                                _connectionStatus == ConnectionStatus.connected
+                                    ? Colors.green
+                                    : Colors.red,
                             fontFamily: 'Poppins',
                           ),
                         ),
@@ -1295,16 +1459,25 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                             decoration: BoxDecoration(
                               color: Colors.red.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                              border: Border.all(
+                                color: Colors.red.withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.error_outline, color: Colors.red, size: 16),
+                                Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     'Error: $_errorMessage',
-                                    style: const TextStyle(fontSize: 12, color: Colors.red),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -1314,9 +1487,9 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Enhanced Parameters Section
                 Text(
                   'Water Parameters',
@@ -1328,10 +1501,10 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Dynamic Stats Grid - Only shows sensors available for current device
                 _buildSensorGrid(isDarkMode, displayLiveValues),
-                
+
                 const SizedBox(height: 24),
               ],
             ),
@@ -1373,25 +1546,28 @@ class EnhancedStatCard extends StatelessWidget {
         curve: Curves.easeInOut,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withOpacity(0.1)
-              : isDarkMode
+          color:
+              isSelected
+                  ? color.withOpacity(0.1)
+                  : isDarkMode
                   ? Colors.grey[800]
                   : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? color
-                : isDarkMode
+            color:
+                isSelected
+                    ? color
+                    : isDarkMode
                     ? Colors.grey[700]!
                     : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isSelected
-                  ? color.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.05),
+              color:
+                  isSelected
+                      ? color.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.05),
               blurRadius: isSelected ? 15 : 10,
               offset: const Offset(0, 4),
             ),
@@ -1408,19 +1584,11 @@ class EnhancedStatCard extends StatelessWidget {
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 20,
-                    color: color,
-                  ),
+                  child: Icon(icon, size: 20, color: color),
                 ),
                 const Spacer(),
                 if (isSelected)
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: color,
-                    size: 16,
-                  ),
+                  Icon(Icons.check_circle_rounded, color: color, size: 16),
               ],
             ),
             const SizedBox(height: 12),

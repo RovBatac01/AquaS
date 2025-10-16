@@ -447,17 +447,18 @@ class _StatisticsState extends State<AdminStatistics> {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: isDarkMode ? Colors.grey[900] : ASColor.BGfirst,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors:
-                isDarkMode
-                    ? [Colors.grey[900]!, Colors.grey[850]!]
-                    : [Colors.grey[50]!, Colors.white],
-          ),
+          gradient:
+              isDarkMode
+                  ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.grey[900]!, Colors.grey[850]!],
+                  )
+                  : null,
+          color: isDarkMode ? null : ASColor.BGfirst,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -603,37 +604,7 @@ class _StatisticsState extends State<AdminStatistics> {
                   ),
                   child: Row(
                     children: [
-                      // Enhanced Export Button
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          height: 48,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              print('Export tapped');
-                            },
-                            icon: Icon(Icons.download_rounded, size: 20),
-                            label: Text(
-                              'Export Data',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              elevation: 2,
-                              shadowColor: Colors.green.withOpacity(0.3),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
+                     
                       // Enhanced Period Selector
                       Expanded(
                         flex: 3,
