@@ -3,6 +3,8 @@ import 'dart:math';
 import 'dart:ui'; // Required for ImageFilter
 import 'dart:async'; // Required for Timer
 import 'dart:convert'; // For JSON encoding/decoding
+import 'package:socket_io_client/socket_io_client.dart' as io;
+import '../../config/api_config.dart';
 
 
 import '../../device_aware_service.dart'; // New device-aware service
@@ -61,6 +63,7 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   Map<String, dynamic>? _lastSuccessfulDataPayload;
 
   Timer? _timer; // Timer for auto-refresh
+  io.Socket? _socket;
 
   final DeviceAwareService _deviceService = DeviceAwareService();
 
@@ -83,6 +86,7 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
   // Animation variables
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
+  bool _isDisposed = false; // Guard to avoid using animation controller after dispose
 
   @override
   void initState() {
@@ -97,19 +101,99 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     // Initialize progress animation
     _progressAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(_animationController)
       ..addListener(() {
-        setState(() {
-          // Update the UI as the animation progresses
-          _currentProgress = _progressAnimation.value;
-        });
+        // Guard against calling setState after dispose (listener may fire)
+        if (mounted && !_isDisposed) {
+          super.setState(() {
+            // Update the UI as the animation progresses
+            _currentProgress = _progressAnimation.value;
+          });
+        }
       });
 
-    _initializeDeviceData(); // Initialize device data and set up timer
+    // Initialize device data (socket will be started after device selection)
+    _initializeDeviceData();
+
+  }
+
+  // Map backend sensor_name to frontend type keys
+  String _sensorNameToType(String? sensorName) {
+    if (sensorName == null) return sensorName ?? '';
+    final name = sensorName.trim();
+    final mapping = <String, String>{
+      'Total Dissolved Solids': 'tds',
+      'Conductivity': 'ec',
+      'Temperature': 'temperature',
+      'Turbidity': 'turbidity',
+      'ph Level': 'ph',
+      'pH Level': 'ph',
+      'Salinity': 'salinity',
+      'Electrical Conductivity': 'ec_compensated',
+    };
+
+    // Try exact match first
+    if (mapping.containsKey(name)) return mapping[name]!;
+
+    // Case-insensitive match
+    final found = mapping.entries.firstWhere(
+      (e) => e.key.toLowerCase() == name.toLowerCase(),
+      orElse: () => MapEntry('', ''),
+    );
+    if (found.key != '') return found.value;
+
+    // Fallback: use some common short forms
+    final lower = name.toLowerCase();
+    if (lower.contains('tds') || lower.contains('dissolved')) return 'tds';
+    if (lower.contains('temp')) return 'temperature';
+    if (lower.contains('ph')) return 'ph';
+    if (lower.contains('turbidity')) return 'turbidity';
+    if (lower.contains('salin')) return 'salinity';
+    if (lower.contains('conduct')) return 'ec';
+
+    // As last resort, return the lowercased sensor name without spaces
+    return name.toLowerCase().replaceAll(' ', '_');
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    // Prevent setState calls after widget is disposed
+    if (mounted && !_isDisposed) {
+      super.setState(fn);
+    }
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer to prevent memory leaks
-    _animationController.dispose(); // Dispose of the animation controller
+    _isDisposed = true;
+    _timer?.cancel(); // Cancel the timer to prevent memory leaks (no-op if not used)
+    try {
+      _animationController.dispose(); // Dispose of the animation controller
+    } catch (e) {
+      // ignore: avoid_print
+      print('Warning disposing animation controller: $e');
+    }
+    try {
+      if (_socket != null) {
+        try {
+          // remove all listeners to avoid callbacks after dispose
+          _socket?.off('connect');
+          _socket?.off('disconnect');
+          _socket?.off('error');
+          _socket?.off('newNotification');
+          _socket?.off('updateTemperatureData');
+          _socket?.off('updatePHData');
+          _socket?.off('updateTDSData');
+          _socket?.off('updateTurbidityData');
+          _socket?.off('updateSalinityData');
+          _socket?.off('updateECData');
+          _socket?.off('updateECCompensatedData');
+        } catch (_) {}
+        _socket?.disconnect();
+        _socket?.dispose();
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Warning disposing socket: $e');
+    }
     super.dispose();
   }
 
@@ -128,13 +212,29 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
         print('DEBUG: Admin has access to ${_accessibleDevices.length} device(s)');
         print('DEBUG: Current device: $_currentDeviceId ($_currentDeviceName)');
         
-        // Start fetching data for the current device
-        _fetchLatestDataForAllStats(isInitialFetch: true);
-        
-        // Set up timer for auto-refresh
-        _timer = Timer.periodic(const Duration(milliseconds: 1500), (Timer t) {
-          _fetchLatestDataForAllStats();
-        });
+        // Do NOT fetch historical data from the database — rely on Socket.IO live updates only.
+        // Try to fetch available sensors based on the establishment (estab_id) so the UI
+        // only shows sensor cards that are actually configured for this establishment.
+        try {
+          final estabId = _accessibleDevices.first['estab_id'] as int? ?? _accessibleDevices.first['estab_id'] as int?;
+          if (estabId != null) {
+            final sensors = await _deviceService.getEstablishmentSensors(estabId);
+            // Map backend sensor names/types to the frontend's sensor keys
+            _availableSensors = sensors.map<String>((s) {
+              final typeFromApi = s['type'] as String?;
+              final nameFromApi = s['sensor_name'] as String?;
+              if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
+              return _sensorNameToType(nameFromApi);
+            }).toList();
+          }
+        } catch (e) {
+          // If anything fails, fall back to showing a sensible default set so UI remains usable
+          print('Warning: failed to fetch estab sensors, falling back to defaults: $e');
+          _availableSensors = ['temperature', 'tds', 'ph', 'turbidity', 'ec', 'salinity', 'ec_compensated'];
+        }
+
+        // Start Socket.IO for live updates after device selection
+        _connectAndListen();
       } else {
         // No accessible devices - show error state
         setState(() {
@@ -151,20 +251,210 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     }
   }
 
+  void _connectAndListen() async {
+    try {
+      // Use configured API base URL for socket connection
+      final base = ApiConfig.baseUrl;
+      print('DEBUG: Connecting Socket.IO to $base');
+
+      _socket = io.io(base, <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': false,
+      });
+
+      _socket?.connect();
+
+      _socket?.onConnect((_) {
+        print('Socket.IO connected');
+        if (mounted && !_isDisposed) {
+            try {
+              setState(() {
+                _connectionStatus = ConnectionStatus.connected;
+                _errorMessage = null;
+                _updateCircularIndicatorValues();
+              });
+            } catch (e) {
+              // ignore: avoid_print
+              print('setState skipped on connect: $e');
+            }
+          }
+      });
+
+      _socket?.onDisconnect((_) {
+        print('Socket.IO disconnected');
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+              _errorMessage = 'Socket.IO disconnected.';
+            });
+          } catch (e) {
+            // ignore: avoid_print
+            print('setState skipped on disconnect: $e');
+          }
+        }
+      });
+
+      _socket?.on('error', (error) => print('Socket.IO error: $error'));
+
+      _socket?.on('newNotification', (data) {
+        print('Received real-time notification: $data');
+        if (mounted && !_isDisposed) {
+          try {
+            final readingValue = (data['readingValue'] as num).toDouble();
+            final threshold = (data['threshold'] as num).toDouble();
+            // show a lightweight message or handle notification
+            _showNotificationAlert(readingValue, threshold);
+          } catch (e) {
+            print('Notification handler skipped: $e');
+          }
+        }
+      });
+
+      // Live sensor updates
+      _socket?.on('updateTemperatureData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestTemp = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateTemperatureData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updatePHData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestPH = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updatePHData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateTDSData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestTDS = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateTDSData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateTurbidityData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestTurbidity = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateTurbidityData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateSalinityData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestSalinity = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateSalinityData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateECData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestConductivity = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateECData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateECCompensatedData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestECCompensated = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateECCompensatedData handler skipped: $e');
+          }
+        }
+      });
+
+    } catch (e) {
+      print('Error connecting to Socket.IO: $e');
+      if (mounted) {
+        setState(() {
+          _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+          _errorMessage = 'Socket connection failed: $e';
+        });
+      }
+    }
+  }
+
   /// Switch to a different device
-  Future<void> _switchDevice(String deviceId, String deviceName) async {
+  Future<void> _switchDevice(String deviceId, String deviceName, [int? estabId]) async {
     setState(() {
       _currentDeviceId = deviceId;
       _currentDeviceName = deviceName;
       _connectionStatus = ConnectionStatus.connecting;
     });
     
-    // Fetch data for the new device
-    _fetchLatestDataForAllStats(isInitialFetch: true);
+    // Reconnect socket for the new device (stop previous live updates then start again)
+    try {
+      _socket?.disconnect();
+      _socket?.dispose();
+    } catch (_) {}
+    _socket = null;
+    // Try to fetch sensors for the provided establishment id if available
+    if (estabId != null) {
+      try {
+        final sensors = await _deviceService.getEstablishmentSensors(estabId);
+        _availableSensors = sensors.map<String>((s) {
+          final typeFromApi = s['type'] as String?;
+          final nameFromApi = s['sensor_name'] as String?;
+          if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
+          return _sensorNameToType(nameFromApi);
+        }).toList();
+      } catch (e) {
+        print('Warning: failed to fetch estab sensors on device switch: $e');
+        _availableSensors = ['temperature', 'tds', 'ph', 'turbidity', 'ec', 'salinity', 'ec_compensated'];
+      }
+    } else {
+      _availableSensors = ['temperature', 'tds', 'ph', 'turbidity', 'ec', 'salinity', 'ec_compensated'];
+    }
+
+    _connectAndListen();
   }
 
   // Fetches the latest data (raw value only) for all water quality parameters
-  Future<void> _fetchLatestDataForAllStats({bool isInitialFetch = false}) async {
+  // NOTE: This function used to fetch historical data from the backend.
+  // The app now relies solely on Socket.IO for live updates; keep this
+  // function only for potential future use. Marked intentionally unused.
+  // ignore: unused_element
+  Future<void> _fetchLatestDataForAllStats() async {
     // Only set to connecting if we don't have any initial data displayed yet.
     // This prevents the UI from clearing during subsequent fetches.
     if (!_hasInitialDataLoaded) {
@@ -303,9 +593,38 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     }
   }
 
+  void _showNotificationAlert(double readingValue, double threshold) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Real-Time Water Quality Alert',
+            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Turbidity reading ($readingValue) is below the threshold ($threshold).',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Helper to update the circular indicator's progress, label, and color
   // based on the current `selectedStat` and the fetched `_latestX` values.
   void _updateCircularIndicatorValues() {
+    // Prevent updates after widget disposed
+    if (!mounted || _isDisposed) return;
     double targetProgress = 0.0; // This will be the target for the animation
     String currentLabel = "N/A";
     Color currentColor = Colors.blue; // Default color for indicator
@@ -396,15 +715,22 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
     targetProgress = targetProgress.clamp(0.0, 1.0);
 
     // Animate the progress
-    _animationController.reset();
-    _progressAnimation = Tween<double>(
-      begin: _currentProgress, // Start from the current animated value
-      end: targetProgress,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut, // Smooth curve for animation
-    ));
-    _animationController.forward();
+    try {
+      if (!_isDisposed) {
+        _animationController.reset();
+        _progressAnimation = Tween<double>(
+          begin: _currentProgress, // Start from the current animated value
+          end: targetProgress,
+        ).animate(CurvedAnimation(
+          parent: _animationController,
+          curve: Curves.easeInOut, // Smooth curve for animation
+        ));
+        _animationController.forward();
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Animation update skipped (controller disposed?): $e');
+    }
 
     setState(() {
       // We don't set _currentProgress directly here, it's updated by the listener
@@ -854,19 +1180,20 @@ class _AdminDetailsState extends State<AdminDetailsScreen> with SingleTickerProv
                               fontSize: 16,
                             ),
                             items: _accessibleDevices.map((device) {
-                              return DropdownMenuItem<String>(
-                                value: device['device_id'],
-                                child: Text('Device ${device['device_id']} - ${device['device_name']}'),
-                              );
-                            }).toList(),
-                            onChanged: (String? newDeviceId) {
-                              if (newDeviceId != null && newDeviceId != _currentDeviceId) {
-                                final selectedDevice = _accessibleDevices.firstWhere(
-                                  (device) => device['device_id'] == newDeviceId,
-                                );
-                                _switchDevice(newDeviceId, selectedDevice['device_name']);
-                              }
-                            },
+                                  return DropdownMenuItem<String>(
+                                    value: device['device_id'],
+                                    child: Text('Device ${device['device_id']} - ${device['device_name']}'),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newDeviceId) {
+                                  if (newDeviceId != null && newDeviceId != _currentDeviceId) {
+                                    final selectedDevice = _accessibleDevices.firstWhere(
+                                      (device) => device['device_id'] == newDeviceId,
+                                    );
+                                    final estabId = selectedDevice['estab_id'] as int? ?? selectedDevice['establishment_id'] as int?;
+                                    _switchDevice(newDeviceId, selectedDevice['device_name'], estabId);
+                                  }
+                                },
                           ),
                         ),
                       ],

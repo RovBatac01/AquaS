@@ -81,6 +81,40 @@ class DeviceAwareService {
     }
   }
 
+  /// Get sensors configured for a specific establishment id (estab_id)
+  Future<List<Map<String, dynamic>>> getEstablishmentSensors(int estabId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('userToken');
+      
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.apiBase}/establishment/$estabId/sensors'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return List<Map<String, dynamic>>.from(data['sensors']);
+        } else {
+          throw Exception('Failed to fetch establishment sensors');
+        }
+      } else {
+        throw Exception('Failed to fetch establishment sensors: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching establishment sensors: $e');
+      rethrow;
+    }
+  }
+
   /// Fetch device-specific sensor data
   Future<List<WaterQualityData>> fetchDeviceData(String statType, String period, String deviceId) async {
     String endpoint;
