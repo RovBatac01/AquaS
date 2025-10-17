@@ -1,9 +1,8 @@
-import 'package:aqua/pages/User/ColorIndicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../components/colors.dart';
 
-class WelcomePopup extends StatelessWidget {
+class WelcomePopup extends StatefulWidget {
   final String? title;
   final String? description;
   final String? imagePath;
@@ -18,6 +17,62 @@ class WelcomePopup extends StatelessWidget {
     this.customContent,
     this.onGetStarted,
   }) : super(key: key);
+
+  @override
+  State<WelcomePopup> createState() => _WelcomePopupState();
+}
+
+class _WelcomePopupState extends State<WelcomePopup> {
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // List of tutorial images in order
+  static const List<String> tutorialImages = [
+    'assets/images/1.png',
+    'assets/images/2.png',
+    'assets/images/3.png',
+    'assets/images/4.png',
+    'assets/images/5.png',
+    'assets/images/6.png',
+    'assets/images/7.png',
+    'assets/images/8.png',
+    'assets/images/9.png',
+    'assets/images/10.png',
+    'assets/images/11.png',
+    'assets/images/12.png',
+    'assets/images/13.png',
+    'assets/images/14.png',
+    'assets/images/15.png',
+    'assets/images/16.png',
+    'assets/images/17.png',
+    'assets/images/18.png',
+    'assets/images/19.png',
+    'assets/images/20.png',
+    'assets/images/21.png',
+    'assets/images/22.png',
+    'assets/images/23.png',
+    'assets/images/24.png',
+    'assets/images/25.png',
+    'assets/images/26.png',
+    'assets/images/27.png',
+    'assets/images/28.png',
+    'assets/images/29.png',
+    'assets/images/30.png',
+    'assets/images/31.png',
+    'assets/images/32.png',
+  ];
 
   // Static method to show the popup
   static void show(BuildContext context) {
@@ -57,10 +112,10 @@ class WelcomePopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
       child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.8,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
           color: ASColor.getCardColor(context),
@@ -74,241 +129,220 @@ class WelcomePopup extends StatelessWidget {
             ],
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Welcome Image
-              _buildWelcomeImage(),
-              SizedBox(height: 20.h),
-
-              // Welcome Title
-              Text(
-                title ?? 'Welcome to AquaS!',
+        child: Column(
+          children: [
+            // Header
+            Center(
+              child: Text(
+                widget.title ?? 'Welcome to AquaS!',
                 style: TextStyle(
-                  fontSize: 24.sp,
+                  fontSize: 22.sp,
                   fontWeight: FontWeight.bold,
                   color: ASColor.getTextColor(context),
                   fontFamily: 'Poppins',
                 ),
-                textAlign: TextAlign.center,
               ),
-              SizedBox(height: 12.h),
+            ),
+            SizedBox(height: 10.h),
 
-              // Welcome Description
-              Text(
-                description ?? 'Monitor your water quality with ease. Track TDS, conductivity, and more to ensure clean and safe water.',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: ASColor.getTextColor(context).withOpacity(0.7),
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w300,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24.h),
-
-              // Custom content or default features list
-              if (customContent != null) ...[
-                customContent!,
-                SizedBox(height: 24.h),
-              ] else ...[
-                _buildFeaturesContainer(context),
-                SizedBox(height: 24.h),
-              ],
-
-              // Get Started Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: onGetStarted ?? () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    elevation: 0,
+            // Description
+            if (widget.description != null || widget.title == null)
+              Padding(
+                padding: EdgeInsets.only(bottom: 15.h),
+                child: Text(
+                  widget.description ??
+                      'Swipe through the tutorial images to learn how to use AquaS!',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: ASColor.getTextColor(context).withOpacity(0.7),
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w300,
                   ),
-                  child: Text(
-                    'Get Started',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      fontFamily: 'Poppins',
-                    ),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ],
-          ),
+
+            // Scrollable Image Gallery
+            Expanded(child: _buildImageGallery(context)),
+
+            SizedBox(height: 20.h),
+
+            // Get Started Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed:
+                    widget.onGetStarted ?? () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ASColor.buttonBackground(context),
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Get Started',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildWelcomeImage() {
-    if (imagePath != null) {
-      return Container(
-        width: 150.w,
-        height: 150.h,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20.r),
-          child: Image.asset(imagePath!, fit: BoxFit.cover),
-        ),
-      );
-    } else {
-      return Container(
-        width: 150.w,
-        height: 150.h,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade400, Colors.cyan.shade300],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blue.withOpacity(0.3),
-              blurRadius: 20,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Icon(Icons.water_drop, size: 50.sp, color: Colors.white),
-            Positioned(
-              top: 45.h,
-              right: 45.w,
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.check,
-                  size: 16.sp,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Widget _buildFeaturesContainer(BuildContext context) {
+  Widget _buildImageGallery(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: ASColor.Background(context),
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: ASColor.getTextColor(context).withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFeatureItem(
-                context,
-                Icons.analytics,
-                'Color Indicator',
-              ),
-              IconButton(
-                icon: Icon(Icons.arrow_forward_ios, size: 16.sp, color: ASColor.getTextColor(context).withOpacity(0.5)),
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => WaterQualityPopupDemo()));
-                },
-              ),
-            ],
+          // Scroll indicator
+          Padding(
+            padding: EdgeInsets.all(12.w),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.arrow_back_ios,
+                  size: 16.sp,
+                  color: ASColor.getTextColor(context).withOpacity(0.5),
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Swipe to navigate',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: ASColor.getTextColor(context).withOpacity(0.6),
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16.sp,
+                  color: ASColor.getTextColor(context).withOpacity(0.5),
+                ),
+              ],
+            ),
           ),
+          // PageView for images
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (int page) {
+                setState(() {
+                  _currentPage = page;
+                });
+              },
+              itemCount: tutorialImages.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 16.w),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Image.asset(
+                      tutorialImages[index],
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: double.infinity,
+                          height: 300.h,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.image_not_supported,
+                                size: 48.sp,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Image not found',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                              Text(
+                                tutorialImages[index].split('/').last,
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 10.sp,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Page indicators
           SizedBox(height: 8.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFeatureItem(
-                context,
-                Icons.history,
-                'Historical Data',
-              ),
-              IconButton(
-                icon: Icon(Icons.arrow_forward_ios, size: 16.sp, color: ASColor.getTextColor(context).withOpacity(0.5)),
-                onPressed: () {},
-              ),
-            ],
-          ),
-
+          _buildPageIndicators(),
           SizedBox(height: 8.h),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFeatureItem(
-                context,
-                Icons.notifications,
-                'Smart Alerts',
-              ),
-              IconButton(
-                icon: Icon(Icons.arrow_forward_ios, size: 16.sp, color: ASColor.getTextColor(context).withOpacity(0.5)),
-                onPressed: () {},
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildFeatureItem(
-                context,
-                Icons.calendar_today,
-                'Schedule Reports',
-              ),
-              IconButton(
-                icon: Icon(Icons.arrow_forward_ios, size: 16.sp, color: ASColor.getTextColor(context).withOpacity(0.5)),
-                onPressed: () {},
-              ),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildFeatureItem(
-    BuildContext context,
-    IconData icon,
-    String text,
-  ) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(8.w),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Icon(icon, size: 20.sp, color: Colors.blue),
-        ),
-        SizedBox(width: 12.w),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: ASColor.getTextColor(context),
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w400,
+  Widget _buildPageIndicators() {
+    return Container(
+      height: 30.h,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            tutorialImages.length,
+            (index) => AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              margin: EdgeInsets.symmetric(horizontal: 1.w),
+              width: _currentPage == index ? 5.w : 3.w,
+              height: _currentPage == index ? 5.h : 3.h,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _currentPage == index
+                    ? Colors.blue
+                    : ASColor.getTextColor(context).withOpacity(0.3),
+              ),
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
