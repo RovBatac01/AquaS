@@ -31,11 +31,21 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// CORS Configuration - MUST be before other middleware
+app.use(cors({
+  origin: '*', // Allow all origins for development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors());
 
 // Middleware to verify JWT and get user ID
 const authenticateToken = (req, res, next) => {
