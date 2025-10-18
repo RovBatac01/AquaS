@@ -8,7 +8,7 @@ class ApiConfig {
 
   // for testing locally
   // static const String _developmentUrl = "http://localhost:5000";
-  // static const String _productionUrl = "https://aquasense-p36u.onrender.com";
+  // static const String _productionUrl = "http://localhost:5000";
 
   // Get the current base URL based on environment
   static String get baseUrl {
