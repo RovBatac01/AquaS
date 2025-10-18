@@ -22,13 +22,21 @@ const server = http.createServer(app);
 
 const otpStorage = {};
 
-// Nodemailer setup
+// Nodemailer setup with improved configuration
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: "aquasense35@gmail.com",
     pass: "ijmcosuxpnioehya",
   },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
 });
 
 // Middleware
@@ -312,10 +320,12 @@ async function sendSignupOTP(email, otp) {
   };
 
   try {
+    console.log(`Attempting to send OTP email to ${email}...`);
     await transporter.sendMail(mailOptions);
-    console.log(`Signup OTP sent to ${email}: ${otp}`);
+    console.log(`✅ Signup OTP sent successfully to ${email}: ${otp}`);
   } catch (error) {
-    console.error('Error sending signup OTP email:', error);
+    console.error('❌ Error sending signup OTP email:', error);
+    console.error('Email error details:', error.message);
     throw new Error('Failed to send verification email. Please check your email configuration. Original error: ' + error.message);
   }
 }
