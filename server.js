@@ -43,7 +43,14 @@ const transporter = nodemailer.createTransport({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors());
+
+// CORS configuration to allow Flutter web development
+app.use(cors({
+  origin: ['http://localhost:50060', 'http://localhost:5000', 'http://127.0.0.1:50060', 'http://127.0.0.1:5000', 'https://aquasense-p36u.onrender.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware to verify JWT and get user ID
 const authenticateToken = (req, res, next) => {
