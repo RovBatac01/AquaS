@@ -171,70 +171,6 @@ class _UserListPageState extends State<UserListPage> {
     }
   }
 
-  // --- NEW: Function to show edit dialog ---
-  void _showEditDialog(Map<String, dynamic> user) {
-    final TextEditingController usernameController = TextEditingController(
-      text: user['username'],
-    );
-    String selectedRole =
-        user['role'] ?? 'User'; // Default to 'User' if role is null
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit User'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
-              ),
-              DropdownButtonFormField<String>(
-                value: selectedRole,
-                decoration: const InputDecoration(labelText: 'Role'),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Super Admin',
-                    child: Text('Super Admin'),
-                  ),
-                  DropdownMenuItem(value: 'Admin', child: Text('Admin')),
-                  DropdownMenuItem(value: 'User', child: Text('User')),
-                ],
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    selectedRole = newValue; // Update the selected role
-                  }
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Call update function
-                _updateUser(
-                  user['id'], // Assuming 'id' is available in the fetched user map
-                  usernameController.text,
-                  selectedRole,
-                );
-                Navigator.of(context).pop(); // Close dialog after action
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // Filtered list based on search and role
   List<Map<String, dynamic>> get _filteredUsers {
     List<Map<String, dynamic>> filtered = _users;
@@ -559,15 +495,6 @@ class _UserListPageState extends State<UserListPage> {
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    IconButton(
-                                      onPressed: () => _showEditDialog(user),
-                                      icon: Icon(
-                                        Icons.edit_rounded,
-                                        color: Colors.blue,
-                                        size: 20,
-                                      ),
-                                      tooltip: 'Edit User',
-                                    ),
                                     IconButton(
                                       onPressed: () => _deleteUser(
                                         user['id'],

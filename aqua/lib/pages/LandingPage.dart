@@ -1,7 +1,10 @@
 import 'package:aqua/pages/Login.dart';
+import 'package:aqua/components/colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'dart:ui';
 import 'package:simple_animations/simple_animations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() => runApp(const AquaSaverApp());
 
@@ -25,7 +28,7 @@ class LandingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      backgroundColor: ASColor.Background(context),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screen = MediaQuery.of(context).size;
@@ -44,117 +47,162 @@ class LandingPage extends StatelessWidget {
               // Decorative water drops
               Positioned.fill(child: DropDecorations(isDarkMode: isDarkMode)),
 
-              // Main scrollable content
-              SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: SafeArea(
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          children: [
-                            SizedBox(height: screen.height * 0.08),
-                            FadeIn(
-                              delay: 300,
-                              child: Icon(
-                                Icons.water_drop,
-                                size: 100,
-                                color:
-                                    isDarkMode
-                                        ? Colors.blue[200]
-                                        : Colors.blueAccent,
-                              ),
+              // Main content
+              Center(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32.w),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24.r),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 40.h),
+                          decoration: BoxDecoration(
+                            color: isDarkMode
+                                ? Colors.white.withOpacity(0.08)
+                                : Colors.white.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(24.r),
+                            border: Border.all(
+                              color: isDarkMode 
+                                  ? Colors.white.withOpacity(0.2) 
+                                  : Colors.white.withOpacity(0.4),
+                              width: 1,
                             ),
-                            SizedBox(height: screen.height * 0.02),
-                            FadeIn(
-                              delay: 600,
-                              child: Text(
-                                'AquaSense',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.blue[200]
-                                          : Colors.blueAccent,
-                                ),
-                              ),
-                            ),
-                            FadeIn(
-                              delay: 800,
-                              child: Text(
-                                'Water Monitoring System',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.teal[100]
-                                          : Colors.teal,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: screen.height * 0.45),
-                            FadeIn(
-                              delay: 1300,
-                              child: Container(
-                                width: screen.width * 0.5,
-                                height: 45,
-                                decoration: BoxDecoration(
-                                  color:
-                                      isDarkMode
-                                          ? Colors.grey[900]
-                                          : Colors.white,
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(
-                                    color:
-                                        isDarkMode
-                                            ? Colors.white54
-                                            : Colors.black26,
-                                    width: 0.8,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Logo - Minimal Blue Droplet
+                              FadeIn(
+                                delay: 300,
+                                child: Container(
+                                  width: 70.w,
+                                  height: 70.h,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.blue.shade400,
+                                        Colors.blue.shade600,
+                                      ],
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.water_drop,
+                                    size: 36.sp,
+                                    color: Colors.white,
                                   ),
                                 ),
-                                child: TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => const LoginScreen(),
-                                      ),
-                                    );
-                                  },
+                              ),
+                              SizedBox(height: 32.h),
+                              
+                              // Title
+                              FadeIn(
+                                delay: 600,
+                                child: Text(
+                                  'AquaSense',
+                                  style: TextStyle(
+                                    fontSize: 36.sp,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Poppins',
+                                    color: isDarkMode ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              
+                              // Subtitle
+                              FadeIn(
+                                delay: 800,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(20.r),
+                                  ),
                                   child: Text(
-                                    'Get Started',
+                                    'Water Monitoring System',
                                     style: TextStyle(
-                                      color:
-                                          isDarkMode
-                                              ? Colors.blue[200]
-                                              : Colors.blueAccent,
-                                      fontSize: 16,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Poppins',
+                                      color: Colors.blue.shade700,
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(height: screen.height * 0.03),
-                            FadeIn(
-                              delay: 1500,
-                              child: Text(
-                                'When it comes to H2O\nWe do not go with the flow',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.white70
-                                          : Colors.black,
+                              SizedBox(height: 32.h),
+                              
+                              // Get Started Button
+                              FadeIn(
+                                delay: 1000,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 54.h,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.green.shade400,
+                                        Colors.green.shade600,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const LoginScreen(),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      padding: EdgeInsets.zero,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16.r),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Get Started',
+                                      style: TextStyle(
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        fontFamily: 'Poppins',
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 40),
-                          ],
+                              SizedBox(height: 24.h),
+                              
+                              // Tagline
+                              FadeIn(
+                                delay: 1200,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                                  child: Text(
+                                    'When it comes to H₂O\nWe do not go with the flow',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      fontFamily: 'Poppins',
+                                      color: isDarkMode 
+                                          ? Colors.white.withOpacity(0.5)
+                                          : Colors.black45,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
