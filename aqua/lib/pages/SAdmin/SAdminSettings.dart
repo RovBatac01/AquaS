@@ -244,24 +244,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Text(
-                'Settings',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: ASColor.getTextColor(context),
-                  fontFamily: 'Montserrat',
-                ),
-              ),
-              Text(
-                'Manage your account and preferences',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: ASColor.getTextColor(context).withOpacity(0.6),
-                  fontFamily: 'Poppins',
-                ),
-              ),
+
               
               const SizedBox(height: 24),
 
