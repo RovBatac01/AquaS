@@ -18,26 +18,6 @@ class AdminWelcomePopup extends StatefulWidget {
     this.onGetStarted,
   }) : super(key: key);
 
-  @override
-  State<AdminWelcomePopup> createState() => _AdminWelcomePopupState();
-}
-
-class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
-  late PageController _pageController;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   // List of tutorial images in order
   static const List<String> tutorialImages = [
     'assets/images/1.png',
@@ -107,6 +87,26 @@ class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
         );
       },
     );
+  }
+
+  @override
+  State<AdminWelcomePopup> createState() => _WelcomePopupState();
+}
+
+class _WelcomePopupState extends State<AdminWelcomePopup> {
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -248,7 +248,7 @@ class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
                   _currentPage = page;
                 });
               },
-              itemCount: tutorialImages.length,
+              itemCount: AdminWelcomePopup.tutorialImages.length,
               itemBuilder: (context, index) {
                 return Container(
                   margin: EdgeInsets.symmetric(horizontal: 16.w),
@@ -265,7 +265,7 @@ class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.r),
                     child: Image.asset(
-                      tutorialImages[index],
+                      AdminWelcomePopup.tutorialImages[index],
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.contain,
@@ -294,7 +294,9 @@ class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
                                 ),
                               ),
                               Text(
-                                tutorialImages[index].split('/').last,
+                                AdminWelcomePopup.tutorialImages[index]
+                                    .split('/')
+                                    .last,
                                 style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 10.sp,
@@ -327,7 +329,7 @@ class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            tutorialImages.length,
+            AdminWelcomePopup.tutorialImages.length,
             (index) => AnimatedContainer(
               duration: Duration(milliseconds: 300),
               margin: EdgeInsets.symmetric(horizontal: 1.w),
@@ -335,9 +337,10 @@ class _AdminWelcomePopupState extends State<AdminWelcomePopup> {
               height: _currentPage == index ? 5.h : 3.h,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _currentPage == index
-                    ? Colors.blue
-                    : ASColor.getTextColor(context).withOpacity(0.3),
+                color:
+                    _currentPage == index
+                        ? Colors.blue
+                        : ASColor.getTextColor(context).withOpacity(0.3),
               ),
             ),
           ),

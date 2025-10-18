@@ -2,6 +2,7 @@ import 'package:aqua/pages/Admin/AdminHome.dart';
 import 'package:aqua/pages/Admin/AdminSettings.dart';
 import 'package:aqua/pages/Admin/AdminNotification.dart';
 import 'package:aqua/pages/Admin/AdminStatistics.dart';
+import 'package:aqua/pages/Admin/AdminPopup.dart' as AdminPopup;
 import 'package:aqua/pages/Calendar.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
@@ -39,6 +40,7 @@ class Admindashboard extends StatefulWidget {
 
 class _MainScreenState extends State<Admindashboard> {
   int _currentIndex = 0;
+  bool _hasShownWelcomePopup = false;
 
   final List<Widget> _screens = [
     Center(child: AdminHomeScreen()),
@@ -55,6 +57,22 @@ class _MainScreenState extends State<Admindashboard> {
     'Calendar',
     'Settings',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Show the admin welcome popup after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasShownWelcomePopup) {
+        _showAdminWelcomePopup();
+        _hasShownWelcomePopup = true;
+      }
+    });
+  }
+
+  void _showAdminWelcomePopup() {
+    AdminPopup.AdminWelcomePopup.show(context);
+  }
 
   //Code for the bottom navigation bar
   void _onItemTapped(int index) {

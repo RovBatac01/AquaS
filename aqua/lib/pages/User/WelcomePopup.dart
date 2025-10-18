@@ -18,26 +18,6 @@ class WelcomePopup extends StatefulWidget {
     this.onGetStarted,
   }) : super(key: key);
 
-  @override
-  State<WelcomePopup> createState() => _WelcomePopupState();
-}
-
-class _WelcomePopupState extends State<WelcomePopup> {
-  late PageController _pageController;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
   // List of tutorial images in order
   static const List<String> tutorialImages = [
     'assets/images/1.png',
@@ -107,6 +87,26 @@ class _WelcomePopupState extends State<WelcomePopup> {
         );
       },
     );
+  }
+
+  @override
+  State<WelcomePopup> createState() => _WelcomePopupState();
+}
+
+class _WelcomePopupState extends State<WelcomePopup> {
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -248,7 +248,7 @@ class _WelcomePopupState extends State<WelcomePopup> {
                   _currentPage = page;
                 });
               },
-              itemCount: tutorialImages.length,
+              itemCount: WelcomePopup.tutorialImages.length,
               itemBuilder: (context, index) {
                 return Container(
                   margin: EdgeInsets.symmetric(horizontal: 16.w),
@@ -265,7 +265,7 @@ class _WelcomePopupState extends State<WelcomePopup> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12.r),
                     child: Image.asset(
-                      tutorialImages[index],
+                      WelcomePopup.tutorialImages[index],
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.contain,
@@ -294,7 +294,9 @@ class _WelcomePopupState extends State<WelcomePopup> {
                                 ),
                               ),
                               Text(
-                                tutorialImages[index].split('/').last,
+                                WelcomePopup.tutorialImages[index]
+                                    .split('/')
+                                    .last,
                                 style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 10.sp,
@@ -327,7 +329,7 @@ class _WelcomePopupState extends State<WelcomePopup> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            tutorialImages.length,
+            WelcomePopup.tutorialImages.length,
             (index) => AnimatedContainer(
               duration: Duration(milliseconds: 300),
               margin: EdgeInsets.symmetric(horizontal: 1.w),
@@ -335,9 +337,10 @@ class _WelcomePopupState extends State<WelcomePopup> {
               height: _currentPage == index ? 5.h : 3.h,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _currentPage == index
-                    ? Colors.blue
-                    : ASColor.getTextColor(context).withOpacity(0.3),
+                color:
+                    _currentPage == index
+                        ? Colors.blue
+                        : ASColor.getTextColor(context).withOpacity(0.3),
               ),
             ),
           ),

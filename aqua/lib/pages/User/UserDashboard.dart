@@ -11,6 +11,7 @@ import 'package:aqua/NavBar/Notification.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:aqua/pages/User/Request.dart';
 import 'package:aqua/pages/User/UserStatistics.dart';
+import 'package:aqua/pages/User/WelcomePopup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -53,6 +54,7 @@ class _MainScreenState extends State<Userdashboard> {
   List<Map<String, dynamic>> userDevices = [];
   bool _hasDeviceAccess = false;
   bool _isCheckingAccess = true;
+  bool _hasShownTutorial = false;
 
   final List<Widget> _screens = [
     Center(child: DetailsScreen(key: ValueKey('Home'))),
@@ -74,6 +76,24 @@ class _MainScreenState extends State<Userdashboard> {
   void initState() {
     super.initState();
     _checkDeviceAccess();
+    _loadTutorialStatus();
+  }
+
+  /// Load tutorial shown status from SharedPreferences
+  Future<void> _loadTutorialStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _hasShownTutorial = prefs.getBool('hasShownUserTutorial') ?? false;
+    });
+  }
+
+  /// Save tutorial shown status to SharedPreferences
+  Future<void> _saveTutorialStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasShownUserTutorial', true);
+    setState(() {
+      _hasShownTutorial = true;
+    });
   }
 
   /// Check if user has access to any devices
@@ -383,6 +403,14 @@ class _MainScreenState extends State<Userdashboard> {
                               Navigator.of(context).pop();
                               _checkDeviceAccess(); // Refresh device access
                               setState(() {}); // Trigger rebuild
+
+                              // Show tutorial after gaining access (only once)
+                              if (!_hasShownTutorial) {
+                                Future.delayed(Duration(milliseconds: 500), () {
+                                  WelcomePopup.show(context);
+                                  _saveTutorialStatus();
+                                });
+                              }
                             },
                             child: Text(
                               'Refresh Dashboard',
