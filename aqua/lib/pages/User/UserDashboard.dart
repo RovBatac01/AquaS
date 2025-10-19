@@ -54,7 +54,6 @@ class _MainScreenState extends State<Userdashboard> {
   List<Map<String, dynamic>> userDevices = [];
   bool _hasDeviceAccess = false;
   bool _isCheckingAccess = true;
-  bool _hasShownTutorial = false;
 
   final List<Widget> _screens = [
     Center(child: DetailsScreen(key: ValueKey('Home'))),
@@ -75,25 +74,21 @@ class _MainScreenState extends State<Userdashboard> {
   @override
   void initState() {
     super.initState();
-    _checkDeviceAccess();
-    _loadTutorialStatus();
+    _checkDeviceAccessAndShowTutorial();
   }
 
-  /// Load tutorial shown status from SharedPreferences
-  Future<void> _loadTutorialStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _hasShownTutorial = prefs.getBool('hasShownUserTutorial') ?? false;
-    });
-  }
+  /// Check if user has access to any devices and show tutorial if they do
+  Future<void> _checkDeviceAccessAndShowTutorial() async {
+    await _checkDeviceAccess();
 
-  /// Save tutorial shown status to SharedPreferences
-  Future<void> _saveTutorialStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasShownUserTutorial', true);
-    setState(() {
-      _hasShownTutorial = true;
-    });
+    // Show tutorial after device access is confirmed
+    if (_hasDeviceAccess && mounted) {
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (mounted) {
+          WelcomePopup.show(context);
+        }
+      });
+    }
   }
 
   /// Check if user has access to any devices
@@ -404,13 +399,10 @@ class _MainScreenState extends State<Userdashboard> {
                               _checkDeviceAccess(); // Refresh device access
                               setState(() {}); // Trigger rebuild
 
-                              // Show tutorial after gaining access (only once)
-                              if (!_hasShownTutorial) {
-                                Future.delayed(Duration(milliseconds: 500), () {
-                                  WelcomePopup.show(context);
-                                  _saveTutorialStatus();
-                                });
-                              }
+                              // Show tutorial after gaining access
+                              Future.delayed(Duration(milliseconds: 500), () {
+                                WelcomePopup.show(context);
+                              });
                             },
                             child: Text(
                               'Refresh Dashboard',
