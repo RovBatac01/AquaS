@@ -17,6 +17,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!'
 const app = express();
 const port = process.env.PORT || 5000;
 
+// CORS Configuration - MUST be before other middleware
+app.use(cors({
+  origin: '*', // Allow all origins for development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
 // Create the HTTP server instance BEFORE the Socket.IO server
 const server = http.createServer(app);
 
@@ -30,17 +40,6 @@ const transporter = nodemailer.createTransport({
     pass: "ijmcosuxpnioehya",
   },
 });
-
-// CORS Configuration - MUST be before other middleware
-app.use(cors({
-  origin: '*', // Allow all origins for development
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-
-// Handle preflight requests
-app.options('*', cors());
 
 // Middleware
 app.use(express.json());
