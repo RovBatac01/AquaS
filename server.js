@@ -14,7 +14,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!';
 const app = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 // ✅ Define your CORS options properly
 const corsOptions = {
@@ -74,6 +74,11 @@ const io = new Server(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+});
+
+// Listen on the assigned port on all interfaces
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend running on port ${PORT} (all interfaces)`);
 });
 
 // MySQL Connection
@@ -1607,11 +1612,6 @@ app.get('/api/user/device-requests', authenticateToken, async (req, res) => {
     console.error('Error fetching user device requests:', error);
     res.status(500).json({ error: 'Failed to fetch device requests' });
   }
-});
-
-// Listen on the assigned port on all interfaces
-server.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Backend running on port ${port} (all interfaces)`);
 });
 
 // PUT /api/user/profile - Update user profile information
