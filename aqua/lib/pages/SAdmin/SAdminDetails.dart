@@ -303,7 +303,7 @@ class _SAdminDetailsState extends State<SAdminDetails> with SingleTickerProvider
   }
 
   void _connectAndListen() {
-    _socket = io.io('https://aquasense-p36u.onrender.com', <String, dynamic>{
+    _socket = io.io('https://aquas-production.up.railway.app', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });

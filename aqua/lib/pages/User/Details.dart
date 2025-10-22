@@ -3,8 +3,10 @@ import 'dart:math';
 import 'dart:ui'; // Required for ImageFilter
 import 'dart:async'; // Required for Timer
 import 'dart:convert'; // For JSON encoding/decoding
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 import 'package:aqua/water_quality_model.dart'; // Corrected import path
+import '../../config/api_config.dart';
 import '../../components/colors.dart'; // Import ASColor
 
 import '../../device_aware_service.dart'; // New device-aware service
@@ -40,7 +42,7 @@ class DetailsScreen extends StatefulWidget {
   State<DetailsScreen> createState() => _DetailsScreenState();
 }
 
-class _DetailsScreenState extends State<DetailsScreen> {
+class _DetailsScreenState extends State<DetailsScreen> with SingleTickerProviderStateMixin {
   String selectedStat =
       "Temp"; // Currently selected statistic for the circular indicator
 
@@ -60,7 +62,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   // To detect if data is the same as the previous fetch
   Map<String, dynamic>? _lastSuccessfulDataPayload;
 
-  Timer? _timer; // Timer for auto-refresh
+  Timer? _timer; // Timer for auto-refresh (kept as fallback)
+  io.Socket? _socket;
 
   final DeviceAwareService _deviceService = DeviceAwareService();
 
@@ -72,16 +75,106 @@ class _DetailsScreenState extends State<DetailsScreen> {
   List<String> _availableSensors =
       []; // Track which sensors are available for current device
 
+  // Animation variables
+  late AnimationController _animationController;
+  late Animation<double> _progressAnimation;
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
-    _initializeDeviceData(); // Initialize device data and set up timer
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    _progressAnimation = Tween<double>(begin: 0.0, end: 0.0)
+        .animate(_animationController)
+      ..addListener(() {
+        if (mounted && !_isDisposed) {
+          setState(() {
+            progress = _progressAnimation.value;
+          });
+        }
+      });
+
+    _initializeDeviceData(); // Initialize device data and set up timer/socket
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    if (mounted && !_isDisposed) super.setState(fn);
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer to prevent memory leaks
+    _isDisposed = true;
+    _timer?.cancel();
+    try {
+      _animationController.dispose();
+    } catch (e) {
+      // ignore: avoid_print
+      print('Warning disposing animation controller: $e');
+    }
+
+    try {
+      if (_socket != null) {
+        try {
+          _socket?.off('connect');
+          _socket?.off('disconnect');
+          _socket?.off('error');
+          _socket?.off('newNotification');
+          _socket?.off('updateTemperatureData');
+          _socket?.off('updatePHData');
+          _socket?.off('updateTDSData');
+          _socket?.off('updateTurbidityData');
+          _socket?.off('updateSalinityData');
+          _socket?.off('updateECData');
+          _socket?.off('updateECCompensatedData');
+        } catch (_) {}
+        _socket?.disconnect();
+        _socket?.dispose();
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('Warning disposing socket: $e');
+    }
+
     super.dispose();
+  }
+
+  // Map backend sensor_name to frontend type keys
+  String _sensorNameToType(String? sensorName) {
+    if (sensorName == null) return sensorName ?? '';
+    final name = sensorName.trim();
+    final mapping = <String, String>{
+      'Total Dissolved Solids': 'tds',
+      'Conductivity': 'ec',
+      'Temperature': 'temperature',
+      'Turbidity': 'turbidity',
+      'ph Level': 'ph',
+      'pH Level': 'ph',
+      'Salinity': 'salinity',
+      'Electrical Conductivity': 'ec_compensated',
+    };
+
+    if (mapping.containsKey(name)) return mapping[name]!;
+    final found = mapping.entries.firstWhere(
+      (e) => e.key.toLowerCase() == name.toLowerCase(),
+      orElse: () => MapEntry('', ''),
+    );
+    if (found.key != '') return found.value;
+
+    final lower = name.toLowerCase();
+    if (lower.contains('tds') || lower.contains('dissolved')) return 'tds';
+    if (lower.contains('temp')) return 'temperature';
+    if (lower.contains('ph')) return 'ph';
+    if (lower.contains('turbidity')) return 'turbidity';
+    if (lower.contains('salin')) return 'salinity';
+    if (lower.contains('conduct')) return 'ec';
+
+    return name.toLowerCase().replaceAll(' ', '_');
   }
 
   /// Initialize device data and start fetching sensor data
@@ -104,13 +197,40 @@ class _DetailsScreenState extends State<DetailsScreen> {
         );
         print('DEBUG: Current device: $_currentDeviceId ($_currentDeviceName)');
 
-        // Start fetching data for the current device
-        _fetchLatestDataForAllStats();
+        // Fetch configured sensors for the establishment and start Socket.IO
+        try {
+          final estabId = _accessibleDevices.first['estab_id'] as int? ??
+              _accessibleDevices.first['establishment_id'] as int?;
+          if (estabId != null) {
+            final sensors = await _deviceService.getEstablishmentSensors(estabId);
+            final mapped = sensors.map<String>((s) {
+              final typeFromApi = s['type'] as String?;
+              final nameFromApi = s['sensor_name'] as String?;
+              if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
+              return _sensorNameToType(nameFromApi);
+            }).toList();
+            final dedup = mapped.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
+            setState(() {
+              _availableSensors = dedup;
+            });
+          }
+        } catch (e) {
+          print('Warning: failed to fetch estab sensors, falling back to defaults: $e');
+          setState(() {
+            _availableSensors = [
+              'temperature',
+              'tds',
+              'ph',
+              'turbidity',
+              'ec',
+              'salinity',
+              'ec_compensated',
+            ];
+          });
+        }
 
-        // Set up timer for auto-refresh
-        _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-          _fetchLatestDataForAllStats();
-        });
+        // Start socket IO for live updates
+        _connectAndListen();
       } else {
         // No approved access - check for pending requests
         List<Map<String, dynamic>> pendingRequests =
@@ -142,16 +262,239 @@ class _DetailsScreenState extends State<DetailsScreen> {
     }
   }
 
+  void _connectAndListen() async {
+    try {
+      final base = ApiConfig.baseUrl;
+      print('DEBUG: Connecting Socket.IO to $base');
+
+      _socket = io.io(base, <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': false,
+      });
+
+      _socket?.connect();
+
+      _socket?.onConnect((_) {
+        print('Socket.IO connected');
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _connectionStatus = ConnectionStatus.connected;
+              _errorMessage = null;
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            // ignore: avoid_print
+            print('setState skipped on connect: $e');
+          }
+        }
+      });
+
+      _socket?.onDisconnect((_) {
+        print('Socket.IO disconnected');
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+              _errorMessage = 'Socket.IO disconnected.';
+            });
+          } catch (e) {
+            // ignore: avoid_print
+            print('setState skipped on disconnect: $e');
+          }
+        }
+      });
+
+      _socket?.on('error', (error) => print('Socket.IO error: $error'));
+
+      _socket?.on('newNotification', (data) {
+        print('Received real-time notification: $data');
+        if (mounted && !_isDisposed) {
+          try {
+            final readingValue = (data['readingValue'] as num).toDouble();
+            final threshold = (data['threshold'] as num).toDouble();
+            _showNotificationAlert(readingValue, threshold);
+          } catch (e) {
+            print('Notification handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateTemperatureData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestTemp = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateTemperatureData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updatePHData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestPH = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updatePHData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateTDSData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestTDS = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateTDSData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateTurbidityData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestTurbidity = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateTurbidityData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateSalinityData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestSalinity = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateSalinityData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateECData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestConductivity = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateECData handler skipped: $e');
+          }
+        }
+      });
+
+      _socket?.on('updateECCompensatedData', (data) {
+        if (mounted && !_isDisposed) {
+          try {
+            setState(() {
+              _latestECCompensated = (data['value'] as num).toDouble();
+              _updateCircularIndicatorValues();
+            });
+          } catch (e) {
+            print('updateECCompensatedData handler skipped: $e');
+          }
+        }
+      });
+    } catch (e) {
+      print('Error connecting to Socket.IO: $e');
+      if (mounted) {
+        setState(() {
+          _connectionStatus = ConnectionStatus.disconnectedNetworkError;
+          _errorMessage = 'Socket connection failed: $e';
+        });
+      }
+    }
+  }
+
+  void _showNotificationAlert(double readingValue, double threshold) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Real-Time Water Quality Alert',
+            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'Turbidity reading ($readingValue) is below the threshold ($threshold).',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Switch to a different device
-  Future<void> _switchDevice(String deviceId, String deviceName) async {
+  Future<void> _switchDevice(String deviceId, String deviceName, [int? estabId]) async {
     setState(() {
       _currentDeviceId = deviceId;
       _currentDeviceName = deviceName;
       _connectionStatus = ConnectionStatus.connecting;
     });
 
-    // Fetch data for the new device
-    _fetchLatestDataForAllStats();
+    // Disconnect previous socket and clear it
+    try {
+      _socket?.disconnect();
+      _socket?.dispose();
+    } catch (_) {}
+    _socket = null;
+
+    // Try to fetch sensors for the new device's establishment if provided
+    if (estabId != null) {
+      try {
+        final sensors = await _deviceService.getEstablishmentSensors(estabId);
+        final mapped = sensors.map<String>((s) {
+          final typeFromApi = s['type'] as String?;
+          final nameFromApi = s['sensor_name'] as String?;
+          if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
+          return _sensorNameToType(nameFromApi);
+        }).toList();
+        final dedup = mapped.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
+        setState(() {
+          _availableSensors = dedup;
+        });
+      } catch (e) {
+        print('Warning: failed to fetch estab sensors on device switch: $e');
+        setState(() {
+          _availableSensors = [
+            'temperature',
+            'tds',
+            'ph',
+            'turbidity',
+            'ec',
+            'salinity',
+            'ec_compensated',
+          ];
+        });
+      }
+    }
+
+    // Reconnect socket for the new device
+    _connectAndListen();
   }
 
   // Fetches the latest data (raw value only) for all water quality parameters
