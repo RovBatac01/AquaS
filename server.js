@@ -13,21 +13,28 @@ const nodemailer = require("nodemailer");
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my$uper$ecreTKey9876543210strong!';
-
 const app = express();
 const port = process.env.PORT || 5000;
 
-// CORS Configuration - MUST be before other middleware
-app.use(cors({
-  origin: '*', // Allow all origins for development
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+// ✅ Define your CORS options properly
+const corsOptions = {
+  origin: "*", // allow all origins (for testing)
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-// Handle preflight requests
-app.options('*', cors());
+// ✅ Apply CORS globally before any routes or middleware
+app.use(cors(corsOptions));
 
-// Create the HTTP server instance BEFORE the Socket.IO server
+// ✅ Handle preflight (OPTIONS) requests globally
+app.options("*", cors(corsOptions));
+
+// ✅ Basic middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// ✅ Create the HTTP server before initializing Socket.IO
 const server = http.createServer(app);
 
 const otpStorage = {};
@@ -40,11 +47,6 @@ const transporter = nodemailer.createTransport({
     pass: "ijmcosuxpnioehya",
   },
 });
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 // Middleware to verify JWT and get user ID
 const authenticateToken = (req, res, next) => {
