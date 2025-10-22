@@ -4,7 +4,7 @@ class ApiConfig {
   
   // API Base URLs
   // For local development - using local backend
-  static const String _developmentUrl = "http://aquas-production.up.railway.app";
+  static const String _developmentUrl = "https://aquas-production.up.railway.app";
   static const String _productionUrl = "http://localhost:5000";
 
   // Uncomment below to use Render for testing
