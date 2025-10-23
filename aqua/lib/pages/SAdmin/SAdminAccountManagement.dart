@@ -53,7 +53,7 @@ class _UserListPageState extends State<UserListPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://aquasense-p36u.onrender.com/users'),
+        Uri.parse('https://aquas-production.up.railway.app/users'),
       );
 
       if (response.statusCode == 200) {
@@ -86,7 +86,7 @@ class _UserListPageState extends State<UserListPage> {
   ) async {
     try {
       final response = await http.put(
-        Uri.parse('https://aquasense-p36u.onrender.com/users/$userId'),
+        Uri.parse('https://aquas-production.up.railway.app/users/$userId'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': newUsername, 'role': newRole}),
       );
@@ -145,7 +145,7 @@ class _UserListPageState extends State<UserListPage> {
     if (confirm) {
       try {
         final response = await http.delete(
-          Uri.parse('https://aquasense-p36u.onrender.com/users/$userId'),
+          Uri.parse('https://aquas-production.up.railway.app/users/$userId'),
         );
 
         if (response.statusCode == 200) {

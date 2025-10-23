@@ -36,7 +36,7 @@ import 'package:aqua/components/colors.dart';
 void main() {
   runApp(
     ScreenUtilInit(
-      designSize: Size(375, 812), // Set to your design's width and height
+      designSize: Size(375, 812), 
       minTextAdapt: true,
       builder:
           (context, child) => ChangeNotifierProvider(

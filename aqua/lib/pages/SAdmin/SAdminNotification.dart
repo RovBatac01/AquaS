@@ -52,7 +52,7 @@ class _SAdminNotificationState extends State<SAdminNotification> {
       // The endpoint for Super Admin notifications (unauthenticated)
       final response = await http.get(
         Uri.parse(
-          'https://aquasense-p36u.onrender.com/api/notifications/superadmin',
+          'https://aquas-production.up.railway.app/api/notifications/superadmin',
         ), // <-- Adjust your backend URL if different
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ class _SAdminNotificationState extends State<SAdminNotification> {
     try {
       final response = await http.delete(
         Uri.parse(
-          'https://aquasense-p36u.onrender.com/api/notifications/superadmin/$notificationId',
+          'https://aquas-production.up.railway.app/api/notifications/superadmin/$notificationId',
         ), // <-- Adjust your backend URL if different
         headers: {
           'Content-Type': 'application/json',

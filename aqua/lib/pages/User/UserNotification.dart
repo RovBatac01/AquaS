@@ -16,17 +16,13 @@ class UserNotification extends StatefulWidget {
 
 class _UserNotification extends State<UserNotification> {
   List<Map<String, dynamic>> notifications = [];
-  List<Map<String, dynamic>> deviceRequests = [];
   bool _isLoading = true;
-  bool _isDeviceRequestsLoading = false;
   String? _errorMessage;
-  int _selectedIndex = 0; // 0 for notifications, 1 for device requests
 
   @override
   void initState() {
     super.initState();
     _fetchNotifications();
-    _fetchDeviceRequests();
   }
 
   /// Fetches notifications from the backend
@@ -59,7 +55,21 @@ class _UserNotification extends State<UserNotification> {
         final data = json.decode(response.body);
         setState(() {
           notifications =
-              (data['notifications'] as List).map((notif) {
+              (data['notifications'] as List).where((notif) {
+                // Only show sensor alerts - exclude everything else
+                final type = notif['type']?.toString().toLowerCase() ?? '';
+                final title = notif['title']?.toString().toLowerCase() ?? '';
+                
+                // Only allow sensor-related notifications
+                return type == 'sensor' || 
+                       title.contains('sensor') || 
+                       title.contains('turbidity') ||
+                       title.contains('ph') ||
+                       title.contains('tds') ||
+                       title.contains('salinity') ||
+                       title.contains('temperature') ||
+                       title.contains('alert');
+              }).map((notif) {
                 return {
                   'id': notif['id'].toString(),
                   'title': notif['title'] ?? 'No Title',
@@ -85,212 +95,6 @@ class _UserNotification extends State<UserNotification> {
         _isLoading = false;
       });
     }
-  }
-
-  /// Fetches pending device requests for the admin
-  Future<void> _fetchDeviceRequests() async {
-    print('DEBUG: Starting to fetch device requests...');
-    setState(() {
-      _isDeviceRequestsLoading = true;
-    });
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('userToken');
-
-      if (token == null) {
-        print('DEBUG: No authentication token found');
-        setState(() {
-          _errorMessage = 'Authentication token not found';
-          _isDeviceRequestsLoading = false;
-        });
-        return;
-      }
-
-      print('DEBUG: Making API call to fetch device requests...');
-      final response = await http.get(
-        Uri.parse('${ApiConfig.apiBase}/device-requests/pending'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      print('DEBUG: API response status: ${response.statusCode}');
-      print('DEBUG: API response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('DEBUG: Parsed device requests data: $data');
-        setState(() {
-          deviceRequests =
-              (data['requests'] as List).map((request) {
-                return {
-                  'id': request['id'],
-                  'username': request['username'],
-                  'email': request['email'],
-                  'device_id': request['device_id'],
-                  'device_name': request['device_name'] ?? 'Unknown Device',
-                  'message': request['message'] ?? '',
-                  'created_at': request['created_at'],
-                };
-              }).toList();
-          _isDeviceRequestsLoading = false;
-        });
-        print('DEBUG: Set ${deviceRequests.length} device requests in state');
-      } else {
-        print('DEBUG: API call failed with status: ${response.statusCode}');
-        setState(() {
-          _errorMessage =
-              'Failed to load device requests: ${response.statusCode} ${response.reasonPhrase}';
-          _isDeviceRequestsLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error fetching device requests: $e';
-        _isDeviceRequestsLoading = false;
-      });
-    }
-  }
-
-  /// Handle device request approval or rejection
-  Future<void> _handleDeviceRequest(
-    String requestId,
-    String action, {
-    String? message,
-  }) async {
-    print('DEBUG: Handling device request - ID: $requestId, Action: $action');
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('userToken');
-
-      if (token == null) {
-        print('DEBUG: No authentication token for device request action');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Authentication token not found')),
-        );
-        return;
-      }
-
-      print('DEBUG: Sending ${action} request for device request $requestId');
-      final response = await http.post(
-        Uri.parse('${ApiConfig.apiBase}/device-requests/$requestId/respond'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'action': action, 'response_message': message ?? ''}),
-      );
-
-      print('DEBUG: Device request response status: ${response.statusCode}');
-      print('DEBUG: Device request response body: ${response.body}');
-
-      final responseData = json.decode(response.body);
-
-      if (response.statusCode == 200 && responseData['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Request ${action}d successfully!'),
-            backgroundColor: action == 'approve' ? Colors.green : Colors.orange,
-          ),
-        );
-
-        _fetchDeviceRequests();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseData['error'] ?? 'Failed to process request'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error processing request: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  /// Show device request action dialog
-  void _showDeviceRequestDialog(Map<String, dynamic> request) {
-    final TextEditingController messageController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Device Access Request'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'User: ${request['username']}',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text('Email: ${request['email']}'),
-                Text(
-                  'Device ID: ${request['device_id']}',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                if (request['device_name'] != 'Unknown Device')
-                  Text('Device: ${request['device_name']}'),
-                SizedBox(height: 8),
-                if (request['message'].isNotEmpty) ...[
-                  Text(
-                    'User Message:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(request['message']),
-                  SizedBox(height: 8),
-                ],
-                Text('Admin Response (Optional):'),
-                TextField(
-                  controller: messageController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter response message...',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _handleDeviceRequest(
-                    request['id'],
-                    'reject',
-                    message: messageController.text,
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: Text('Reject', style: TextStyle(color: Colors.white)),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _handleDeviceRequest(
-                    request['id'],
-                    'approve',
-                    message: messageController.text,
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: Text('Approve', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-    );
   }
 
   /// Delete a notification
@@ -365,16 +169,11 @@ class _UserNotification extends State<UserNotification> {
   /// Get notification icon based on type
   Icon _getNotificationIcon(String type) {
     switch (type.toLowerCase()) {
-      case 'device_request':
-        return Icon(Icons.devices, color: Colors.orange);
-      case 'device_response':
-        return Icon(Icons.check_circle, color: Colors.green);
       case 'sensor':
         return Icon(Icons.sensors, color: Colors.red);
       case 'schedule':
+      case 'event':
         return Icon(Icons.calendar_month, color: Colors.blue);
-      case 'request':
-        return Icon(Icons.help, color: Colors.purple);
       default:
         return Icon(Icons.notifications, color: Colors.grey);
     }
@@ -430,161 +229,6 @@ class _UserNotification extends State<UserNotification> {
         final notification = notifications[index];
         return _buildNotificationItem(notification, index);
       },
-    );
-  }
-
-  /// Build device requests list
-  Widget _buildDeviceRequestsList() {
-    if (_isDeviceRequestsLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (deviceRequests.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.devices, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'No device access requests',
-              style: TextStyle(
-                fontSize: 18,
-                color: ASColor.getTextColor(context),
-              ),
-            ),
-            Text(
-              'Requests from users will appear here',
-              style: TextStyle(
-                fontSize: 14,
-                color: ASColor.getTextColor(context).withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.separated(
-      itemCount: deviceRequests.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final request = deviceRequests[index];
-        return _buildDeviceRequestItem(request);
-      },
-    );
-  }
-
-  /// Build individual device request item
-  Widget _buildDeviceRequestItem(Map<String, dynamic> request) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withOpacity(0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.orange.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.all(16),
-        leading: Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.orange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(Icons.devices, color: Colors.orange),
-        ),
-        title: Text(
-          'Device: ${request['device_id']}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: ASColor.getTextColor(context),
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'User: ${request['username']} (${request['email']})',
-              style: TextStyle(
-                color: ASColor.getTextColor(context).withOpacity(0.7),
-              ),
-            ),
-            if (request['message'].isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Text(
-                  'Message: ${request['message']}',
-                  style: TextStyle(
-                    color: ASColor.getTextColor(context).withOpacity(0.6),
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            SizedBox(height: 8),
-            Text(
-              _formatTimestamp(request['created_at']),
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ),
-          ],
-        ),
-        trailing: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth:
-                MediaQuery.of(context).size.width *
-                0.3, // Max 30% of screen width
-            minWidth: 90, // Minimum width for three buttons
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(
-                child: IconButton(
-                  onPressed:
-                      () => _handleDeviceRequest(request['id'], 'reject'),
-                  icon: Icon(Icons.close, color: Colors.red, size: 16.sp),
-                  tooltip: 'Reject',
-                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
-                  padding: EdgeInsets.all(1),
-                ),
-              ),
-              Flexible(
-                child: IconButton(
-                  onPressed:
-                      () => _handleDeviceRequest(request['id'], 'approve'),
-                  icon: Icon(Icons.check, color: Colors.green, size: 16.sp),
-                  tooltip: 'Approve',
-                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
-                  padding: EdgeInsets.all(1),
-                ),
-              ),
-              Flexible(
-                child: IconButton(
-                  onPressed: () => _showDeviceRequestDialog(request),
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: ASColor.getTextColor(context),
-                    size: 16.sp,
-                  ),
-                  tooltip: 'More options',
-                  constraints: BoxConstraints(minWidth: 24, minHeight: 24),
-                  padding: EdgeInsets.all(1),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -734,89 +378,11 @@ class _UserNotification extends State<UserNotification> {
         child: SafeArea(
           child: Column(
             children: [
-              // Tab Bar
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedIndex = 0),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color:
-                                _selectedIndex == 0
-                                    ? Colors.blue
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Notifications (${notifications.length})',
-                              style: TextStyle(
-                                color:
-                                    _selectedIndex == 0
-                                        ? Colors.white
-                                        : ASColor.getTextColor(context),
-                                fontWeight:
-                                    _selectedIndex == 0
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _selectedIndex = 1),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color:
-                                _selectedIndex == 1
-                                    ? Colors.orange
-                                    : Colors.transparent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Device Requests (${deviceRequests.length})',
-                              style: TextStyle(
-                                color:
-                                    _selectedIndex == 1
-                                        ? Colors.white
-                                        : ASColor.getTextColor(context),
-                                fontWeight:
-                                    _selectedIndex == 1
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16),
+
 
               // Content Area
               Expanded(
-                child:
-                    _selectedIndex == 0
-                        ? _buildNotificationsList()
-                        : _buildDeviceRequestsList(),
+                child: _buildNotificationsList(),
               ),
             ],
           ),

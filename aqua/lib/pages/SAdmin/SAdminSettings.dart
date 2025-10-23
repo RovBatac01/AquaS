@@ -65,7 +65,7 @@ Future<void> updateUser(
     );
 
     final uri = Uri.parse(
-      'https://aquasense-p36u.onrender.com/api/super-admin/profile', // <--- CHANGED ENDPOINT
+      'https://aquas-production.up.railway.app/api/super-admin/profile', // <--- CHANGED ENDPOINT
     );
     final response = await http.put( // <--- CHANGED TO PUT REQUEST
       uri,
@@ -180,7 +180,7 @@ class _SettingsScreenState extends State<SAdminSettingsScreen> {
 
     try {
       final uri = Uri.parse(
-        'https://aquasense-p36u.onrender.com/api/super-admin/change-password',
+        'https://aquas-production.up.railway.app/api/super-admin/change-password',
       );
       final response = await http.post(
         uri,
