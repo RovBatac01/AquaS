@@ -63,7 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     // Replace with your actual API endpoint
     final url = Uri.parse(
-      'https://aquas-production.up.railway.app/api/forgot-password',
+      'http://localhost:5000/api/forgot-password',
     );
     try {
       final response = await http.post(
@@ -127,7 +127,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     // Replace with your actual API endpoint
-    final url = Uri.parse('https://aquas-production.up.railway.app/api/verify-otp');
+    final url = Uri.parse('http://localhost:5000/api/verify-otp');
     try {
       final response = await http.post(
         url,
@@ -200,7 +200,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     // Replace with your actual API endpoint
     final url = Uri.parse(
-      'https://aquas-production.up.railway.app/api/change-password',
+      'http://localhost:5000/api/change-password',
     );
     try {
       final response = await http.post(
