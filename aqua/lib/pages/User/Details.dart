@@ -146,34 +146,44 @@ class _DetailsScreenState extends State<DetailsScreen> with SingleTickerProvider
 
   // Map backend sensor_name to frontend type keys
   String _sensorNameToType(String? sensorName) {
-    if (sensorName == null) return sensorName ?? '';
+    if (sensorName == null || sensorName.isEmpty) return '';
     final name = sensorName.trim();
+    
+    // First check for exact matches (case-insensitive)
     final mapping = <String, String>{
       'Total Dissolved Solids': 'tds',
       'Conductivity': 'ec',
       'Temperature': 'temperature',
       'Turbidity': 'turbidity',
+      'Portable Turbidity': 'turbidity',
       'ph Level': 'ph',
       'pH Level': 'ph',
       'Salinity': 'salinity',
       'Electrical Conductivity': 'ec_compensated',
     };
 
+    // Try exact match first
     if (mapping.containsKey(name)) return mapping[name]!;
+    
+    // Try case-insensitive match
     final found = mapping.entries.firstWhere(
       (e) => e.key.toLowerCase() == name.toLowerCase(),
       orElse: () => MapEntry('', ''),
     );
     if (found.key != '') return found.value;
 
+    // Try contains-based matching
     final lower = name.toLowerCase();
+    if (lower.contains('turbidity')) return 'turbidity';
     if (lower.contains('tds') || lower.contains('dissolved')) return 'tds';
     if (lower.contains('temp')) return 'temperature';
     if (lower.contains('ph')) return 'ph';
-    if (lower.contains('turbidity')) return 'turbidity';
     if (lower.contains('salin')) return 'salinity';
+    if (lower.contains('conduct') && lower.contains('electrical')) return 'ec_compensated';
     if (lower.contains('conduct')) return 'ec';
 
+    // Last resort: normalize the name
+    print('⚠️ Unknown sensor type: "$name", normalizing to: "${name.toLowerCase().replaceAll(' ', '_')}"');
     return name.toLowerCase().replaceAll(' ', '_');
   }
 
@@ -198,24 +208,93 @@ class _DetailsScreenState extends State<DetailsScreen> with SingleTickerProvider
         print('DEBUG: Current device: $_currentDeviceId ($_currentDeviceName)');
 
         // Fetch configured sensors for the establishment and start Socket.IO
+        // Try using device_id to fetch sensors if available
         try {
-          final estabId = _accessibleDevices.first['estab_id'] as int? ??
-              _accessibleDevices.first['establishment_id'] as int?;
-          if (estabId != null) {
-            final sensors = await _deviceService.getEstablishmentSensors(estabId);
-            final mapped = sensors.map<String>((s) {
-              final typeFromApi = s['type'] as String?;
-              final nameFromApi = s['sensor_name'] as String?;
-              if (typeFromApi != null && typeFromApi.isNotEmpty) return typeFromApi;
-              return _sensorNameToType(nameFromApi);
-            }).toList();
-            final dedup = mapped.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
-            setState(() {
-              _availableSensors = dedup;
-            });
+          // First try to get sensors by device_id if available
+          if (_currentDeviceId != null && _currentDeviceId!.isNotEmpty) {
+            try {
+              print('🔍 DEBUG: Fetching sensors for device $_currentDeviceId');
+              final sensors = await _deviceService.getAvailableSensors(_currentDeviceId!);
+              print('🔍 DEBUG: Received ${sensors.length} sensors from API: $sensors');
+              final mapped = sensors.map<String>((s) {
+                final typeFromApi = s['type'] as String?;
+                final nameFromApi = s['sensor_name'] as String?;
+                print('🔍 DEBUG: Mapping sensor - type: $typeFromApi, name: $nameFromApi');
+                
+                // Always use the mapping function for both type and name
+                // This ensures "portable turbidity" gets mapped to "turbidity"
+                String mappedType = '';
+                if (typeFromApi != null && typeFromApi.isNotEmpty) {
+                  mappedType = _sensorNameToType(typeFromApi);
+                }
+                if (mappedType.isEmpty && nameFromApi != null) {
+                  mappedType = _sensorNameToType(nameFromApi);
+                }
+                
+                print('🔍 DEBUG: Final mapped type: $mappedType');
+                return mappedType;
+              }).toList();
+              print('🔍 DEBUG: Mapped sensors: $mapped');
+              final dedup = mapped.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
+              print('🔍 DEBUG: Deduplicated sensors: $dedup');
+              setState(() {
+                _availableSensors = dedup.isNotEmpty ? dedup : [
+                  'temperature',
+                  'tds',
+                  'ph',
+                  'turbidity',
+                  'ec',
+                  'salinity',
+                  'ec_compensated',
+                ];
+              });
+              print('✅ Successfully fetched ${_availableSensors.length} sensors for device $_currentDeviceId: $_availableSensors');
+            } catch (deviceError) {
+              print('⚠️ Warning: Could not fetch sensors by device_id, trying by establishment: $deviceError');
+              // Fall back to establishment-based query
+              final estabId = _accessibleDevices.first['estab_id'] as int? ??
+                  _accessibleDevices.first['establishment_id'] as int?;
+              if (estabId != null) {
+                print('🔍 DEBUG: Fetching sensors for establishment $estabId');
+                final sensors = await _deviceService.getEstablishmentSensors(estabId);
+                print('🔍 DEBUG: Received ${sensors.length} sensors from establishment API: $sensors');
+                final mapped = sensors.map<String>((s) {
+                  final typeFromApi = s['type'] as String?;
+                  final nameFromApi = s['sensor_name'] as String?;
+                  
+                  // Always use the mapping function for both type and name
+                  String mappedType = '';
+                  if (typeFromApi != null && typeFromApi.isNotEmpty) {
+                    mappedType = _sensorNameToType(typeFromApi);
+                  }
+                  if (mappedType.isEmpty && nameFromApi != null) {
+                    mappedType = _sensorNameToType(nameFromApi);
+                  }
+                  
+                  return mappedType;
+                }).toList();
+                final dedup = mapped.map((s) => s.trim()).where((s) => s.isNotEmpty).toSet().toList();
+                setState(() {
+                  _availableSensors = dedup.isNotEmpty ? dedup : [
+                    'temperature',
+                    'tds',
+                    'ph',
+                    'turbidity',
+                    'ec',
+                    'salinity',
+                    'ec_compensated',
+                  ];
+                });
+                print('✅ Successfully fetched ${_availableSensors.length} sensors for establishment $estabId: $_availableSensors');
+              } else {
+                throw Exception('No establishment ID found');
+              }
+            }
+          } else {
+            throw Exception('No device ID available');
           }
         } catch (e) {
-          print('Warning: failed to fetch estab sensors, falling back to defaults: $e');
+          print('ℹ️ Using default sensor configuration: $e');
           setState(() {
             _availableSensors = [
               'temperature',

@@ -193,6 +193,111 @@ async function initializeDeviceAccessTables() {
 // Initialize tables on startup
 initializeDeviceAccessTables();
 
+// Initialize sensors master table
+async function initializeSensorsTables() {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    
+    // Create sensors master table if it doesn't exist
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS sensors (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sensor_name VARCHAR(255) NOT NULL UNIQUE,
+        sensor_type VARCHAR(100),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    console.log('✅ Sensors table initialized');
+    
+    // Check if sensors table has default sensors
+    const [sensorCount] = await connection.query('SELECT COUNT(*) as count FROM sensors');
+    if (sensorCount[0].count === 0) {
+      // Insert default sensor types
+      const defaultSensors = [
+        { name: 'Turbidity', type: 'water_quality', description: 'Measures water clarity in NTU' },
+        { name: 'ph Level', type: 'water_quality', description: 'Measures pH level of water' },
+        { name: 'Total Dissolved Solids', type: 'water_quality', description: 'Measures TDS in ppm' },
+        { name: 'Salinity', type: 'water_quality', description: 'Measures salinity in ppt' },
+        { name: 'Conductivity', type: 'water_quality', description: 'Measures electrical conductivity' },
+        { name: 'Electrical Conductivity', type: 'water_quality', description: 'Measures EC compensated' },
+        { name: 'Temperature', type: 'environmental', description: 'Measures temperature in Celsius' }
+      ];
+      
+      for (const sensor of defaultSensors) {
+        await connection.query(
+          'INSERT INTO sensors (sensor_name, sensor_type, description) VALUES (?, ?, ?)',
+          [sensor.name, sensor.type, sensor.description]
+        );
+      }
+      console.log('✅ Default sensors added to sensors table');
+    } else {
+      console.log(`ℹ️ Sensors table already has ${sensorCount[0].count} sensors`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error initializing sensors table:', error);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+initializeSensorsTables();
+
+// Initialize estab_sensors mappings
+async function initializeEstabSensorsMappings() {
+  let connection;
+  try {
+    connection = await db.getConnection();
+    
+    // Check if estab_sensors has any data
+    const [mappingCount] = await connection.query('SELECT COUNT(*) as count FROM estab_sensors');
+    
+    if (mappingCount[0].count === 0) {
+      console.log('ℹ️ estab_sensors table is empty, creating default mappings...');
+      
+      // Get all establishments
+      const [establishments] = await connection.query('SELECT id, estab_name FROM estab');
+      
+      // Get all sensors
+      const [sensors] = await connection.query('SELECT id, sensor_name FROM sensors');
+      
+      if (establishments.length > 0 && sensors.length > 0) {
+        // Assign all sensors to all establishments
+        for (const estab of establishments) {
+          for (const sensor of sensors) {
+            try {
+              await connection.query(
+                'INSERT IGNORE INTO estab_sensors (estab_id, sensor_id) VALUES (?, ?)',
+                [estab.id, sensor.id]
+              );
+            } catch (err) {
+              // Ignore errors for duplicate entries
+              if (!err.message.includes('Duplicate')) {
+                console.log(`Warning: Could not assign sensor ${sensor.id} to establishment ${estab.id}:`, err.message);
+              }
+            }
+          }
+        }
+        console.log(`✅ Assigned ${sensors.length} sensors to ${establishments.length} establishments`);
+      } else {
+        console.log('⚠️ No establishments or sensors found to create mappings');
+      }
+    } else {
+      console.log(`ℹ️ estab_sensors table already has ${mappingCount[0].count} mappings`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error initializing estab_sensors mappings:', error);
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+initializeEstabSensorsMappings();
+
 // Add device_id columns to sensor tables for device-specific filtering
 async function initializeSensorDeviceColumns() {
   let connection;
@@ -2095,21 +2200,73 @@ app.get('/api/establishment/:establishmentId/sensors', authenticateToken, async 
     
     connection = await db.getConnection();
     
-    // Check if user has access to this establishment
+    // Super Admin has unrestricted access
     if (userRole !== 'Super Admin') {
+      // Check if user has access to this establishment via direct ownership OR device access
+      let hasAccess = false;
+      
+      // Check 1: Direct establishment ownership (for Admins)
       const [userEstab] = await connection.query(
         'SELECT establishment_id FROM users WHERE id = ?',
         [userId]
       );
       
-      if (userEstab.length === 0 || userEstab[0].establishment_id != establishmentId) {
+      if (userEstab.length > 0 && userEstab[0].establishment_id == establishmentId) {
+        hasAccess = true;
+        console.log(`✅ DEBUG: User ${userId} has direct access via establishment_id`);
+      }
+      
+      // Check 2: Device access (for regular Users)
+      if (!hasAccess) {
+        // Get device_id for this establishment
+        const [estabDevice] = await connection.query(
+          'SELECT device_id FROM estab WHERE id = ?',
+          [establishmentId]
+        );
+        
+        if (estabDevice.length > 0 && estabDevice[0].device_id) {
+          const cleanDeviceId = estabDevice[0].device_id.replace(/,/g, '');
+          
+          // Check if user has device access
+          const [deviceAccess] = await connection.query(
+            'SELECT * FROM user_device_access WHERE user_id = ? AND REPLACE(device_id, ",", "") = ?',
+            [userId, cleanDeviceId]
+          );
+          
+          if (deviceAccess.length > 0) {
+            hasAccess = true;
+            console.log(`✅ DEBUG: User ${userId} has access via device_id ${cleanDeviceId}`);
+          }
+        }
+      }
+      
+      if (!hasAccess) {
+        console.log(`❌ DEBUG: User ${userId} denied access to establishment ${establishmentId}`);
         return res.status(403).json({ error: 'Access denied to this establishment' });
       }
+    } else {
+      console.log(`✅ DEBUG: Super Admin ${userId} has unrestricted access`);
     }
+    
+    // First check if establishment exists
+    const [estabExists] = await connection.query(
+      'SELECT id, estab_name, device_id FROM estab WHERE id = ?',
+      [establishmentId]
+    );
+    
+    if (estabExists.length === 0) {
+      console.log(`❌ DEBUG: Establishment ${establishmentId} does not exist`);
+      return res.status(404).json({ 
+        error: 'Establishment not found',
+        establishmentId: establishmentId 
+      });
+    }
+    
+    console.log(`✅ DEBUG: Establishment ${establishmentId} exists: ${estabExists[0].estab_name}`);
     
     // Get sensors for this establishment
     const [sensors] = await connection.query(
-      `SELECT s.id, s.sensor_name, es.estab_id, es.sensor_id
+      `SELECT s.id, s.sensor_name, s.sensor_type, es.estab_id, es.sensor_id
        FROM estab_sensors es
        JOIN sensors s ON es.sensor_id = s.id
        WHERE es.estab_id = ?
@@ -2117,7 +2274,13 @@ app.get('/api/establishment/:establishmentId/sensors', authenticateToken, async 
       [establishmentId]
     );
     
-    console.log(`🔍 DEBUG: Found ${sensors.length} sensors for establishment ${establishmentId}`);
+    console.log(`✅ DEBUG: Found ${sensors.length} sensors for establishment ${establishmentId}`);
+    
+    if (sensors.length === 0) {
+      console.log(`⚠️ DEBUG: No sensors configured for establishment ${establishmentId}, returning empty array`);
+    } else {
+      console.log(`📊 DEBUG: Sensors:`, sensors.map(s => `${s.sensor_name} (ID: ${s.id})`).join(', '));
+    }
     
     res.json({
       success: true,
@@ -2127,8 +2290,11 @@ app.get('/api/establishment/:establishmentId/sensors', authenticateToken, async 
     });
     
   } catch (error) {
-    console.error('Error fetching establishment sensors:', error);
-    res.status(500).json({ error: 'Failed to fetch sensors for establishment' });
+    console.error('❌ ERROR fetching establishment sensors:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch sensors for establishment',
+      details: error.message 
+    });
   } finally {
     if (connection) connection.release();
   }
