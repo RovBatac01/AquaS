@@ -7,7 +7,7 @@ import 'package:aqua/pages/User/Details.dart';
 import 'package:aqua/pages/Login.dart';
 import 'package:aqua/NavBar/HomeUi.dart';
 import 'package:aqua/NavBar/Statistics.dart';
-import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/pages/User/UserNotification.dart';
 import 'package:aqua/pages/Theme_Provider.dart';
 import 'package:aqua/pages/User/Request.dart';
 import 'package:aqua/pages/User/UserStatistics.dart';
@@ -58,7 +58,7 @@ class _MainScreenState extends State<Userdashboard> {
   final List<Widget> _screens = [
     Center(child: DetailsScreen(key: ValueKey('Home'))),
     Center(child: UserStatistics(key: ValueKey('Stats'))),
-    Center(child: NotificationPage(key: ValueKey('Notif'))),
+    Center(child: UserNotification(key: ValueKey('Notif'))),
     Center(child: CalendarPage()),
     Center(child: UserSettingsScreen()),
   ];
