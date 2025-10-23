@@ -1,4 +1,5 @@
 import 'package:aqua/NavBar/Notification.dart';
+import 'package:aqua/NavBar/NotificationDetailPage.dart';
 import 'package:aqua/NavBar/Settings.dart';
 import 'package:aqua/NavBar/Statistics.dart';
 import 'package:aqua/pages/Admin/AdminDashboard.dart';
@@ -11,6 +12,7 @@ import 'package:aqua/pages/CalibrationRequest.dart';
 import 'package:aqua/pages/SAdmin/SAdminHome.dart';
 import 'package:aqua/pages/SAdmin/SAdminStatistics.dart';
 import 'package:aqua/pages/User/UserSettings.dart';
+import 'package:aqua/pages/User/UserNotification.dart';
 
 import 'package:aqua/pages/ForgotPassword/ForgotPass.dart';
 import 'package:aqua/pages/SAdmin/SAdminDetails.dart';
@@ -88,7 +90,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       themeMode: themeProvider.themeMode,
-      home: LandingPage(),
+      home: LoginScreen(),
     );
   }
 }

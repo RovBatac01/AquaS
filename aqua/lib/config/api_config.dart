@@ -4,11 +4,11 @@ class ApiConfig {
   
   // API Base URLs
   // For local development - using local backend
-  static const String _developmentUrl = "https://aquas-production.up.railway.app";
-  static const String _productionUrl = "http://localhost:5000";
+  static const String _developmentUrl = "http://localhost:5000";
+  static const String _productionUrl = "https://aquas-production.up.railway.app";
 
   // Uncomment below to use Render for testing
-  // static const String _developmentUrl = "https://aquasense-p36u.onrender.com";
+  // static const String _developmentUrl = "https://aquas-production.up.railway.app";
   // static const String _productionUrl = "http://localhost:5000";
 
   // Get the current base URL based on environment

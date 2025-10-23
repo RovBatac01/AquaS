@@ -426,16 +426,7 @@ app.post("/logout", authenticateToken, async (req, res) => {
       } catch (activityErr) {
         console.log("Activity logging failed (non-critical):", activityErr.message);
       }
-      
-      // Clear any server-side session data if exists
-      try {
-        await db.query(
-          'UPDATE users SET access_token = NULL WHERE id = ?',
-          [userId]
-        );
-      } catch (tokenErr) {
-        console.log("Token clearing failed (non-critical):", tokenErr.message);
-      }
+  
     }
     
     res.status(200).json({ 
