@@ -387,17 +387,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              FontAwesomeIcons.google,
-                              color: ASColor.getTextColor(context),
-                            ),
-                            SizedBox(width: 16),
-                          ],
-                        ),
-                        SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
                             Text(
                               "Don’t have an account ?",
                               style: TextStyle(
